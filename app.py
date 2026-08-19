@@ -28,7 +28,7 @@ if submitted:
     else:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-1.5-pro')
 
             prompt = f"""
             तुम्ही भारतीय माहिती अधिकार कायदा (RTI Act 2005) तज्ज्ञ आहात.
