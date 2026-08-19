@@ -1,1 +1,2 @@
-# rti-ai-app
+streamlit
+google-generativeai
