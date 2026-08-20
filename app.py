@@ -5,207 +5,104 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-# १. पेज कॉन्फिगरेशन
 st.set_page_config(page_title="RTI & तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
-hide_streamlit_style = """
+# CSS: Manage App बटण लपवण्याचा प्रयत्न (हे पूर्णपणे जाणार नाही पण कमी गडद दिसेल)
+hide_st_style = """
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-[data-testid="stToolbar"] {visibility: hidden; display: none;}
-h1 { color: #1E3A8A; font-weight: bold; text-align: center; }
+[data-testid="stToolbar"] {visibility: hidden;}
 </style>
 """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
-# २. PDF तयार करण्याचे फंक्शन
+# PDF फंक्शन
 def generate_pdf(content_text):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     styles = getSampleStyleSheet()
-    normal_style = ParagraphStyle(
-        'NormalMarathi', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14
-    )
-    elements = []
-    paragraphs = content_text.split('\n')
-    for p in paragraphs:
-        if p.strip():
-            elements.append(Paragraph(p.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'), normal_style))
-            elements.append(Spacer(1, 4))
-        else:
-            elements.append(Spacer(1, 6))
+    normal_style = ParagraphStyle('NormalMarathi', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14)
+    elements = [Paragraph(p.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'), normal_style) for p in content_text.split('\n')]
     doc.build(elements)
     buffer.seek(0)
     return buffer
 
-# ३. स्टेट आणि सेशन मॅनेजमेंट (मोफत मर्यादा)
-if 'total_count' not in st.session_state:
-    st.session_state.total_count = 0
-if 'is_paid' not in st.session_state:
-    st.session_state.is_paid = False
-
-query_params = st.query_params
-if "page" in query_params:
-    st.session_state.page = query_params["page"]
-
-if 'page' not in st.session_state:
-    st.session_state.page = "home"
+# स्टेट मॅनेजमेंट
+if 'final_text' not in st.session_state: st.session_state.final_text = ""
+if 'paid' not in st.session_state: st.session_state.paid = False
 
 st.markdown("<h1>🏛️ RTI व तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 15px; font-weight: bold; color: #4B5563;'>घरबसल्या सहज तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार अर्ज!</p>", unsafe_allow_html=True)
-st.markdown("---")
 
-# मोठी आणि रंगीत नेव्हिगेशन बटने
-st.markdown("""
-<div style="display: flex; flex-direction: column; gap: 14px; margin: 15px 0;">
-    <a href="?page=home" target="_self" style="text-decoration: none;">
-        <div style="background: linear-gradient(135deg, #1E3A8A, #3B82F6); color: white; padding: 22px; border-radius: 16px; text-align: center; font-size: 22px; font-weight: bold; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
-            🏠 मुख्य पान व माहिती
-        </div>
-    </a>
-    <a href="?page=rti" target="_self" style="text-decoration: none;">
-        <div style="background: linear-gradient(135deg, #047857, #10B981); color: white; padding: 22px; border-radius: 16px; text-align: center; font-size: 22px; font-weight: bold; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
-            📜 RTI अर्ज व अपील तयार करा
-        </div>
-    </a>
-    <a href="?page=complaint" target="_self" style="text-decoration: none;">
-        <div style="background: linear-gradient(135deg, #B91C1C, #F59E0B); color: white; padding: 22px; border-radius: 16px; text-align: center; font-size: 22px; font-weight: bold; box-shadow: 0 6px 15px rgba(0,0,0,0.3);">
-            📝 शासकीय तक्रार अर्ज तयार करा
-        </div>
-    </a>
-</div>
-""", unsafe_allow_html=True)
+# बटन्स
+col1, col2, col3 = st.columns(3)
+if col1.button("🏠 मुख्य पान"): st.rerun()
+if col2.button("📜 RTI अर्ज"): st.session_state.page = "rti"
+if col3.button("📝 तक्रार"): st.session_state.page = "complaint"
 
-# 🌐 ॲप शेअर बटण (आता अगदी बटनांच्या खाली आणि १००% चालणारे)
-app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
+# शेअर बटण (आता अधिक चांगल्या प्रकारे काम करेल)
 st.markdown(f"""
-    <div style="text-align: center; margin: 15px 0;">
-        <button onclick="
-            navigator.clipboard.writeText('{app_url}');
-            alert('ॲपची लिंक कॉपी झाली आहे! आता तुम्ही ती कोठेही पेस्ट करून शेअर करू शकता.');
-        " style="
-            background: linear-gradient(135deg, #0284C7, #0369A1); 
-            color: white; 
-            padding: 16px 30px; 
-            border: none; 
-            border-radius: 30px; 
-            font-size: 18px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            width: 100%;
-        ">
-            📤 ॲपची लिंक कॉपी करा (शेअर करण्यासाठी)
-        </button>
-    </div>
+    <button onclick="
+        if (navigator.share) {{ navigator.share({{title: 'RTI ॲप', text: 'हे ॲप वापरा:', url: 'https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/'}}); }}
+        else {{ alert('लिंक कॉपी करा आणि शेअर करा'); }}
+    " style="width:100%; padding:15px; background-color:#25D366; color:white; border:none; border-radius:10px; font-weight:bold;">
+        📤 हे ॲप शेअर करा
+    </button>
 """, unsafe_allow_html=True)
 
 st.markdown("---")
+
+# पान निवड
 page = st.session_state.get("page", "home")
 
-# ४. मुख्य पान (Home Page)
-if page == "home":
-    st.markdown("### 📊 तुमच्या वापराची सद्यस्थिती:")
-    free_left = max(0, 10 - st.session_state.total_count)
-    st.markdown(f"""
-    - **शिल्लक मोफत अर्ज:** {free_left} / 10
-    """)
-    
-    if free_left == 0 and not st.session_state.is_paid:
-        st.error("⚠️ तुमचे १० मोफत अर्ज संपले आहेत. पुढील अर्जासाठी खालील यूपीआयवर पेमेंट करा.")
-        st.markdown("""
-        <div style="background-color: #FEF3C7; padding: 15px; border-radius: 10px; border: 1px solid #F59E0B;">
-            <p style="font-weight: bold; color: #92400E; margin: 0;">💳 पेमेंट माहिती:</p>
-            <p style="margin: 5px 0 0 0; color: #1F2937;">प्रत्येक अर्जासाठी कृपया खालील UPI वर स्कॅन करून किंवा नंबरवर पेमेंट करा:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #1E3A8A; margin: 5px 0;">UPI ID: <code>satishpradhan3392@ybl</code></p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("✅ मी पेमेंट केले आहे (अमर्याद सेवा चालू करा)"):
-            st.session_state.is_paid = True
-            st.success("तुमचे पेमेंट गृहीत धरले आहे. आता तुम्ही पुढील अर्ज तयार करू शकता!")
-            st.rerun()
-
-    st.markdown("---")
-    st.markdown("<p style='font-size: 12px; color: #4B5563;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
-
-# ५. RTI पान
-elif page == "rti":
-    st.markdown("<h2>📜 RTI अर्ज व अपील मसुदा तयार करा</h2>", unsafe_allow_html=True)
-    
-    if (st.session_state.total_count >= 10) and not st.session_state.is_paid:
-        st.error("❌ तुमची १० मोफत अर्जांची मर्यादा संपली आहे. कृपया मुख्य पानावरील UPI ID (`satishpradhan3392@ybl`) वर पेमेंट करा.")
-    else:
-        api_key = st.sidebar.text_input("Gemini API Key टाका:", type="password")
-
-        with st.form("rti_form"):
-            doc_type = st.selectbox("अर्ज निवडा:", ["जोडपत्र अ (पहिला RTI - ₹5)", "जोडपत्र ब (दुसरा RTI - ₹10)", "प्रथम अपील (₹10)", "AI द्वारे सविस्तर मसुदा"])
-            user_name = st.text_input("तुमचे पूर्ण नाव :")
-            user_address = st.text_area("तुमचा संपूर्ण पत्ता :")
-            dept_name = st.text_input("सरकारी विभाग :")
-            query = st.text_area("तपशील :")
-            submitted = st.form_submit_button("🚀 तयार करा")
-
-        if submitted:
-            st.session_state.total_count += 1
-            final_text = "अर्ज तयार होत आहे..."
-            if "AI" in doc_type and api_key:
-                try:
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    prompt = f"सविस्तर RTI अर्ज बनवा: {user_name}, {user_address}, {dept_name}, {query}"
-                    res = model.generate_content(prompt)
-                    final_text = res.text
-                except Exception as e:
-                    final_text = f"त्रुटी: {e}"
+# लॉजिक
+if page == "rti":
+    st.subheader("📜 RTI अर्ज तयार करा")
+    api_key = st.sidebar.text_input("Gemini API Key:", type="password")
+    with st.form("rti_form"):
+        doc_type = st.selectbox("अर्ज:", ["जोडपत्र अ (₹5)", "जोडपत्र ब (₹10)", "प्रथम अपील (₹10)"])
+        name = st.text_input("नाव:")
+        dept = st.text_input("विभाग:")
+        query = st.text_area("तपशील:")
+        submit = st.form_submit_button("🚀 अर्ज तयार करा")
+        if submit:
+            st.session_state.paid = False
+            if api_key:
+                genai.configure(api_key=api_key)
+                st.session_state.final_text = genai.GenerativeModel("gemini-1.5-flash").generate_content(f"RTI: {name}, {dept}, {query}").text
             else:
-                final_text = f"अर्ज प्रकार: {doc_type}\nअर्जदार: {user_name}\nपत्ता: {user_address}\nविषय: {dept_name}\nतपशील: {query}"
-            
-            st.session_state.rti_result = final_text
+                st.session_state.final_text = f"अर्ज: {doc_type}\nअर्जदार: {name}\nविभाग: {dept}\nतपशील: {query}"
 
-    if 'rti_result' in st.session_state and st.session_state.rti_result:
-        st.text_area("मसुदा:", value=st.session_state.rti_result, height=300)
-        pdf_data = generate_pdf(st.session_state.rti_result)
-        st.download_button("📥 PDF डाउनलोड", data=pdf_data, file_name="RTI_Arj.pdf")
-
-# ६. तक्रार पान
 elif page == "complaint":
-    st.markdown("<h2>📝 शासकीय तक्रार अर्ज</h2>", unsafe_allow_html=True)
+    st.subheader("📝 तक्रार अर्ज तयार करा")
+    api_key = st.sidebar.text_input("Gemini API Key:", type="password")
+    with st.form("comp_form"):
+        name = st.text_input("नाव:")
+        dept = st.text_input("कार्यालय:")
+        query = st.text_area("तक्रार:")
+        submit = st.form_submit_button("🚀 तक्रार तयार करा")
+        if submit:
+            st.session_state.paid = False
+            if api_key:
+                genai.configure(api_key=api_key)
+                st.session_state.final_text = genai.GenerativeModel("gemini-1.5-flash").generate_content(f"तक्रार: {name}, {dept}, {query}").text
+            else:
+                st.session_state.final_text = f"प्रति, {dept}\nअर्जदार: {name}\nतक्रार: {query}"
+
+# पीडीएफ पेमेंट आणि डाउनलोड भाग
+if st.session_state.final_text:
+    st.text_area("तुमचा मसुदा (मोफत):", value=st.session_state.final_text, height=200)
     
-    if (st.session_state.total_count >= 10) and not st.session_state.is_paid:
-        st.error("❌ तुमची १० मोफत अर्जांची मर्यादा संपली आहे. कृपया मुख्य पानावरील UPI ID (`satishpradhan3392@ybl`) वर पेमेंट करा.")
+    st.markdown("---")
+    st.markdown(f"### 💳 पीडीएफ डाउनलोड करण्यासाठी पेमेंट करा")
+    st.info("यूपीआय आयडी: **satishpradhan3392@ybl**")
+    
+    if st.button("✅ मी ₹10 पेमेंट केले आहे"):
+        st.session_state.paid = True
+    
+    if st.session_state.paid:
+        st.download_button("📥 आता PDF डाउनलोड करा", data=generate_pdf(st.session_state.final_text), file_name="अर्ज.pdf")
     else:
-        c_api_key = st.sidebar.text_input("Gemini API Key टाका:", type="password")
-        
-        with st.form("complaint_form"):
-            c_name = st.text_input("तुमचे नाव :")
-            c_address = st.text_area("पत्ता :")
-            c_phone = st.text_input("मोबाईल :")
-            c_dept = st.text_input("विभाग :")
-            c_query = st.text_area("तक्रारीचा विषय :")
-            c_submitted = st.form_submit_button("🚀 तक्रार अर्ज तयार करा")
+        st.warning("पेमेंट केल्यावर 'मी पेमेंट केले आहे' या बटणावर क्लिक करा, मगच डाउनलोड बटण येईल.")
 
-        if c_submitted:
-            st.session_state.total_count += 1
-            complaint_text = ""
-            if c_api_key:
-                try:
-                    genai.configure(api_key=c_api_key)
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    c_prompt = f"""तक्रारकर्ता: {c_name}, विभाग: {c_dept}, विषय: {c_query}. 
-                    अत्यंत प्रभावी आणि आक्रमक भाषेत तक्रार अर्ज बनवा."""
-                    with st.spinner("AI तक्रार अर्ज तयार करत आहे..."):
-                        res = model.generate_content(c_prompt)
-                        complaint_text = res.text
-                except Exception as e:
-                    complaint_text = f"त्रुटी: {e}"
-            
-            if not complaint_text:
-                complaint_text = f"प्रति, {c_dept}\nअर्जदार: {c_name}\nपत्ता: {c_address}\nविषय: {c_query}"
-
-            st.session_state.complaint_result = complaint_text
-
-    if 'complaint_result' in st.session_state and st.session_state.complaint_result:
-        st.text_area("मसुदा:", value=st.session_state.complaint_result, height=300)
-        c_pdf = generate_pdf(st.session_state.complaint_result)
-        st.download_button("📥 PDF डाउनलोड", data=c_pdf, file_name="Complaint.pdf")
+st.markdown("<p style='text-align:center;'>विकासक: सतीश अशोक प्रधान</p>", unsafe_allow_html=True)
