@@ -6,9 +6,6 @@ from datetime import datetime
 # १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
 st.set_page_config(page_title="RTI व शासकीय तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
-# ॲपचा मास्टर अनलॉक पिन (पेमेंट सुरक्षिततेसाठी)
-SECRET_PIN = "7788"
-
 custom_css = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
@@ -65,7 +62,7 @@ div.st-key-btn_online button p { font-size: 17px !important; font-weight: 800 !i
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# २. सेशन स्टेट मॅनेजमेंट (डेटा कायम राहण्यासाठी)
+# २. सेशन स्टेट मॅनेजमेंट
 if 'page' not in st.session_state: st.session_state.page = "rti"
 
 # RTI व्हेरिएबल्स
@@ -75,7 +72,6 @@ if 'rti_address' not in st.session_state: st.session_state.rti_address = ""
 if 'rti_dept' not in st.session_state: st.session_state.rti_dept = ""
 if 'rti_query' not in st.session_state: st.session_state.rti_query = ""
 if 'rti_result' not in st.session_state: st.session_state.rti_result = ""
-if 'rti_paid' not in st.session_state: st.session_state.rti_paid = False
 
 # तक्रार अर्ज व्हेरिएबल्स
 if 'comp_name' not in st.session_state: st.session_state.comp_name = ""
@@ -84,16 +80,13 @@ if 'comp_dept' not in st.session_state: st.session_state.comp_dept = ""
 if 'comp_subject' not in st.session_state: st.session_state.comp_subject = ""
 if 'comp_query' not in st.session_state: st.session_state.comp_query = ""
 if 'comp_result' not in st.session_state: st.session_state.comp_result = ""
-if 'complaint_paid' not in st.session_state: st.session_state.complaint_paid = False
 
 # ऑनलाइन पोर्टल मसुदा व्हेरिएबल्स
 if 'online_dept' not in st.session_state: st.session_state.online_dept = ""
 if 'online_subject' not in st.session_state: st.session_state.online_subject = ""
 if 'online_query' not in st.session_state: st.session_state.online_query = ""
 if 'online_result' not in st.session_state: st.session_state.online_result = ""
-if 'online_paid' not in st.session_state: st.session_state.online_paid = False
 
-# हिस्ट्री यादी
 if 'history_list' not in st.session_state: st.session_state.history_list = []
 
 # ३. शीर्ष शीर्षक
@@ -136,7 +129,6 @@ with nav3:
         st.session_state.rti_dept = ""
         st.session_state.rti_query = ""
         st.session_state.rti_result = ""
-        st.session_state.rti_paid = False
         
         st.session_state.comp_name = ""
         st.session_state.comp_address = ""
@@ -144,13 +136,11 @@ with nav3:
         st.session_state.comp_subject = ""
         st.session_state.comp_query = ""
         st.session_state.comp_result = ""
-        st.session_state.complaint_paid = False
 
         st.session_state.online_dept = ""
         st.session_state.online_subject = ""
         st.session_state.online_query = ""
         st.session_state.online_result = ""
-        st.session_state.online_paid = False
 
         st.success("सर्व माहिती रिसेट झाली!")
         st.rerun()
@@ -172,6 +162,23 @@ st.markdown(f"""
 st.markdown("---")
 
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
+
+# ऐच्छिक सहकार्य QR कोड दाखवणारे फंक्शन
+def render_voluntary_support_box():
+    upi_id = "satishpradhan3392@ybl"
+    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26cu=INR"
+    
+    st.markdown("---")
+    st.markdown(f"""
+    <div style="background: #F8FAFC; border: 2px dashed #94A3B8; border-radius: 12px; padding: 15px; text-align: center; margin-top: 20px;">
+        <h4 style="color: #1E293B; margin: 0 0 5px 0;">🙏 ॲप आवडल्यास विकासकाला ऐच्छिक सहकार्य करा</h4>
+        <p style="color: #64748B; font-size: 13px; margin: 0 0 10px 0;">सामान्य नागरिकांच्या मदतीसाठी ही सेवा मोफत आहे. आपल्या इच्छेनुसार <b>₹१० ते ₹१०,००,०००</b> पर्यंत सहकार्य करू शकता.</p>
+        <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+            <img src="{qr_url}" width="130" style="border: 2px solid #CBD5E1; border-radius: 8px; padding: 4px; background: white;" />
+        </div>
+        <p style="color: #0F172A; font-weight: bold; font-size: 14px; margin: 0;">UPI ID: <code style="background: #E2E8F0; padding: 3px 8px; border-radius: 6px;">{upi_id}</code></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # १-पान A4 प्रिंट/PDF फंक्शन
 def render_printable_marathi_doc(title, content, theme_color):
@@ -298,27 +305,8 @@ if st.session_state.page == "rti":
         
         st.markdown("---")
         st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
-        
-        if not st.session_state.rti_paid:
-            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि अनलॉक पिन टाका.**")
-            upi_id = "satishpradhan3392@ybl"
-            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
-            
-            c_qr, c_info = st.columns([1, 2])
-            with c_qr:
-                st.image(qr_url, caption="₹१० स्कॅन करा", width=130)
-            with c_info:
-                st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹१०/-")
-                pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="rti_pin")
-                if st.button("🔒 सुरक्षित पडताळणी करून PDF अनलॉक करा", key="unlock_rti"):
-                    if pin_input.strip() == SECRET_PIN:
-                        st.session_state.rti_paid = True
-                        st.success("पडताळणी यशस्वी!")
-                        st.rerun()
-                    else:
-                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
-        else:
-            render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result, "#059669")
+        render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result, "#059669")
+        render_voluntary_support_box()
 
 # ==================== पान २: शासकीय तक्रार ====================
 elif st.session_state.page == "complaint":
@@ -389,27 +377,8 @@ elif st.session_state.page == "complaint":
         
         st.markdown("---")
         st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
-        
-        if not st.session_state.complaint_paid:
-            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि अनलॉक पिन टाका.**")
-            upi_id = "satishpradhan3392@ybl"
-            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
-            
-            c_qr, c_info = st.columns([1, 2])
-            with c_qr:
-                st.image(qr_url, caption="₹१० स्कॅन करा", width=130)
-            with c_info:
-                st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹१०/-")
-                c_pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="comp_pin")
-                if st.button("🔒 सुरक्षित पडताळणी करून PDF अनलॉक करा", key="unlock_complaint"):
-                    if c_pin_input.strip() == SECRET_PIN:
-                        st.session_state.complaint_paid = True
-                        st.success("पडताळणी यशस्वी!")
-                        st.rerun()
-                    else:
-                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
-        else:
-            render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.comp_result, "#DC2626")
+        render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.comp_result, "#DC2626")
+        render_voluntary_support_box()
 
 # ==================== पान ३: ऑनलाइन RTI पोर्टल मसुदा ====================
 elif st.session_state.page == "online_portal":
@@ -489,73 +458,53 @@ elif st.session_state.page == "online_portal":
     if st.session_state.online_result:
         st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे!")
         
-        # ₹५ पेमेंट गेटवे
-        if not st.session_state.online_paid:
-            st.markdown("---")
-            st.info("📌 **हा मसुदा कॉपी करण्यासाठी आणि ऑनलाइन अर्ज भरण्याचे सविस्तर मार्गदर्शन अनलॉक करण्यासाठी केवळ ₹५ पेमेंट करा व अनलॉक पिन टाका.**")
-            upi_id = "satishpradhan3392@ybl"
-            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=5%26cu=INR"
-            
-            c_qr, c_info = st.columns([1, 2])
-            with c_qr:
-                st.image(qr_url, caption="₹५ स्कॅन करा", width=130)
-            with c_info:
-                st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹५/-")
-                o_pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="online_pin")
-                if st.button("🔒 ₹५ पडताळणी करून मसुदा अनलॉक करा", key="unlock_online"):
-                    if o_pin_input.strip() == SECRET_PIN:
-                        st.session_state.online_paid = True
-                        st.success("पडताळणी यशस्वी! मसुदा व पुढील मार्गदर्शन खाली उघडले आहे.")
-                        st.rerun()
-                    else:
-                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
-        else:
-            # अनलॉक झालेला काळा बॉक्स आणि १-क्लिक कॉपी बटण
-            html_clean = st.session_state.online_result.replace('\n', '<br>').replace('"', '&quot;')
-            raw_text_js = st.session_state.online_result.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-            
-            black_box_html = f"""
-            <div style="background-color: #111827; color: #F9FAFB; padding: 20px; border-radius: 12px; border: 2px solid #374151; font-family: sans-serif; line-height: 1.6; font-size: 15px; margin-bottom: 12px;">
-                {html_clean}
-            </div>
-            <div style="text-align: center;">
-                <button onclick="
-                    navigator.clipboard.writeText(`{raw_text_js}`);
-                    alert('✅ मसुदा कॉपी झाला आहे! आता खालील मार्गदर्शनानुसार ऑनलाइन पोर्टलवर पेस्ट करा.');
-                " style="
-                    background: linear-gradient(135deg, #D97706, #F59E0B);
-                    color: white;
-                    padding: 14px 25px;
-                    font-size: 17px;
-                    font-weight: bold;
-                    border: none;
-                    border-radius: 10px;
-                    cursor: pointer;
-                    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
-                    width: 100%;
-                ">
-                    📋 एका क्लिकमध्ये संपूर्ण मसुदा कॉपी करा (Copy Text)
-                </button>
-            </div>
-            """
-            st.components.v1.html(black_box_html, height=300, scrolling=True)
+        # थेट काळा बॉक्स आणि १-क्लिक कॉपी बटण
+        html_clean = st.session_state.online_result.replace('\n', '<br>').replace('"', '&quot;')
+        raw_text_js = st.session_state.online_result.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        
+        black_box_html = f"""
+        <div style="background-color: #111827; color: #F9FAFB; padding: 20px; border-radius: 12px; border: 2px solid #374151; font-family: sans-serif; line-height: 1.6; font-size: 15px; margin-bottom: 12px;">
+            {html_clean}
+        </div>
+        <div style="text-align: center;">
+            <button onclick="
+                navigator.clipboard.writeText(`{raw_text_js}`);
+                alert('✅ मसुदा कॉपी झाला आहे! आता खालील मार्गदर्शनानुसार ऑनलाइन पोर्टलवर पेस्ट करा.');
+            " style="
+                background: linear-gradient(135deg, #D97706, #F59E0B);
+                color: white;
+                padding: 14px 25px;
+                font-size: 17px;
+                font-weight: bold;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+                width: 100%;
+            ">
+                📋 एका क्लिकमध्ये संपूर्ण मसुदा कॉपी करा (Copy Text)
+            </button>
+        </div>
+        """
+        st.components.v1.html(black_box_html, height=300, scrolling=True)
 
-            # ऑनलाइन पोर्टलचे पुढील सविस्तर मार्गदर्शन
-            st.markdown("---")
-            st.markdown("""
-            <div style="background-color: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 15px;">
-                <h4 style="color: #065F46; margin-top: 0;">🌐 ऑनलाइन RTI पोर्टलवर अर्ज भरण्याचे सविस्तर मार्गदर्शन:</h4>
-                <ol style="font-size: 15px; color: #1F2937; line-height: 1.8; padding-left: 20px;">
-                    <li><b>पोर्टल उघडा:</b> महाराष्ट्र शासनाच्या <a href="https://rtionline.maharashtra.gov.in" target="_blank"><b>rtionline.maharashtra.gov.in</b></a> (किंवा केंद्र शासनाच्या <a href="https://rtionline.gov.in" target="_blank"><b>rtionline.gov.in</b></a>) वेबसाईटवर जा.</li>
-                    <li><b>'Submit Request' वर क्लिक करा:</b> होम पेजवर असलेल्या 'नवीन अर्ज दाखल करा' (Submit Request) या पर्यायावर दाबा आणि नियम मान्य (Accept) करा.</li>
-                    <li><b>विभाग निवडा:</b> तुमचा संबंधित विभाग (उदा. महसूल, ग्रामविकास, नगरविकास, पोलीस) ड्रॉपडाऊनमधून निवडा.</li>
-                    <li><b>वैयक्तिक माहिती भरा:</b> तुमचे नाव, पत्ता, मोबाईल नंबर आणि ईमेल आयडी अचूक टाका.</li>
-                    <li><b>मसुदा पेस्ट करा:</b> वर <b>'📋 कॉपी करा'</b> बटण दाबून घेतलेला मसुदा खालील <i>'Text for RTI Request application'</i> या बॉक्समध्ये थेट <b>Paste</b> करा.</li>
-                    <li><b>शासकीय फी भरा:</b> ₹१०/- शासकीय फी भरण्यासाठी UPI / Net Banking पर्याय निवडून पेमेंट पूर्ण करा.</li>
-                    <li><b>नोंदणी क्रमांक (Registration No.) सेव्ह करा:</b> स्क्रीनवर आलेला १५ अंकी RTI नंबर सेव्ह करा; याच नंबरवरून तुम्हाला ३० दिवसांत उत्तर किंवा माहिती मिळेल.</li>
-                </ol>
-            </div>
-            """, unsafe_allow_html=True)
+        # ऑनलाइन पोर्टलचे पुढील सविस्तर मार्गदर्शन
+        st.markdown("---")
+        st.markdown("""
+        <div style="background-color: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 15px;">
+            <h4 style="color: #065F46; margin-top: 0;">🌐 ऑनलाइन RTI पोर्टलवर अर्ज भरण्याचे सविस्तर मार्गदर्शन:</h4>
+            <ol style="font-size: 15px; color: #1F2937; line-height: 1.8; padding-left: 20px;">
+                <li><b>पोर्टल उघडा:</b> महाराष्ट्र शासनाच्या <a href="https://rtionline.maharashtra.gov.in" target="_blank"><b>rtionline.maharashtra.gov.in</b></a> (किंवा केंद्र शासनाच्या <a href="https://rtionline.gov.in" target="_blank"><b>rtionline.gov.in</b></a>) वेबसाईटवर जा.</li>
+                <li><b>'Submit Request' वर क्लिक करा:</b> होम पेजवर असलेल्या 'नवीन अर्ज दाखल करा' (Submit Request) या पर्यायावर दाबा आणि नियम मान्य (Accept) करा.</li>
+                <li><b>विभाग निवडा:</b> तुमचा संबंधित विभाग (उदा. महसूल, ग्रामविकास, नगरविकास, पोलीस) ड्रॉपडाऊनमधून निवडा.</li>
+                <li><b>वैयक्तिक माहिती भरा:</b> तुमचे नाव, पत्ता, मोबाईल नंबर आणि ईमेल आयडी अचूक टाका.</li>
+                <li><b>मसुदा पेस्ट करा:</b> वर <b>'📋 कॉपी करा'</b> बटण दाबून घेतलेला मसुदा खालील <i>'Text for RTI Request application'</i> या बॉक्समध्ये थेट <b>Paste</b> करा.</li>
+                <li><b>शासकीय फी भरा:</b> ₹१०/- शासकीय फी भरण्यासाठी UPI / Net Banking पर्याय निवडून पेमेंट पूर्ण करा.</li>
+                <li><b>नोंदणी क्रमांक (Registration No.) सेव्ह करा:</b> स्क्रीनवर आलेला १५ अंकी RTI नंबर सेव्ह करा; याच नंबरवरून तुम्हाला ३० दिवसांत उत्तर किंवा माहिती मिळेल.</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+        render_voluntary_support_box()
 
 # ==================== पान ४: हिस्ट्री ====================
 elif st.session_state.page == "history":
@@ -573,14 +522,12 @@ elif st.session_state.page == "home":
     <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
         <h3 style="color: #1E40AF; margin-top: 0; font-weight: 800;">🔵 मुख्य माहिती व नियम</h3>
         <ul style="font-size: 15px; color: #1F2937; line-height: 1.8;">
-            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF (शुल्क: ₹१०).</li>
-            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज (शुल्क: ₹१०).</li>
-            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI पोर्टलवर थेट कॉपी-पेस्ट मसुदा आणि अर्ज दाखल करण्याचे सविस्तर मार्गदर्शन (शुल्क: ₹५).</li>
-            <li><b>🔒 १००% सुरक्षित पेमेंट:</b> पैसे जमा झाल्यावरच सुरक्षित पिनद्वारे मसुदा अनलॉक होतो.</li>
+            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF.</li>
+            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज.</li>
+            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI पोर्टलवर १५० शब्दांच्या मर्यादेत थेट कॉपी-पेस्ट करण्यासाठी मसुदा.</li>
             <li><b>📜 माझी हिस्ट्री:</b> तयार केलेले सर्व मसुदे आपोआप सेव्ह राहतात.</li>
             <li><b>🔄 सर्व रिसेट करा:</b> सर्व माहिती एका क्लिकवर पुसून नव्याने सुरुवात करण्यासाठी.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("<p style='font-size: 13px; color: #6B7280; text-align: center;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
-
