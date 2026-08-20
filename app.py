@@ -89,7 +89,7 @@ if 'page' not in st.session_state:
     st.session_state.page = "rti"
 
 # RTI चे सेव्ह व्हेरिएबल्स
-if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)"
+if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')"
 if 'rti_name' not in st.session_state: st.session_state.rti_name = ""
 if 'rti_address' not in st.session_state: st.session_state.rti_address = ""
 if 'rti_dept' not in st.session_state: st.session_state.rti_dept = ""
@@ -121,7 +121,7 @@ st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सह
 st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज, तक्रार व ऑनलाइन पोर्टल मसुदा!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ४. मुख्य ३ मोठे रंगीत बॉक्सेस (🟢 RTI, 🔴 तक्रार, 🟠 ऑनलाइन पोर्टल)
+# ४. मुख्य ३ मोठे रंगीत बॉक्सेस
 col1, col2 = st.columns(2)
 with col1:
     if st.button("🟢 १. RTI अर्ज व अपील\n(ऑफलाइन/टपाल)", key="btn_rti"):
@@ -241,7 +241,7 @@ def render_printable_marathi_doc(title, content, theme_color):
     """
     st.components.v1.html(printable_html, height=540, scrolling=True)
 
-# ==================== पान १: RTI अर्ज ====================
+# ==================== पान १: RTI अर्ज (ऑफलाइन) ====================
 if st.session_state.page == "rti":
     st.markdown("""
     <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
@@ -250,7 +250,6 @@ if st.session_state.page == "rti":
     </div>
     """, unsafe_allow_html=True)
 
-    # सुधारित पर्याय (योग्य कायदेशीर कलमांसह)
     st.session_state.rti_type = st.selectbox(
         "अर्जाचा प्रकार निवडा:",
         [
@@ -382,7 +381,7 @@ elif st.session_state.page == "complaint":
                     except Exception as e:
                         st.error(f"AI त्रुटी: {e}")
                 else:
-                    st.session_state.comp_result = f"""प्रति,
+                    st.session_state.complaint_result = f"""प्रति,
 मा. {st.session_state.comp_dept},
 
 विषय: {st.session_state.comp_subject} बाबत तातडीने कठोर कारवाई करणेबाबत.
@@ -402,7 +401,7 @@ elif st.session_state.page == "complaint":
                 st.session_state.history_list.append({
                     "type": "🔴 तक्रार अर्ज",
                     "title": f"{st.session_state.comp_dept} - {st.session_state.comp_subject}",
-                    "content": st.session_state.comp_result,
+                    "content": st.session_state.complaint_result,
                     "time": datetime.now().strftime("%d-%m-%Y %H:%M")
                 })
 
@@ -443,9 +442,22 @@ elif st.session_state.page == "online_portal":
     </div>
     """, unsafe_allow_html=True)
 
-    st.session_state.online_dept = st.text_input("संबंधित अधिकारी / विभागाचे नाव:", value=st.session_state.online_dept, placeholder="उदा. श्री. महेश महाजन (तलाठी, आधार भवन, जिल्हाधिकारी कार्यालय)")
-    st.session_state.online_subject = st.text_input("माहितीचा मुख्य विषय:", value=st.session_state.online_subject, placeholder="उदा. मूळ नियुक्ती, शैक्षणिक प्रमाणपत्रे व सेवापुस्तिका बाबत")
-    st.session_state.online_query = st.text_area("कोणती माहिती हवी आहे? (मुद्दे साध्या भाषेत लिहा):", value=st.session_state.online_query, placeholder="उदा. शैक्षणिक प्रमाणपत्रे, पडताळणी अहवाल, सेवापुस्तिका, रजेचे रेकॉर्ड, मूळ आदेश")
+    # अधिकृत व सर्वसमावेशक सामान्य उदाहरणे (कोणतेही वैयक्तिक नाव नाही)
+    st.session_state.online_dept = st.text_input(
+        "संबंधित अधिकारी / विभागाचे नाव:",
+        value=st.session_state.online_dept,
+        placeholder="उदा. जन माहिती अधिकारी, महसूल विभाग / ग्रामपंचायत / नगर परिषद कार्यालय"
+    )
+    st.session_state.online_subject = st.text_input(
+        "माहितीचा मुख्य विषय:",
+        value=st.session_state.online_subject,
+        placeholder="उदा. रस्ता बांधकाम निधी, विकासकामे किंवा सेवापुस्तिका तपशील"
+    )
+    st.session_state.online_query = st.text_area(
+        "कोणती माहिती हवी आहे? (मुद्दे साध्या भाषेत लिहा):",
+        value=st.session_state.online_query,
+        placeholder="उदा. कामाचे अंदाजपत्रक, खर्च, देयके, मोजमाप पुस्तिका व संबंधित आदेशाची प्रत"
+    )
 
     if st.button("🚀 ऑनलाइन पोर्टल मसुदा तयार करा"):
         if not st.session_state.online_dept or not st.session_state.online_query:
