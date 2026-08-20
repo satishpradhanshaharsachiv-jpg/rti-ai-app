@@ -6,7 +6,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
-# १. पेज कॉन्फिगरेशन आणि आकर्षक रंगीत स्टाईल
+# १. पेज कॉन्फिगरेशन आणि डिझाईन स्टाईल
 st.set_page_config(page_title="RTI & Complaint AI Assistant", page_icon="📜", layout="centered")
 
 hide_streamlit_style = """
@@ -19,8 +19,10 @@ h2 { color: #047857; font-weight: bold; }
 .stButton>button {
     font-size: 18px !important;
     font-weight: bold !important;
-    padding: 10px 24px !important;
-    border-radius: 10px !important;
+    padding: 12px 20px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    width: 100%;
 }
 </style>
 """
@@ -46,17 +48,33 @@ def generate_pdf(content_text):
     buffer.seek(0)
     return buffer
 
-# ३. मुख्य पानावर मोठे पर्याय (Radio Buttons with Custom Style)
+# ३. सेशन स्टेटद्वारे पानांचे व्यवस्थापन (मोठ्या बटनांसाठी)
+if 'page' not in st.session_state:
+    st.session_state.page = "🏠 मुख्य पान व माहिती"
+
 st.markdown("<h1 style='text-align: center; color: #B91C1C;'>🏛️ RTI व तक्रार अर्ज AI सहाय्यक</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>घरबसल्या सहज तयार करा कायदेशीर RTI अर्ज, अपील आणि शासकीय तक्रार अर्ज!</p>", unsafe_allow_html=True)
+st.markdown("---")
 
-page = st.radio(
-    "👉 खालीलपैकी हवा असलेला पर्याय निवडा:", 
-    ["🏠 मुख्य पान व माहिती", "📜 RTI अर्ज व अपील तयार करा", "📝 तक्रार अर्ज तयार करा"], 
-    horizontal=True
-)
+# मोठे रंगीत नेव्हिगेशन बटन्स (रेश किंवा वर्तुळ नाही, तर थेट मोठे टच बटन्स)
+st.markdown("<h3 style='text-align: center; color: #374151;'>👇 पुढील पानावर जाण्यासाठी खालील बटनावर टच करा:</h3>", unsafe_allow_html=True)
+col_b1, col_b2, col_b3 = st.columns(3)
+
+with col_b1:
+    if st.button("🏠 मुख्य पान"):
+        st.session_state.page = "🏠 मुख्य पान व माहिती"
+        st.rerun()
+with col_b2:
+    if st.button("📜 RTI अर्ज"):
+        st.session_state.page = "📜 RTI अर्ज व अपील तयार करा"
+        st.rerun()
+with col_b3:
+    if st.button("📝 तक्रार अर्ज"):
+        st.session_state.page = "📝 तक्रार अर्ज तयार करा"
+        st.rerun()
 
 st.markdown("---")
+page = st.session_state.page
 
 # ४. मुख्य पान (Home Page)
 if page == "🏠 मुख्य पान व माहिती":
@@ -64,27 +82,39 @@ if page == "🏠 मुख्य पान व माहिती":
     st.markdown("### 📋 **१. आरटीआय (RTI) अर्ज व अपील**")
     st.write("माहिती अधिकार कायदा २००५ अंतर्गत मूळ अर्ज, प्रथम अपील आणि द्वितीय अपील झटपट तयार करा.")
     
-    data_text = "🏛️ RTI व तक्रार अर्ज AI सहाय्यक - आता घरबसल्या मोबाईलवरून आरटीआय आणि तक्रार अर्ज तयार करा! लिंक उघडा:"
-    app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
-    
     st.markdown("### 📝 **२. शासकीय तक्रार अर्ज**")
     st.write("शासकीय कार्यालयातील दिरंगाई, समस्या किंवा तक्रारीसाठी थेट कायदेशीर अर्ज तयार करा.")
     
     st.markdown("---")
     st.markdown("## 🌐 हे ॲप आपल्या मित्रांना आणि सोशल मीडियावर शेअर करा:")
     
-    # सोशल मीडिया शेअरिंग बटन्स (WhatsApp, Facebook, Telegram)
+    data_text = "🏛️ RTI व तक्रार अर्ज AI सहाय्यक - आता घरबसल्या मोबाईलवरून आरटीआय आणि तक्रार अर्ज तयार करा! लिंक उघडा:"
+    app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
+    
     whatsapp_url = f"https://api.whatsapp.com/send?text={data_text} {app_url}"
     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={app_url}"
     telegram_url = f"https://t.me/share/url?url={app_url}&text={data_text}"
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="background-color:#25D366; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; width:100%;">💬 WhatsApp</button></a>', unsafe_allow_html=True)
-    with col2:
-        st.markdown(f'<a href="{facebook_url}" target="_blank"><button style="background-color:#1877F2; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; width:100%;">📘 Facebook</button></a>', unsafe_allow_html=True)
-    with col3:
-        st.markdown(f'<a href="{telegram_url}" target="_blank"><button style="background-color:#0088cc; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; width:100%;">✈️ Telegram</button></a>', unsafe_allow_html=True)
+    # एकदम मोठे, आकर्षक आणि डिझायनर शेअर बटनार (WhatsApp, Facebook, Telegram)
+    st.markdown(f"""
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+            <a href="{whatsapp_url}" target="_blank" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    💬 WhatsApp वर भव्य शेअर करा
+                </div>
+            </a>
+            <a href="{facebook_url}" target="_blank" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #1877F2, #0d56b3); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    📘 Facebook वर शेअर करा
+                </div>
+            </a>
+            <a href="{telegram_url}" target="_blank" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #0088cc, #005f8f); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    ✈️ Telegram / इतर ॲप्सवर शेअर करा
+                </div>
+            </a>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 👤 विकासक व संपर्क माहिती:")
@@ -97,7 +127,6 @@ if page == "🏠 मुख्य पान व माहिती":
 elif page == "📜 RTI अर्ज व अपील तयार करा":
     st.markdown("<h2>📜 RTI अर्ज व अपील मसुदा तयार करा</h2>", unsafe_allow_html=True)
     
-    # Gemini API Key स्पष्टपणे दिसण्यासाठी
     st.sidebar.markdown("### 🔑 AI सेटिंग्ज")
     api_key = st.sidebar.text_input("Gemini API Key टाका (AI मसुद्यासाठी):", type="password")
 
@@ -192,7 +221,7 @@ elif page == "📜 RTI अर्ज व अपील तयार करा":
                 filename_prefix = "Jodpatra_C_Second_Appeal"
             else:
                 if not api_key:
-                    st.error("AI मसुद्यासाठी कृपया डावीकडील मेनूमध्ये/साईटबारमध्ये Gemini API Key प्रविष्ट करा.")
+                    st.error("AI मसुद्यासाठी कृपया साईडबारमध्ये Gemini API Key प्रविष्ट करा.")
                 else:
                     try:
                         genai.configure(api_key=api_key)
@@ -214,7 +243,7 @@ elif page == "📜 RTI अर्ज व अपील तयार करा":
 
 # ६. तक्रार अर्ज तयार करण्याचे नवीन पान (Complaint Form)
 elif page == "📝 तक्रार अर्ज तयार करा":
-    st.markdown("<h2>📝 शासकीय तक्रार अर्ज तयार करा</h2>", style="color: #B91C1C;")
+    st.markdown("<h2>📝 शासकीय तक्रार अर्ज तयार करा</h2>", unsafe_allow_html=True)
     
     COMPLAINT_TEMPLATE = """शासकीय तक्रार अर्ज
 
@@ -266,4 +295,3 @@ elif page == "📝 तक्रार अर्ज तयार करा":
             c_pdf = generate_pdf(complaint_text)
             st.download_button("📥 तक्रार अर्ज PDF डाउनलोड करा", data=c_pdf, file_name=f"Complaint_Application_{c_name}.pdf", mime="application/pdf")
             st.download_button("📄 Text (.txt) फाईल डाउनलोड करा", data=complaint_text, file_name=f"Complaint_Application_{c_name}.txt", mime="text/plain")
-
