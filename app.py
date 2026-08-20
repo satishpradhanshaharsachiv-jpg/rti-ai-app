@@ -88,7 +88,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 if 'page' not in st.session_state:
     st.session_state.page = "rti"
 
-# RTI चे सेव्ह व्हेरिएबल्स
+# RTI व्हेरिएबल्स
 if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')"
 if 'rti_name' not in st.session_state: st.session_state.rti_name = ""
 if 'rti_address' not in st.session_state: st.session_state.rti_address = ""
@@ -97,7 +97,7 @@ if 'rti_query' not in st.session_state: st.session_state.rti_query = ""
 if 'rti_result' not in st.session_state: st.session_state.rti_result = ""
 if 'rti_paid' not in st.session_state: st.session_state.rti_paid = False
 
-# तक्रार अर्जाचे सेव्ह व्हेरिएबल्स
+# तक्रार अर्ज व्हेरिएबल्स
 if 'comp_name' not in st.session_state: st.session_state.comp_name = ""
 if 'comp_address' not in st.session_state: st.session_state.comp_address = ""
 if 'comp_dept' not in st.session_state: st.session_state.comp_dept = ""
@@ -111,8 +111,9 @@ if 'online_dept' not in st.session_state: st.session_state.online_dept = ""
 if 'online_subject' not in st.session_state: st.session_state.online_subject = ""
 if 'online_query' not in st.session_state: st.session_state.online_query = ""
 if 'online_result' not in st.session_state: st.session_state.online_result = ""
+if 'online_paid' not in st.session_state: st.session_state.online_paid = False
 
-# सेव्ह केलेली हिस्ट्री
+# हिस्ट्री यादी
 if 'history_list' not in st.session_state:
     st.session_state.history_list = []
 
@@ -172,6 +173,7 @@ with nav3:
         st.session_state.online_subject = ""
         st.session_state.online_query = ""
         st.session_state.online_result = ""
+        st.session_state.online_paid = False
 
         st.success("सर्व माहिती रिसेट झाली!")
         st.rerun()
@@ -442,7 +444,6 @@ elif st.session_state.page == "online_portal":
     </div>
     """, unsafe_allow_html=True)
 
-    # अधिकृत व सर्वसमावेशक सामान्य उदाहरणे (कोणतेही वैयक्तिक नाव नाही)
     st.session_state.online_dept = st.text_input(
         "संबंधित अधिकारी / विभागाचे नाव:",
         value=st.session_state.online_dept,
@@ -510,9 +511,75 @@ elif st.session_state.page == "online_portal":
                 })
 
     if st.session_state.online_result:
-        st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे! (खालील काळ्या बॉक्समधून थेट कॉपी करा)")
-        st.code(st.session_state.online_result, language="text")
-        st.info("💡 **टीप:** वरील काळ्या बॉक्सच्या उजव्या बाजूला असलेल्या **कॉपी चिन्हावर (📋 Copy)** क्लिक करा आणि शासनाच्या ऑनलाइन RTI पोर्टलच्या मजकूर बॉक्समध्ये (Text Box) थेट **Paste** करा.")
+        st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे!")
+        
+        # ₹५ पेमेंट गेटवे
+        if not st.session_state.online_paid:
+            st.markdown("---")
+            st.info("📌 **हा मसुदा कॉपी करण्यासाठी आणि ऑनलाइन अर्ज भरण्याचे सविस्तर मार्गदर्शन अनलॉक करण्यासाठी केवळ ₹५ पेमेंट करा.**")
+            upi_id = "satishpradhan3392@ybl"
+            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=5%26cu=INR"
+            
+            c_qr, c_info = st.columns([1, 2])
+            with c_qr:
+                st.image(qr_url, caption="₹५ स्कॅन करा", width=130)
+            with c_info:
+                st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹५/-")
+                o_utr_input = st.text_input("पेमेंट झाल्यावर १२-अंकी UTR / Ref No. टाका:", max_chars=12, key="online_utr")
+                if st.button("🔒 ₹५ पेमेंट पडताळणी करून मसुदा अनलॉक करा", key="unlock_online"):
+                    if len(o_utr_input.strip()) == 12 and o_utr_input.strip().isdigit():
+                        st.session_state.online_paid = True
+                        st.success("पेमेंट पडताळणी यशस्वी! मसुदा व पुढील मार्गदर्शन खाली उघडले आहे.")
+                        st.rerun()
+                    else:
+                        st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
+        else:
+            # अनलॉक झालेला काळा बॉक्स आणि १-क्लिक कॉपी बटण
+            html_clean = st.session_state.online_result.replace('\n', '<br>').replace('"', '&quot;')
+            raw_text_js = st.session_state.online_result.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+            
+            black_box_html = f"""
+            <div style="background-color: #111827; color: #F9FAFB; padding: 20px; border-radius: 12px; border: 2px solid #374151; font-family: sans-serif; line-height: 1.6; font-size: 15px; margin-bottom: 12px;">
+                {html_clean}
+            </div>
+            <div style="text-align: center;">
+                <button onclick="
+                    navigator.clipboard.writeText(`{raw_text_js}`);
+                    alert('✅ मसुदा कॉपी झाला आहे! आता खालील मार्गदर्शनानुसार ऑनलाइन पोर्टलवर पेस्ट करा.');
+                " style="
+                    background: linear-gradient(135deg, #D97706, #F59E0B);
+                    color: white;
+                    padding: 14px 25px;
+                    font-size: 17px;
+                    font-weight: bold;
+                    border: none;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+                    width: 100%;
+                ">
+                    📋 एका क्लिकमध्ये संपूर्ण मसुदा कॉपी करा (Copy Text)
+                </button>
+            </div>
+            """
+            st.components.v1.html(black_box_html, height=300, scrolling=True)
+
+            # ऑनलाइन पोर्टलचे पुढील सविस्तर मार्गदर्शन
+            st.markdown("---")
+            st.markdown("""
+            <div style="background-color: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 15px;">
+                <h4 style="color: #065F46; margin-top: 0;">🌐 ऑनलाइन RTI पोर्टलवर अर्ज भरण्याचे सविस्तर मार्गदर्शन:</h4>
+                <ol style="font-size: 15px; color: #1F2937; line-height: 1.8; padding-left: 20px;">
+                    <li><b>पोर्टल उघडा:</b> महाराष्ट्र शासनाच्या <a href="https://rtionline.maharashtra.gov.in" target="_blank"><b>rtionline.maharashtra.gov.in</b></a> (किंवा केंद्र शासनाच्या <a href="https://rtionline.gov.in" target="_blank"><b>rtionline.gov.in</b></a>) वेबसाईटवर जा.</li>
+                    <li><b>'Submit Request' वर क्लिक करा:</b> होम पेजवर असलेल्या 'नवीन अर्ज दाखल करा' (Submit Request) या पर्यायावर दाबा आणि नियम मान्य (Accept) करा.</li>
+                    <li><b>विभाग निवडा:</b> तुमचा संबंधित विभाग (उदा. महसूल, ग्रामविकास, नगरविकास, पोलीस) ड्रॉपडाऊनमधून निवडा.</li>
+                    <li><b>वैयक्तिक माहिती भरा:</b> तुमचे नाव, पत्ता, मोबाईल नंबर आणि ईमेल आयडी अचूक टाका.</li>
+                    <li><b>मसुदा पेस्ट करा:</b> वर <b>'📋 कॉपी करा'</b> बटण दाबून घेतलेला मसुदा खालील <i>'Text for RTI Request application'</i> या बॉक्समध्ये थेट <b>Paste</b> करा.</li>
+                    <li><b>शासकीय फी भरा:</b> ₹१०/- शासकीय फी भरण्यासाठी UPI / Net Banking पर्याय निवडून पेमेंट पूर्ण करा.</li>
+                    <li><b>नोंदणी क्रमांक (Registration No.) सेव्ह करा:</b> स्क्रीनवर आलेला १५ अंकी RTI नंबर सेव्ह करा; याच नंबरवरून तुम्हाला ३० दिवसांत उत्तर किंवा माहिती मिळेल.</li>
+                </ol>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ==================== पान ४: हिस्ट्री ====================
 elif st.session_state.page == "history":
@@ -530,9 +597,9 @@ elif st.session_state.page == "home":
     <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
         <h3 style="color: #1E40AF; margin-top: 0; font-weight: 800;">🔵 मुख्य माहिती व नियम</h3>
         <ul style="font-size: 15px; color: #1F2937; line-height: 1.8;">
-            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF.</li>
-            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज.</li>
-            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI / केंद्र सरकारच्या पोर्टलवर १५० शब्दांच्या मर्यादेत थेट कॉपी-पेस्ट करण्यासाठी मसुदा.</li>
+            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF (शुल्क: ₹१०).</li>
+            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज (शुल्क: ₹१०).</li>
+            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI पोर्टलवर थेट कॉपी-पेस्ट मसुदा आणि अर्ज दाखल करण्याचे सविस्तर मार्गदर्शन (शुल्क: ₹५).</li>
             <li><b>📜 माझी हिस्ट्री:</b> तयार केलेले सर्व मसुदे आपोआप सेव्ह राहतात.</li>
             <li><b>🔄 सर्व रिसेट करा:</b> सर्व माहिती एका क्लिकवर पुसून नव्याने सुरुवात करण्यासाठी.</li>
         </ul>
