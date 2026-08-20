@@ -1,4 +1,3 @@
-
 import io
 import streamlit as st
 import google.generativeai as genai
@@ -7,14 +6,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 
-# १. पेज कॉन्फिगरेशन आणि स्टाईल
+# १. पेज कॉन्फिगरेशन (फक्त ॲपचे नाव)
 st.set_page_config(page_title="RTI AI Assistant", page_icon="📜", layout="centered")
 
+# (इथे हेडर लपवला नाही, जेणेकरून कोणतीही अडचण येणार नाही)
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-header {visibility: hidden;}
 [data-testid="stToolbar"] {visibility: hidden; display: none;}
 </style>
 """
@@ -40,11 +39,11 @@ def generate_rti_pdf(content_text, title="RTI Document"):
     buffer.seek(0)
     return buffer
 
-# ३. साईडबार मेनू
-menu = st.sidebar.selectbox("मेनू निवडा", ["मुख्य पान (Home)", "RTI अर्ज व अपील तयार करा"])
+# ३. मुख्य पानावरच सोपे रेडिओ बटण (मोबाईलसाठी अतिशय सोपे)
+page = st.radio("पेच निवडा:", ["🏛️ मुख्य पान (Home)", "📜 RTI अर्ज व अपील तयार करा"], horizontal=True)
 
 # ४. मुख्य पान (Home Page)
-if menu == "मुख्य पान (Home)":
+if page == "🏛️ मुख्य पान (Home)":
     st.title("🏛️ RTI AI अर्ज व अपील सहाय्यक")
     st.markdown("### माहिती अधिकार कायदा (RTI) - घरबसल्या अर्ज तयार करा!")
     st.markdown("---")
@@ -59,12 +58,12 @@ if menu == "मुख्य पान (Home)":
     st.markdown("**मोबाईल नंबर:** ८६६८२३५३९५")
     st.markdown("**ईमेल:** Satishpradhan.shaharsachiv@gmail.com")
     st.markdown("---")
-    st.info("💡 अर्ज तयार करण्यासाठी डावीकडील मेनूमधून **'RTI अर्ज व अपील तयार करा'** हा पर्याय निवडा.")
+    st.success("👆 अर्ज तयार करण्यासाठी वर दिलेल्या **'📜 RTI अर्ज व अपील तयार करा'** या पर्यायावर टच करा!")
 
 # ५. अर्ज तयार करण्याचे पान (App Logic)
-elif menu == "RTI अर्ज व अपील तयार करा":
+elif page == "📜 RTI अर्ज व अपील तयार करा":
     st.title("📜 AI RTI अर्ज व अपील सहाय्यक")
-    api_key = st.sidebar.text_input("Gemini API Key टाका:", type="password")
+    api_key = st.text_input("Gemini API Key टाका (पर्यायी):", type="password")
 
     JODPATRA_A = """जोडपत्र - 'अ' (नियम ३ पहा)
 माहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील माहिती मिळवण्यासाठीचा अर्ज.
@@ -154,10 +153,10 @@ elif menu == "RTI अर्ज व अपील तयार करा":
                 filename_prefix = "Jodpatra_B_First_Appeal"
             elif "जोडपत्र क" in doc_type:
                 final_text = JODPATRA_C.format(user_name=user_name, user_address=user_address, dept_name=dept_name, query=query)
-                filename_prefix = "Jodpatra_C_Second_Appeal"
+                filename_prefix = "Jodpatra_Jodpatra_C_Second_Appeal"
             else:
                 if not api_key:
-                    st.error("AI मसुद्यासाठी कृपया साइडबारमध्ये Gemini API Key प्रविष्ट करा.")
+                    st.error("AI मसुद्यासाठी कृपया Gemini API Key प्रविष्ट करा.")
                 else:
                     try:
                         genai.configure(api_key=api_key)
