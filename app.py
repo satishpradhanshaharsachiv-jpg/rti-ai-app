@@ -2,20 +2,17 @@ import streamlit as st
 import google.generativeai as genai
 import urllib.parse
 
-# १. पेज कॉन्फिगरेशन
-st.set_page_config(page_title="RTI & Complaint AI Assistant", page_icon="🏛️", layout="centered")
+# १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
+st.set_page_config(page_title="RTI व तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
-# २. संपूर्ण ॲपसाठी मराठी फॉन्ट, रंगीबेरंगी डिझाइन आणि वॉटरमार्क लपवणे
-custom_ui_style = """
-<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&display=swap" rel="stylesheet">
-
+custom_css = """
 <style>
-/* सर्व मजकुरासाठी मराठी फॉन्ट */
+@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&display=swap');
+
 * {
     font-family: 'Mukta', sans-serif !important;
 }
 
-/* Streamlit ब्रँडिंग आणि मेनू पूर्णपणे लपवणे */
 #MainMenu {visibility: hidden; display: none;}
 footer {visibility: hidden; display: none;}
 header {visibility: hidden; display: none;}
@@ -25,84 +22,51 @@ header {visibility: hidden; display: none;}
 div[class^="viewerBadge"] {visibility: hidden; display: none !important;}
 button[title="View source"] {display: none;}
 
-/* मुख्य शीर्षक */
-.main-header {
-    background: linear-gradient(135deg, #1E3A8A, #3B82F6);
-    color: white;
-    padding: 20px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 6px 15px rgba(30, 58, 138, 0.3);
-    margin-bottom: 20px;
-}
-.main-header h1 {
-    color: #FFFFFF !important;
-    font-size: 26px !important;
-    font-weight: 800 !important;
-    margin: 0;
-}
-.main-header p {
-    color: #E0E7FF !important;
-    font-size: 15px !important;
-    margin-top: 6px;
-    font-weight: 600;
-}
+h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 26px; margin-bottom: 2px; }
 
-/* नेव्हिगेशन बटनांचे वेगवेगळे रंग */
-.btn-rti div.stButton > button {
+/* 🟢 हिरवे RTI बटन */
+.rti-box div.stButton > button {
     background: linear-gradient(135deg, #059669, #10B981) !important;
-    color: #FFFFFF !important;
-    font-size: 20px !important;
+    color: white !important;
+    font-size: 22px !important;
     font-weight: 800 !important;
-    height: 65px !important;
-    border-radius: 14px !important;
-    border: none !important;
-    box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35) !important;
+    height: 80px !important;
+    border-radius: 16px !important;
+    border: 2px solid #047857 !important;
+    box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4) !important;
+    margin-bottom: 12px !important;
 }
 
-.btn-complaint div.stButton > button {
-    background: linear-gradient(135deg, #DC2626, #F97316) !important;
-    color: #FFFFFF !important;
-    font-size: 20px !important;
+/* 🔴 लाल तक्रार बटन */
+.comp-box div.stButton > button {
+    background: linear-gradient(135deg, #DC2626, #EF4444) !important;
+    color: white !important;
+    font-size: 22px !important;
     font-weight: 800 !important;
-    height: 65px !important;
-    border-radius: 14px !important;
-    border: none !important;
-    box-shadow: 0 6px 14px rgba(220, 38, 38, 0.35) !important;
+    height: 80px !important;
+    border-radius: 16px !important;
+    border: 2px solid #B91C1C !important;
+    box-shadow: 0 6px 15px rgba(220, 38, 38, 0.4) !important;
+    margin-bottom: 12px !important;
 }
 
-.btn-home div.stButton > button {
-    background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
-    color: #FFFFFF !important;
-    font-size: 17px !important;
+/* 🔵 निळे माहिती बटन */
+.home-box div.stButton > button {
+    background: linear-gradient(135deg, #1E40AF, #3B82F6) !important;
+    color: white !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
-    height: 50px !important;
+    height: 55px !important;
     border-radius: 12px !important;
-    border: none !important;
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25) !important;
-}
-
-/* फॉर्म विभागांचे रंगीत बॉक्सेस */
-.rti-card {
-    background: #ECFDF5;
-    border: 2px solid #10B981;
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 20px;
-}
-
-.complaint-card {
-    background: #FFF7ED;
-    border: 2px solid #F97316;
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 20px;
+    border: 2px solid #1E3A8A !important;
+    box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3) !important;
+    margin-bottom: 12px !important;
 }
 </style>
 """
-st.markdown(custom_ui_style, unsafe_allow_html=True)
+st.markdown(custom_css, unsafe_allow_html=True)
 
-# ३. सेशन स्टेट
+# २. सेशन स्टेट
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 if 'rti_paid' not in st.session_state:
@@ -110,41 +74,33 @@ if 'rti_paid' not in st.session_state:
 if 'complaint_paid' not in st.session_state:
     st.session_state.complaint_paid = False
 
-# मुख्य रंगीबेरंगी बॅनर
-st.markdown("""
-<div class="main-header">
-    <h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>
-    <p>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 15px; font-weight: bold; color: #374151;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
+st.markdown("---")
 
-# ४. मोठी आणि ठळक रंगीबेरंगी नेव्हिगेशन बटने
-st.markdown('<div class="btn-rti">', unsafe_allow_html=True)
-if st.button("📜 RTI अर्ज व अपील तयार करा"):
+# ३. ठळक व मोठ्या रंगांची बटने (फोनवर सांगण्यासाठी अतिशय सोपे)
+st.markdown('<div class="rti-box">', unsafe_allow_html=True)
+if st.button("🟢 १. RTI अर्ज व अपील (हिरवे बटन दाबा)"):
     st.session_state.page = "rti"
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.write("")
-
-st.markdown('<div class="btn-complaint">', unsafe_allow_html=True)
-if st.button("📝 शासकीय तक्रार अर्ज तयार करा"):
+st.markdown('<div class="comp-box">', unsafe_allow_html=True)
+if st.button("🔴 २. शासकीय तक्रार अर्ज (लाल बटन दाबा)"):
     st.session_state.page = "complaint"
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.write("")
-
-st.markdown('<div class="btn-home">', unsafe_allow_html=True)
-if st.button("🏠 मुख्य पान व माहिती"):
+st.markdown('<div class="home-box">', unsafe_allow_html=True)
+if st.button("🔵 ३. मुख्य माहिती व नियम (निळे बटन दाबा)"):
     st.session_state.page = "home"
 st.markdown('</div>', unsafe_allow_html=True)
 
 # WhatsApp शेअर बटण
 app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
-share_msg = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
+share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
 st.markdown(f"""
-    <div style="margin: 15px 0;">
-        <a href="https://api.whatsapp.com/send?text={share_msg}" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 12px; border-radius: 12px; text-align: center; font-size: 16px; font-weight: 800; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.35);">
+    <div style="margin: 10px 0 15px 0;">
+        <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" style="text-decoration: none;">
+            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 12px; border-radius: 12px; text-align: center; font-size: 17px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
                 📲 WhatsApp वर मित्रांना शेअर करा
             </div>
         </a>
@@ -156,8 +112,8 @@ st.markdown("---")
 # API Key इनपुट (साइडबार)
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 
-# १-पान A4 PDF / प्रिंट तयार करण्याचे HTML फंक्शन (शुद्ध मराठी फॉन्ट)
-def render_printable_marathi_doc(title, content):
+# ४. शुद्ध मराठी १-पान A4 PDF / प्रिंट तयार करण्याचे HTML फंक्शन
+def render_printable_marathi_doc(title, content, theme_color):
     html_content = content.replace('\n', '<br>')
     printable_html = f"""
     <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap" rel="stylesheet">
@@ -166,15 +122,15 @@ def render_printable_marathi_doc(title, content):
         background: #ffffff;
         color: #000000;
         padding: 30px 40px;
-        border: 2px solid #000000;
-        border-radius: 6px;
+        border: 3px solid {theme_color};
+        border-radius: 8px;
         line-height: 1.6;
         font-size: 15px;
         max-width: 750px;
         margin: 15px auto;
         box-sizing: border-box;
     ">
-        <h3 style="text-align: center; font-size: 18px; margin-bottom: 20px; text-decoration: underline; color: #000000;">{title}</h3>
+        <h3 style="text-align: center; font-size: 18px; margin-bottom: 20px; color: {theme_color}; text-decoration: underline;">{title}</h3>
         <div>{html_content}</div>
     </div>
     <div style="text-align: center; margin-top: 15px;">
@@ -186,13 +142,13 @@ def render_printable_marathi_doc(title, content):
             document.body.innerHTML = originalContent;
             window.location.reload();
         " style="
-            background: #1E3A8A;
+            background: {theme_color};
             color: white;
-            padding: 14px 28px;
-            font-size: 17px;
+            padding: 14px 30px;
+            font-size: 18px;
             font-weight: bold;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0,0,0,0.25);
         ">
@@ -200,27 +156,29 @@ def render_printable_marathi_doc(title, content):
         </button>
     </div>
     """
-    st.components.v1.html(printable_html, height=530, scrolling=True)
+    st.components.v1.html(printable_html, height=540, scrolling=True)
 
-# ==================== पान १: मुख्य पान ====================
+# ==================== पान १: मुख्य माहिती ====================
 if st.session_state.page == "home":
     st.markdown("""
-    <div style="background: #EEF2FF; border-left: 5px solid #4F46E5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #1E3A8A; margin: 0 0 10px 0;">📌 ॲपची ठळक वैशिष्ट्ये:</h3>
-        <p style="margin: 5px 0; color: #374151;">✔️ <b>कायदेशीर अचूकता:</b> RTI कायदा कलम ६(१), ६(३), ७(१) व २०(१) नुसार अचूक मसुदा.</p>
-        <p style="margin: 5px 0; color: #374151;">✔️ <b>१ पान मर्यादा:</b> थेट प्रिंट काढण्यासाठी एकाच A4 पानावर सुबक मांडणी.</p>
-        <p style="margin: 5px 0; color: #374151;">✔️ <b>अक्षरांची शुद्धता:</b> सर्व मराठी जोडाक्षरे १००% स्पष्ट व वाचनीय.</p>
-        <p style="margin: 5px 0; color: #374151;">✔️ <b>शुल्क:</b> मसुदा तयार करणे मोफत; A4 PDF डाऊनलोडसाठी नाममात्र <b>₹१०</b> शुल्क.</p>
+    <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+        <h3 style="color: #1E40AF; margin-top: 0;">🔵 मुख्य माहिती व नियम</h3>
+        <ul style="font-size: 16px; color: #1F2937; line-height: 1.8;">
+            <li><b>🟢 हिरवे बटन (RTI अर्ज):</b> ग्रामपंचायत, नगरपालिका, महसूल, पोलीस अशा कोणत्याही विभागाकडून अधिकृत माहिती मागवण्यासाठी.</li>
+            <li><b>🔴 लाल बटन (तक्रार अर्ज):</b> शासकीय कामातील दिरंगाई, रस्ता, पाणी, भ्रष्टाचार यांविरोधात कडक तक्रार मसुदा तयार करण्यासाठी.</li>
+            <li><b>📄 १ पान A4 PDF:</b> तयार होणारा अर्ज थेट १ पानात प्रिंट / सेव्ह होतो.</li>
+            <li><b>💰 शुल्क:</b> मसुदा तयार करणे मोफत आहे. अधिकृत प्रिंट-रेडी PDF डाऊनलोड करण्यासाठी केवळ <b>₹१०</b> नाममात्र शुल्क आहे.</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("<p style='font-size: 13px; color: #6B7280;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 13px; color: #6B7280; text-align: center;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
 
 # ==================== पान २: RTI अर्ज ====================
 elif st.session_state.page == "rti":
     st.markdown("""
-    <div class="rti-card">
-        <h2 style="color: #065F46; margin: 0 0 5px 0; font-size: 22px;">📜 RTI अर्ज व प्रथम/द्वितीय अपील मसुदा</h2>
-        <p style="color: #047857; margin: 0; font-weight: 600;">खालील फॉर्ममध्ये माहिती भरा आणि कायदेशीर कलमांसह अर्ज तयार करा.</p>
+    <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <h3 style="color: #065F46; margin: 0;">🟢 RTI अर्ज व अपील विभाग</h3>
+        <p style="color: #047857; margin: 5px 0 0 0; font-weight: bold;">कलम ६(१), प्रथम व द्वितीय अपीलाचा परिपूर्ण मसुदा तयार करा.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -257,7 +215,7 @@ elif st.session_state.page == "rti":
 
 नियम:
 १. कलम ६(१), कलम ६(३) (५ दिवसांत वर्ग करणे), कलम ७(१) (३० दिवसांची मुदत) व ₹१० कोर्ट फी स्टॅम्पचा स्पष्ट उल्लेख असावा.
-२. भाषा अत्यंत अधिकृत, संक्षिप्त व स्पष्ट असावी जेणेकरून मजकूर १ पानात बसेल.
+२. भाषा अत्यंत अधिकृत, संक्षिप्त व स्पष्ट असावी जेणेकरून मजकूर एकाच A4 पानात बसेल.
 """
                         res = model.generate_content(prompt, generation_config={"temperature": 0.2})
                         st.session_state.rti_result = res.text
@@ -311,14 +269,14 @@ elif st.session_state.page == "rti":
                     else:
                         st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
         else:
-            render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result)
+            render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result, "#059669")
 
 # ==================== पान ३: शासकीय तक्रार ====================
 elif st.session_state.page == "complaint":
     st.markdown("""
-    <div class="complaint-card">
-        <h2 style="color: #9A3412; margin: 0 0 5px 0; font-size: 22px;">📝 शासकीय तक्रार अर्ज तयार करा</h2>
-        <p style="color: #C2410C; margin: 0; font-weight: 600;">प्रशासकीय दिरंगाई व गैरव्यवहाराविरुद्ध कडक तक्रार मसुदा बनवा.</p>
+    <div style="background: #FEF2F2; border-left: 6px solid #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <h3 style="color: #991B1B; margin: 0;">🔴 शासकीय तक्रार अर्ज विभाग</h3>
+        <p style="color: #B91C1C; margin: 5px 0 0 0; font-weight: bold;">प्रशासकीय दिरंगाई व समस्यांविरुद्ध कडक तक्रार अर्ज तयार करा.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -397,4 +355,4 @@ elif st.session_state.page == "complaint":
                     else:
                         st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
         else:
-            render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.complaint_result)
+            render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.complaint_result, "#DC2626")
