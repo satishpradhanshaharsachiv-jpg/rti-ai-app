@@ -1,41 +1,80 @@
 import io
+import os
+import urllib.request
 import urllib.parse
 import streamlit as st
 import google.generativeai as genai
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
-# १. पेज कॉन्फिगरेशन
+# १. पेज कॉन्फिगरेशन आणि CSS डिझाइन
 st.set_page_config(page_title="RTI & तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
-# CSS स्टाईल
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 [data-testid="stToolbar"] {visibility: hidden; display: none;}
-h1 { color: #1E3A8A; font-weight: bold; text-align: center; font-size: 26px; }
-.stButton>button { width: 100%; border-radius: 12px; height: 50px; font-weight: bold; font-size: 16px; }
+h1 { color: #1E3A8A; font-weight: bold; text-align: center; font-size: 24px; }
+.stButton>button { width: 100%; border-radius: 10px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# २. PDF तयार करण्याचे फंक्शन (मराठी/युनिकोड सुरक्षित)
+# २. मराठी फॉन्ट सेट करणे आणि १ पानाची A4 PDF तयार करणे
+FONT_NAME = 'MarathiDevanagari'
+FONT_FILE = 'NotoSansDevanagari-Regular.ttf'
+
+def setup_marathi_font():
+    if not os.path.exists(FONT_FILE):
+        url = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf"
+        try:
+            urllib.request.urlretrieve(url, FONT_FILE)
+        except Exception:
+            pass
+    if os.path.exists(FONT_FILE) and FONT_NAME not in pdfmetrics.getRegisteredFontNames():
+        try:
+            pdfmetrics.registerFont(TTFont(FONT_NAME, FONT_FILE))
+        except Exception:
+            pass
+
 def generate_pdf(content_text):
+    setup_marathi_font()
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    styles = getSampleStyleSheet()
-    normal_style = ParagraphStyle(
-        'NormalMarathi', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14
+    
+    # एकाच पानात बसवण्यासाठी योग्य मार्जिन (२५ pt)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=25,
+        leftMargin=25,
+        topMargin=25,
+        bottomMargin=25
     )
+    
+    styles = getSampleStyleSheet()
+    font_to_use = FONT_NAME if FONT_NAME in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
+    
+    # १ पानाची मर्यादा टिकवण्यासाठी कॉम्पॅक्ट फॉन्ट व साईझ
+    marathi_style = ParagraphStyle(
+        'MarathiStyle',
+        parent=styles['Normal'],
+        fontName=font_to_use,
+        fontSize=9.5,
+        leading=13.5
+    )
+    
     elements = []
     for line in content_text.split('\n'):
         clean_line = line.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').strip()
         if clean_line:
-            elements.append(Paragraph(clean_line, normal_style))
-            elements.append(Spacer(1, 4))
+            elements.append(Paragraph(clean_line, marathi_style))
+            elements.append(Spacer(1, 2))
         else:
-            elements.append(Spacer(1, 6))
+            elements.append(Spacer(1, 4))
+            
     doc.build(elements)
     buffer.seek(0)
     return buffer
@@ -48,32 +87,31 @@ if 'rti_paid' not in st.session_state:
 if 'complaint_paid' not in st.session_state:
     st.session_state.complaint_paid = False
 
-# शीर्ष शीर्षक
 st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 14px; font-weight: 600; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # ४. मुख्य नेव्हिगेशन बटने
-col1, col2, col3 = st.columns(3)
-with col1:
+c1, c2, c3 = st.columns(3)
+with c1:
     if st.button("🏠 मुख्य माहिती"):
         st.session_state.page = "home"
-with col2:
+with c2:
     if st.button("📜 RTI अर्ज"):
         st.session_state.page = "rti"
-with col3:
+with c3:
     if st.button("📝 तक्रार अर्ज"):
         st.session_state.page = "complaint"
 
-# 🌐 शेअर बटण (WhatsApp वर थेट शेअर आणि लिंक कॉपी)
+# 🌐 WhatsApp शेअर बटण
 app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
-share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज आणि शासकीय तक्रार १ सेकंदात तयार करा. हे मोफत AI ॲप वापरा: {app_url}")
-whatsapp_share_url = f"https://api.whatsapp.com/send?text={share_text}"
+share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
+whatsapp_url = f"https://api.whatsapp.com/send?text={share_text}"
 
 st.markdown(f"""
-    <div style="margin: 12px 0;">
-        <a href="{whatsapp_share_url}" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 12px; border-radius: 12px; text-align: center; font-size: 16px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+    <div style="margin: 10px 0;">
+        <a href="{whatsapp_url}" target="_blank" style="text-decoration: none;">
+            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 10px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: bold;">
                 📲 WhatsApp वर मित्रांना शेअर करा
             </div>
         </a>
@@ -85,22 +123,23 @@ st.markdown("---")
 # ५. साइडबारमध्ये API Key
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 st.sidebar.markdown("---")
-st.sidebar.info("💡 **टीप:** API Key टाकल्यास AI कायदेशीर कलमांसह परिपूर्ण अर्ज तयार करेल.")
+st.sidebar.info("💡 **टीप:** API Key टाकल्यास AI कायदेशीर कलमांसह परिपूर्ण अर्ज तयार करतो.")
 
-# ==================== पान १: मुख्य पान ====================
+# ==================== मुख्य पान ====================
 if st.session_state.page == "home":
-    st.markdown("### 📌 ॲप कसे वापरावे?")
+    st.markdown("### 📌 ॲपची वैशिष्ट्ये:")
     st.markdown("""
-    * **RTI अर्ज:** ग्रामपंचायत, महानगरपालिका, महसूल, पोलीस अशा कोणत्याही विभागाकडून माहिती मागवण्यासाठी कायदेशीर अर्ज तयार करा.
-    * **शासकीय तक्रार:** रस्ता, पाणी, लाईट, भ्रष्टाचार किंवा प्रशासकीय दिरंगाईविरोधात कडक भाषेत तक्रार मसुदा बनवा.
-    * **पारदर्शकता:** मसुदा तयार करणे पूर्णपणे विनामूल्य आहे. अधिकृत PDF डाऊनलोड करण्यासाठी केवळ **₹१०** नाममात्र शुल्क आकारले जाते.
+    * **RTI अर्ज व अपील:** नमुना जोडपत्र अ, प्रथम अपील (कलम १९(१)), द्वितीय अपील (कलम १९(३)) चे कायदेशीर मसुदे.
+    * **शासकीय तक्रार अर्ज:** शासकीय कार्यालयातील दिरंगाई व गैरव्यवहाराविरुद्ध कडक तक्रार मसुदा.
+    * **१ पान मर्यादा:** डाऊनलोड होणारी PDF थेट प्रिंट काढण्यासाठी एकाच A4 पानावर व्यवस्थित बसते.
+    * **मसुदा मोफत:** मजकूर पाहणे पूर्ण मोफत आहे. अधिकृत A4 PDF डाऊनलोड करण्यासाठी केवळ **₹१०** नाममात्र शुल्क आहे.
     """)
     st.markdown("---")
-    st.markdown("<p style='font-size: 13px; color: #6B7280;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px; color: #6B7280;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
 
-# ==================== पान २: RTI अर्ज ====================
+# ==================== RTI अर्ज पान ====================
 elif st.session_state.page == "rti":
-    st.markdown("<h3>📜 RTI अर्ज व अपील मसुदा</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>📜 RTI अर्ज व अपील मसुदा तयार करा</h3>", unsafe_allow_html=True)
 
     with st.form("rti_form"):
         doc_type = st.selectbox("अर्जाचा प्रकार निवडा:", [
@@ -110,38 +149,33 @@ elif st.session_state.page == "rti":
         ])
         user_name = st.text_input("अर्जदाराचे पूर्ण नाव:")
         user_address = st.text_area("अर्जदाराचा संपूर्ण पत्ता व मोबाईल:")
-        dept_name = st.text_input("सार्वजनिक प्राधिकरणाचे नाव / सरकारी विभाग:")
-        query = st.text_area("कोणती माहिती / कागदपत्रे हवी आहेत? (सविस्तर लिहा):")
-        submitted = st.form_submit_button("🚀 कायदेशीर RTI अर्ज तयार करा")
+        dept_name = st.text_input("सरकारी विभाग / कार्यालयाचे नाव:")
+        query = st.text_area("मागितलेली माहिती / अपीलाचे कारण:")
+        submitted = st.form_submit_button("🚀 RTI अर्ज तयार करा")
 
     if submitted:
         if not user_name or not query or not dept_name:
-            st.warning("कृपया अर्जदाराचे नाव, विभाग आणि मागितलेली माहिती भरा.")
+            st.warning("कृपया सर्व आवश्यक माहिती भरा.")
         else:
-            with st.spinner("कायदेशीर कलमांसह RTI मसुदा तयार होत आहे..."):
+            with st.spinner("कायदेशीर कलमांसह १ पानात बसणारा RTI मसुदा तयार होत आहे..."):
                 if api_key:
                     try:
                         genai.configure(api_key=api_key)
                         model = genai.GenerativeModel("gemini-1.5-flash")
                         prompt = f"""
-तुम्ही महाराष्ट्र माहिती अधिकार अधिनियम २००५ चे सर्वोच्च कायदेशीर सल्लागार आहात.
-खालील माहितीवरून अत्यंत परिपूर्ण, कायदेशीर आणि शासकीय भाषेत RTI अर्ज तयार करा.
+तुम्ही महाराष्ट्र माहिती अधिकार अधिनियम २००५ चे तज्ञ आहात.
+खालील माहितीवरून अत्यंत परिपूर्ण आणि A4 साईझच्या एकाच पानात बसेल असा सुटसुटीत RTI मसुदा तयार करा.
 
 प्रकार: {doc_type}
 अर्जदार: {user_name}
-पत्ता व संपर्क: {user_address}
-संबंधित कार्यालय: {dept_name}
-मागितलेली माहिती: {query}
+पत्ता: {user_address}
+कार्यालय: {dept_name}
+माहिती: {query}
 
-नियम व मसुद्यात पुढील बाबी बंधनकारक असाव्यात:
-१. शीर्षभागी: 'माहितीचा अधिकार अधिनियम २००५ चे कलम ६(१) अन्वये अर्ज (नमुना - जोडपत्र अ)'
-२. प्रति, जन माहिती अधिकारी / सहाय्यक जन माहिती अधिकारी, {dept_name}
-३. मागितलेली माहिती क्रमांकानुसार (१, २, ३...) अत्यंत अचूक व कायदेशीर मुद्द्यांत मागा.
-४. कलम ६(३) चा स्पष्ट उल्लेख करा: जर ही माहिती आपल्या अखत्यारीतील नसेल तर ५ दिवसांत संबंधित विभागाकडे वर्ग करावी.
-५. कलम ७(१) चा उल्लेख करा: ३० दिवसांच्या विहित मुदतीत माहिती उपलब्ध करून देणे बंधनकारक आहे.
-६. कलम २०(१) व २०(२) चे स्मरण द्या: विनाकारण माहिती नाकारल्यास प्रतिदिवस २५० रु. प्रमाणे २५,००० रु. दंडात्मक कारवाई होऊ शकते.
-७. १० रुपयांचा कोर्ट फी स्टॅम्प किंवा डिमांड ड्राफ्ट जोडल्याचा उल्लेख असावा.
-८. शेवटी अर्जदाराची सही, तारीख आणि ठिकाणाची जागा ठेवा.
+नियम:
+१. मसुदा जास्त लांबलचक नसावा जेणेकरून तो एकाच पानात बसेल.
+२. कलम ६(१), कलम ६(३) (५ दिवसांत वर्ग करणे), कलम ७(१) (३० दिवसांची मुदत), कलम २०(१) (दंडात्मक कारवाई) आणि ₹१० कोर्ट फी स्टॅम्पचा उल्लेख करा.
+३. शेवटी अर्जदाराचे नाव व स्वाक्षरीची जागा ठेवा.
 """
                         res = model.generate_content(prompt, generation_config={"temperature": 0.2})
                         st.session_state.rti_result = res.text
@@ -161,32 +195,29 @@ elif st.session_state.page == "rti":
 {query}
 
 ४. माहितीचा कालावधी: चालू वर्ष व मागील अभिलेख
-५. माहिती टपालाने / व्यक्तिशः हवी आहे: व्यक्तिशः / प्रमाणित प्रतीसह
+५. माहितीचा प्रकार: प्रमाणित सत्यप्रतीसह व्यक्तिशः / टपालाने
 
-सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील दाखल करण्यात येईल. तसेच सदर माहिती आपल्या विभागाशी संबंधित नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी.
+सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील करण्यात येईल. सदर माहिती आपल्या कार्यालयाशी संबंधित नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी.
+अर्जासोबत ₹१०/- चा कोर्ट फी स्टॅम्प जोडला आहे.
 
-अर् Call फी: ₹१०/- चा कोर्ट फी स्टॅम्प जोडला आहे.
-
-तारीख: ____________
-ठिकाण: ____________
-अर्जदाराची स्वाक्षरी: {user_name}"""
+तारीख: ____________                                अर्जदाराची स्वाक्षरी: {user_name}
+ठिकाण: ____________"""
 
     if 'rti_result' in st.session_state and st.session_state.rti_result:
-        st.success("✅ तुमचा कायदेशीर RTI मसुदा तयार झाला आहे!")
-        st.text_area("📄 तयार झालेला मसुदा (येथून कॉपी करू शकता):", value=st.session_state.rti_result, height=350)
+        st.success("✅ RTI मसुदा यशस्वीपणे तयार झाला आहे!")
+        st.text_area("📄 तयार झालेला मसुदा (येथून कॉपी करू शकता):", value=st.session_state.rti_result, height=280)
         
-        # डाऊनलोड व पेमेंट विभाग
         st.markdown("---")
-        st.markdown("### 📥 अधिकृत PDF डाऊनलोड करा")
+        st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड")
         
         if not st.session_state.rti_paid:
-            st.info("📌 **अधिकृत A4 साईझ PDF डाऊनलोड करण्यासाठी नाममात्र ₹१० पेमेंट करा.**")
+            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF डाऊनलोड करण्यासाठी नाममात्र ₹१० शुल्क भरा.**")
             upi_id = "satishpradhan3392@ybl"
-            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
+            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
             
             c_qr, c_info = st.columns([1, 2])
             with c_qr:
-                st.image(qr_url, caption="₹१० स्कॅन करून भरा", width=160)
+                st.image(qr_url, caption="₹१० स्कॅन करा", width=140)
             with c_info:
                 st.markdown(f"**UPI ID:** `{upi_id}`")
                 st.markdown("**रक्कम:** ₹१०/-")
@@ -194,51 +225,44 @@ elif st.session_state.page == "rti":
                     st.session_state.rti_paid = True
                     st.rerun()
         else:
-            pdf_data = generate_pdf(st.session_state.rti_result)
+            pdf_bytes = generate_pdf(st.session_state.rti_result)
             st.download_button(
-                label="📥 अधिकृत PDF डाऊनलोड करा (A4 Size)",
-                data=pdf_data,
-                file_name=f"RTI_{user_name if 'user_name' in locals() and user_name else 'Application'}.pdf",
+                label="📥 अधिकृत RTI PDF डाऊनलोड करा (A4 One-Page)",
+                data=pdf_bytes,
+                file_name="RTI_Application.pdf",
                 mime="application/pdf"
             )
 
-# ==================== पान ३: शासकीय तक्रार ====================
+# ==================== शासकीय तक्रार पान ====================
 elif st.session_state.page == "complaint":
-    st.markdown("<h3>📝 शासकीय तक्रार अर्ज</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>📝 शासकीय तक्रार अर्ज तयार करा</h3>", unsafe_allow_html=True)
 
     with st.form("complaint_form"):
         c_name = st.text_input("तक्रारदाराचे पूर्ण नाव:")
         c_address = st.text_area("पत्ता व मोबाईल नंबर:")
-        c_dept = st.text_input("कार्यालय / अधिकारी ज्यांच्याकडे तक्रार करायची आहे (उदा. आयुक्त, जिल्हाधिकारी, पोलीस अधीक्षक):")
+        c_dept = st.text_input("कार्यालय / अधिकारी (उदा. आयुक्त / जिल्हाधिकारी):")
         c_subject = st.text_input("तक्रारीचा मुख्य विषय:")
-        c_query = st.text_area("तक्रारीचा सविस्तर तपशील व प्रशासकीय निष्काळजीपणा:")
-        c_submitted = st.form_submit_button("🚀 कडक तक्रार मसुदा तयार करा")
+        c_query = st.text_area("तक्रारीचा सविस्तर तपशील:")
+        c_submitted = st.form_submit_button("🚀 तक्रार अर्ज तयार करा")
 
     if c_submitted:
         if not c_name or not c_dept or not c_query:
-            st.warning("कृपया नाव, विभाग आणि तक्रारीचा तपशील भरा.")
+            st.warning("कृपया सर्व आवश्यक माहिती भरा.")
         else:
-            with st.spinner("तक्रार मसुदा तयार होत आहे..."):
+            with st.spinner("१ पानात बसणारा कडक तक्रार मसुदा तयार होत आहे..."):
                 if api_key:
                     try:
                         genai.configure(api_key=api_key)
                         model = genai.GenerativeModel("gemini-1.5-flash")
                         prompt = f"""
-तुम्ही प्रशासकीय कायदेतज्ञ आहात. शासकीय अनागोंदी, नागरिकांची गैरसोय किंवा अधिकारांच्या उल्लंघनाविरुद्ध
-शासकीय अधिकाऱ्याला सादर करण्यासाठी अत्यंत कडक, आक्रमक आणि कायदेशीर भाषेतील तक्रार अर्ज बनवा.
-
+तुम्ही प्रशासकीय कायदेतज्ञ आहात. खालील तक्रारीवरून A4 साईझच्या एकाच पानात बसेल असा कडक तक्रार अर्ज बनवा:
 तक्रारदार: {c_name}
 पत्ता: {c_address}
-प्रति (अधिकारी): {c_dept}
+प्रति: {c_dept}
 विषय: {c_subject}
-सविस्तर तक्रार: {c_query}
+तपशील: {c_query}
 
-मसुद्यात पुढील मुद्दे असावेत:
-१. प्रति: मा. {c_dept} यांना आदरयुक्त पण स्पष्ट संबोधा.
-२. विषय: {c_subject} बाबत कठोर कारवाई करण्याबाबत.
-३. मुद्द्यांनुसार घडलेला प्रकार, नियमांचे उल्लंघन व नागरिकांना होणारा त्रास स्पष्ट मांडा.
-४. विहित मुदतीत (उदा. ७ दिवसांत) निवारण न झाल्यास वरिष्ठ कार्यालय, लोकायुक्त किंवा न्यायालयात दाद मागण्याचा इशारा द्या.
-५. प्रतिलिपि (माहितीस्तव): मा. जिल्हाधिकारी / संबंधित वरिष्ठ अधिकारी यांचा समावेश करा.
+मसुद्यात प्रति, विषय, मुद्द्यांनुसार तक्रार, ७ दिवसांत कारवाईचा इशारा आणि प्रतिलिपि (जिल्हाधिकारी) असा सुटसुटीत १-पान फॉरमॅट ठेवा.
 """
                         res = model.generate_content(prompt, generation_config={"temperature": 0.2})
                         st.session_state.complaint_result = res.text
@@ -252,36 +276,31 @@ elif st.session_state.page == "complaint":
 तक्रारदार: {c_name}, रा. {c_address}
 
 महोदय,
-
 मी खालीलप्रमाणे तक्रार नोंदवत आहे:
 {c_query}
 
-सदर प्रकरणात संबंधित जबाबदार अधिकाऱ्यांवर/कर्मचाऱ्यांवर प्रशासकीय नियमांनुसार तातडीने कारवाई करण्यात यावी. ७ दिवसांच्या आत यावर योग्य ती कारवाई न झाल्यास मला नाईलाजाने वरिष्ठ पातळीवर व न्यायालयात दाद मागावी लागेल.
+सदर प्रकरणात संबंधित जबाबदार घटकांवर ७ दिवसांच्या आत प्रशासकीय नियमांनुसार कारवाई करण्यात यावी, अन्यथा वरिष्ठ पातळीवर व न्यायालयात दाद मागावी लागेल.
 
-तारीख: ____________
-आपला नम्र,
-{c_name}
+तारीख: ____________                                तक्रारदाराची स्वाक्षरी: {c_name}
+ठिकाण: ____________
 
-प्रत माहितीस्तव सादर:
-१. मा. जिल्हाधिकारी महोदय.
-२. मा. विभागीय आयुक्त महोदय."""
+प्रत माहितीस्तव: मा. जिल्हाधिकारी महोदय."""
 
     if 'complaint_result' in st.session_state and st.session_state.complaint_result:
         st.success("✅ तक्रार अर्ज मसुदा तयार झाला आहे!")
-        st.text_area("📄 तयार झालेली तक्रार:", value=st.session_state.complaint_result, height=350)
+        st.text_area("📄 तयार झालेली तक्रार:", value=st.session_state.complaint_result, height=280)
         
-        # डाऊनलोड व पेमेंट विभाग
         st.markdown("---")
-        st.markdown("### 📥 अधिकृत PDF डाऊनलोड करा")
+        st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड")
         
         if not st.session_state.complaint_paid:
-            st.info("📌 **अधिकृत A4 साईझ PDF डाऊनलोड करण्यासाठी नाममात्र ₹१० पेमेंट करा.**")
+            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF डाऊनलोड करण्यासाठी नाममात्र ₹१० शुल्क भरा.**")
             upi_id = "satishpradhan3392@ybl"
-            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
+            qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
             
             c_qr, c_info = st.columns([1, 2])
             with c_qr:
-                st.image(qr_url, caption="₹१० स्कॅन करून भरा", width=160)
+                st.image(qr_url, caption="₹१० स्कॅन करा", width=140)
             with c_info:
                 st.markdown(f"**UPI ID:** `{upi_id}`")
                 st.markdown("**रक्कम:** ₹१०/-")
@@ -289,10 +308,10 @@ elif st.session_state.page == "complaint":
                     st.session_state.complaint_paid = True
                     st.rerun()
         else:
-            c_pdf_data = generate_pdf(st.session_state.complaint_result)
+            c_pdf_bytes = generate_pdf(st.session_state.complaint_result)
             st.download_button(
-                label="📥 अधिकृत तक्रार PDF डाऊनलोड करा",
-                data=c_pdf_data,
-                file_name=f"Complaint_{c_name if 'c_name' in locals() and c_name else 'Letter'}.pdf",
+                label="📥 अधिकृत तक्रार PDF डाऊनलोड करा (A4 One-Page)",
+                data=c_pdf_bytes,
+                file_name="Complaint_Letter.pdf",
                 mime="application/pdf"
             )
