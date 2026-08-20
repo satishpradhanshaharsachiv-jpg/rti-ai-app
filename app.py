@@ -147,7 +147,7 @@ with nav3:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # WhatsApp शेअर बटण
-app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=2"
+app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
 share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
 st.markdown(f"""
     <div style="margin: 10px 0 15px 0;">
