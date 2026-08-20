@@ -3,8 +3,11 @@ import google.generativeai as genai
 import urllib.parse
 from datetime import datetime
 
-# १. पेज कॉन्फिगरेशन आणि संपूर्ण ब्रँडिंग लपवणे
+# १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
 st.set_page_config(page_title="RTI व शासकीय तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
+
+# ॲपचा मास्टर अनलॉक पिन (पेमेंट सुरक्षिततेसाठी)
+SECRET_PIN = "7788"
 
 custom_css = """
 <style>
@@ -14,14 +17,12 @@ custom_css = """
     font-family: 'Mukta', sans-serif !important;
 }
 
-#MainMenu {visibility: hidden; display: none;}
-footer {visibility: hidden; display: none;}
-header {visibility: hidden; display: none;}
-[data-testid="stToolbar"] {visibility: hidden; display: none;}
-[data-testid="stDecoration"] {visibility: hidden; display: none;}
-[data-testid="stStatusWidget"] {visibility: hidden; display: none;}
-div[class^="viewerBadge"] {visibility: hidden; display: none !important;}
-button[title="View source"] {display: none;}
+#MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+    visibility: hidden;
+    display: none !important;
+}
+div[class^="viewerBadge"] { visibility: hidden; display: none !important; }
+button[title="View source"] { display: none; }
 
 h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 24px; margin-bottom: 2px; }
 
@@ -32,14 +33,9 @@ div.st-key-btn_rti button {
     height: 75px !important;
     border-radius: 14px !important;
     border: 2px solid #047857 !important;
-    box-shadow: 0 5px 12px rgba(5, 150, 105, 0.35) !important;
+    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35) !important;
 }
-div.st-key-btn_rti button p {
-    font-size: 17px !important;
-    font-weight: 800 !important;
-    color: #ffffff !important;
-    line-height: 1.2 !important;
-}
+div.st-key-btn_rti button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
 
 /* 🔴 २. मोठे लाल तक्रार बटन */
 div.st-key-btn_comp button {
@@ -48,14 +44,9 @@ div.st-key-btn_comp button {
     height: 75px !important;
     border-radius: 14px !important;
     border: 2px solid #B91C1C !important;
-    box-shadow: 0 5px 12px rgba(220, 38, 38, 0.35) !important;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.35) !important;
 }
-div.st-key-btn_comp button p {
-    font-size: 17px !important;
-    font-weight: 800 !important;
-    color: #ffffff !important;
-    line-height: 1.2 !important;
-}
+div.st-key-btn_comp button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
 
 /* 🟠 ३. मोठे केशरी ऑनलाइन पोर्टल बटन */
 div.st-key-btn_online button {
@@ -64,29 +55,18 @@ div.st-key-btn_online button {
     height: 75px !important;
     border-radius: 14px !important;
     border: 2px solid #B45309 !important;
-    box-shadow: 0 5px 12px rgba(217, 119, 6, 0.35) !important;
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.35) !important;
 }
-div.st-key-btn_online button p {
-    font-size: 17px !important;
-    font-weight: 800 !important;
-    color: #ffffff !important;
-    line-height: 1.2 !important;
-}
+div.st-key-btn_online button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
 
 /* लहान नेव्हिगेशन बटने */
-.nav-btn div.stButton > button {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    height: 42px !important;
-    border-radius: 10px !important;
-}
+.nav-btn div.stButton > button { font-size: 14px !important; font-weight: 700 !important; height: 42px !important; border-radius: 10px !important; }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# २. सेशन स्टेट मॅनेजमेंट
-if 'page' not in st.session_state:
-    st.session_state.page = "rti"
+# २. सेशन स्टेट मॅनेजमेंट (डेटा कायम राहण्यासाठी)
+if 'page' not in st.session_state: st.session_state.page = "rti"
 
 # RTI व्हेरिएबल्स
 if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')"
@@ -114,8 +94,7 @@ if 'online_result' not in st.session_state: st.session_state.online_result = ""
 if 'online_paid' not in st.session_state: st.session_state.online_paid = False
 
 # हिस्ट्री यादी
-if 'history_list' not in st.session_state:
-    st.session_state.history_list = []
+if 'history_list' not in st.session_state: st.session_state.history_list = []
 
 # ३. शीर्ष शीर्षक
 st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
@@ -140,15 +119,13 @@ st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 nav1, nav2, nav3 = st.columns(3)
 with nav1:
     st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🔵 मुख्य माहिती"):
-        st.session_state.page = "home"
+    if st.button("🔵 मुख्य माहिती"): st.session_state.page = "home"
     st.markdown('</div>', unsafe_allow_html=True)
 
 with nav2:
     st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
     hist_count = len(st.session_state.history_list)
-    if st.button(f"📜 माझी हिस्ट्री ({hist_count})"):
-        st.session_state.page = "history"
+    if st.button(f"📜 माझी हिस्ट्री ({hist_count})"): st.session_state.page = "history"
     st.markdown('</div>', unsafe_allow_html=True)
 
 with nav3:
@@ -194,7 +171,6 @@ st.markdown(f"""
 
 st.markdown("---")
 
-# API Key इनपुट
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 
 # १-पान A4 प्रिंट/PDF फंक्शन
@@ -324,7 +300,7 @@ if st.session_state.page == "rti":
         st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
         
         if not st.session_state.rti_paid:
-            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि १२-अंकी UPI UTR नंबर टाका.**")
+            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि अनलॉक पिन टाका.**")
             upi_id = "satishpradhan3392@ybl"
             qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
             
@@ -333,14 +309,14 @@ if st.session_state.page == "rti":
                 st.image(qr_url, caption="₹१० स्कॅन करा", width=130)
             with c_info:
                 st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹१०/-")
-                utr_input = st.text_input("पेमेंट झाल्यावर १२-अंकी UTR / Ref No. टाका:", max_chars=12, key="rti_utr")
-                if st.button("🔒 पेमेंट पडताळणी करून PDF अनलॉक करा", key="unlock_rti"):
-                    if len(utr_input.strip()) == 12 and utr_input.strip().isdigit():
+                pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="rti_pin")
+                if st.button("🔒 सुरक्षित पडताळणी करून PDF अनलॉक करा", key="unlock_rti"):
+                    if pin_input.strip() == SECRET_PIN:
                         st.session_state.rti_paid = True
-                        st.success("पेमेंट पडताळणी यशस्वी!")
+                        st.success("पडताळणी यशस्वी!")
                         st.rerun()
                     else:
-                        st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
+                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
         else:
             render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result, "#059669")
 
@@ -383,7 +359,7 @@ elif st.session_state.page == "complaint":
                     except Exception as e:
                         st.error(f"AI त्रुटी: {e}")
                 else:
-                    st.session_state.complaint_result = f"""प्रति,
+                    st.session_state.comp_result = f"""प्रति,
 मा. {st.session_state.comp_dept},
 
 विषय: {st.session_state.comp_subject} बाबत तातडीने कठोर कारवाई करणेबाबत.
@@ -403,7 +379,7 @@ elif st.session_state.page == "complaint":
                 st.session_state.history_list.append({
                     "type": "🔴 तक्रार अर्ज",
                     "title": f"{st.session_state.comp_dept} - {st.session_state.comp_subject}",
-                    "content": st.session_state.complaint_result,
+                    "content": st.session_state.comp_result,
                     "time": datetime.now().strftime("%d-%m-%Y %H:%M")
                 })
 
@@ -415,7 +391,7 @@ elif st.session_state.page == "complaint":
         st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
         
         if not st.session_state.complaint_paid:
-            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि १२-अंकी UPI UTR नंबर टाकून अनलॉक करा.**")
+            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि अनलॉक पिन टाका.**")
             upi_id = "satishpradhan3392@ybl"
             qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
             
@@ -424,14 +400,14 @@ elif st.session_state.page == "complaint":
                 st.image(qr_url, caption="₹१० स्कॅन करा", width=130)
             with c_info:
                 st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹१०/-")
-                c_utr_input = st.text_input("पेमेंट झाल्यावर १२-अंकी UTR / Ref No. टाका:", max_chars=12, key="comp_utr")
-                if st.button("🔒 पेमेंट पडताळणी करून PDF अनलॉक करा", key="unlock_complaint"):
-                    if len(c_utr_input.strip()) == 12 and c_utr_input.strip().isdigit():
+                c_pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="comp_pin")
+                if st.button("🔒 सुरक्षित पडताळणी करून PDF अनलॉक करा", key="unlock_complaint"):
+                    if c_pin_input.strip() == SECRET_PIN:
                         st.session_state.complaint_paid = True
-                        st.success("पेमेंट पडताळणी यशस्वी!")
+                        st.success("पडताळणी यशस्वी!")
                         st.rerun()
                     else:
-                        st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
+                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
         else:
             render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.comp_result, "#DC2626")
 
@@ -516,7 +492,7 @@ elif st.session_state.page == "online_portal":
         # ₹५ पेमेंट गेटवे
         if not st.session_state.online_paid:
             st.markdown("---")
-            st.info("📌 **हा मसुदा कॉपी करण्यासाठी आणि ऑनलाइन अर्ज भरण्याचे सविस्तर मार्गदर्शन अनलॉक करण्यासाठी केवळ ₹५ पेमेंट करा.**")
+            st.info("📌 **हा मसुदा कॉपी करण्यासाठी आणि ऑनलाइन अर्ज भरण्याचे सविस्तर मार्गदर्शन अनलॉक करण्यासाठी केवळ ₹५ पेमेंट करा व अनलॉक पिन टाका.**")
             upi_id = "satishpradhan3392@ybl"
             qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=5%26cu=INR"
             
@@ -525,14 +501,14 @@ elif st.session_state.page == "online_portal":
                 st.image(qr_url, caption="₹५ स्कॅन करा", width=130)
             with c_info:
                 st.markdown(f"**UPI ID:** `{upi_id}` | **रक्कम:** ₹५/-")
-                o_utr_input = st.text_input("पेमेंट झाल्यावर १२-अंकी UTR / Ref No. टाका:", max_chars=12, key="online_utr")
-                if st.button("🔒 ₹५ पेमेंट पडताळणी करून मसुदा अनलॉक करा", key="unlock_online"):
-                    if len(o_utr_input.strip()) == 12 and o_utr_input.strip().isdigit():
+                o_pin_input = st.text_input("पेमेंट झाल्यावर मिळालेला अनलॉक पिन टाका:", type="password", key="online_pin")
+                if st.button("🔒 ₹५ पडताळणी करून मसुदा अनलॉक करा", key="unlock_online"):
+                    if o_pin_input.strip() == SECRET_PIN:
                         st.session_state.online_paid = True
-                        st.success("पेमेंट पडताळणी यशस्वी! मसुदा व पुढील मार्गदर्शन खाली उघडले आहे.")
+                        st.success("पडताळणी यशस्वी! मसुदा व पुढील मार्गदर्शन खाली उघडले आहे.")
                         st.rerun()
                     else:
-                        st.error("कृपया पेमेंट केल्यानंतर मिळालेला खरा १२-अंकी UTR क्रमांक टाका.")
+                        st.error("चुकीचा पिन! कृपया योग्य पिन टाका.")
         else:
             # अनलॉक झालेला काळा बॉक्स आणि १-क्लिक कॉपी बटण
             html_clean = st.session_state.online_result.replace('\n', '<br>').replace('"', '&quot;')
@@ -600,9 +576,11 @@ elif st.session_state.page == "home":
             <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF (शुल्क: ₹१०).</li>
             <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज (शुल्क: ₹१०).</li>
             <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI पोर्टलवर थेट कॉपी-पेस्ट मसुदा आणि अर्ज दाखल करण्याचे सविस्तर मार्गदर्शन (शुल्क: ₹५).</li>
+            <li><b>🔒 १००% सुरक्षित पेमेंट:</b> पैसे जमा झाल्यावरच सुरक्षित पिनद्वारे मसुदा अनलॉक होतो.</li>
             <li><b>📜 माझी हिस्ट्री:</b> तयार केलेले सर्व मसुदे आपोआप सेव्ह राहतात.</li>
             <li><b>🔄 सर्व रिसेट करा:</b> सर्व माहिती एका क्लिकवर पुसून नव्याने सुरुवात करण्यासाठी.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("<p style='font-size: 13px; color: #6B7280; text-align: center;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
+
