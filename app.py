@@ -3,8 +3,8 @@ import google.generativeai as genai
 import urllib.parse
 from datetime import datetime
 
-# १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
-st.set_page_config(page_title="RTI व शासकीय तक्रार सहाय्यक", page_icon="🏛️", layout="centered")
+# १. पेज कॉन्फिगरेशन आणि संपूर्ण ब्रँडिंग लपवणे
+st.set_page_config(page_title="RTI व शासकीय तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
 custom_css = """
 <style>
@@ -23,36 +23,52 @@ header {visibility: hidden; display: none;}
 div[class^="viewerBadge"] {visibility: hidden; display: none !important;}
 button[title="View source"] {display: none;}
 
-h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 25px; margin-bottom: 2px; }
+h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 24px; margin-bottom: 2px; }
 
-/* 🟢 १. मोठे व ठळक हिरवे RTI बटन */
+/* 🟢 १. मोठे हिरवे RTI बटन */
 div.st-key-btn_rti button {
     background: linear-gradient(135deg, #059669, #10B981) !important;
     color: #ffffff !important;
-    height: 80px !important;
+    height: 75px !important;
     border-radius: 14px !important;
     border: 2px solid #047857 !important;
-    box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4) !important;
+    box-shadow: 0 5px 12px rgba(5, 150, 105, 0.35) !important;
 }
 div.st-key-btn_rti button p {
-    font-size: 20px !important;
-    font-weight: 900 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
     color: #ffffff !important;
     line-height: 1.2 !important;
 }
 
-/* 🔴 २. मोठे व ठळक लाल तक्रार बटन */
+/* 🔴 २. मोठे लाल तक्रार बटन */
 div.st-key-btn_comp button {
     background: linear-gradient(135deg, #DC2626, #EF4444) !important;
     color: #ffffff !important;
-    height: 80px !important;
+    height: 75px !important;
     border-radius: 14px !important;
     border: 2px solid #B91C1C !important;
-    box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4) !important;
+    box-shadow: 0 5px 12px rgba(220, 38, 38, 0.35) !important;
 }
 div.st-key-btn_comp button p {
-    font-size: 20px !important;
-    font-weight: 900 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
+}
+
+/* 🟠 ३. मोठे केशरी ऑनलाइन पोर्टल बटन */
+div.st-key-btn_online button {
+    background: linear-gradient(135deg, #D97706, #F59E0B) !important;
+    color: #ffffff !important;
+    height: 75px !important;
+    border-radius: 14px !important;
+    border: 2px solid #B45309 !important;
+    box-shadow: 0 5px 12px rgba(217, 119, 6, 0.35) !important;
+}
+div.st-key-btn_online button p {
+    font-size: 17px !important;
+    font-weight: 800 !important;
     color: #ffffff !important;
     line-height: 1.2 !important;
 }
@@ -61,14 +77,14 @@ div.st-key-btn_comp button p {
 .nav-btn div.stButton > button {
     font-size: 14px !important;
     font-weight: 700 !important;
-    height: 45px !important;
+    height: 42px !important;
     border-radius: 10px !important;
 }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# २. सेशन स्टेट मॅनेजमेंट (डेटा सुरक्षित ठेवण्यासाठी)
+# २. सेशन स्टेट मॅनेजमेंट (डेटा टिकवून ठेवण्यासाठी)
 if 'page' not in st.session_state:
     st.session_state.page = "rti"
 
@@ -90,27 +106,37 @@ if 'comp_query' not in st.session_state: st.session_state.comp_query = ""
 if 'comp_result' not in st.session_state: st.session_state.comp_result = ""
 if 'complaint_paid' not in st.session_state: st.session_state.complaint_paid = False
 
+# ऑनलाइन पोर्टल मसुदा व्हेरिएबल्स
+if 'online_dept' not in st.session_state: st.session_state.online_dept = ""
+if 'online_subject' not in st.session_state: st.session_state.online_subject = ""
+if 'online_query' not in st.session_state: st.session_state.online_query = ""
+if 'online_result' not in st.session_state: st.session_state.online_result = ""
+
 # सेव्ह केलेली हिस्ट्री
 if 'history_list' not in st.session_state:
     st.session_state.history_list = []
 
 # ३. शीर्ष शीर्षक
 st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 14px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज, तक्रार व ऑनलाइन पोर्टल मसुदा!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ४. मुख्य आडवे दोन मोठे आकर्षक बॉक्सेस (🟢 RTI व 🔴 तक्रार)
-col_rti, col_comp = st.columns(2)
-
-with col_rti:
-    if st.button("🟢 RTI अर्ज व अपील अर्ज", key="btn_rti"):
+# ४. मुख्य ३ मोठे रंगीत बॉक्सेस (🟢 RTI, 🔴 तक्रार, 🟠 ऑनलाइन पोर्टल)
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🟢 १. RTI अर्ज व अपील\n(ऑफलाइन/टपाल)", key="btn_rti"):
         st.session_state.page = "rti"
-
-with col_comp:
-    if st.button("🔴 शासकीय तक्रार अर्ज", key="btn_comp"):
+with col2:
+    if st.button("🔴 २. शासकीय तक्रार अर्ज\n(कडक तक्रार मसुदा)", key="btn_comp"):
         st.session_state.page = "complaint"
 
-# लहान उप-नेव्हिगेशन (होम, हिस्ट्री आणि रिसेट)
+# तिसरे स्वतंत्र व मोठे ऑनलाइन पोर्टल बटन
+if st.button("🟠 ३. ऑनलाइन RTI पोर्टल मसुदा (थेट कॉपी-पेस्टसाठी)", key="btn_online"):
+    st.session_state.page = "online_portal"
+
+st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+
+# उप-नेव्हिगेशन (होम, हिस्ट्री आणि रिसेट)
 nav1, nav2, nav3 = st.columns(3)
 with nav1:
     st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
@@ -142,13 +168,19 @@ with nav3:
         st.session_state.comp_query = ""
         st.session_state.comp_result = ""
         st.session_state.complaint_paid = False
+
+        st.session_state.online_dept = ""
+        st.session_state.online_subject = ""
+        st.session_state.online_query = ""
+        st.session_state.online_result = ""
+
         st.success("सर्व माहिती रिसेट झाली!")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # WhatsApp शेअर बटण
 app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
-share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
+share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज, तक्रार व ऑनलाइन पोर्टल मसुदा १ सेकंदात तयार करा: {app_url}")
 st.markdown(f"""
     <div style="margin: 10px 0 15px 0;">
         <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" style="text-decoration: none;">
@@ -210,18 +242,18 @@ def render_printable_marathi_doc(title, content, theme_color):
     """
     st.components.v1.html(printable_html, height=540, scrolling=True)
 
-# ==================== पान १: RTI अर्ज ====================
+# ==================== पान १: RTI अर्ज (ऑफलाइन) ====================
 if st.session_state.page == "rti":
     st.markdown("""
     <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #065F46; margin: 0; font-weight: 800;">🟢 RTI अर्ज व अपील विभाग</h3>
-        <p style="color: #047857; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">येथे भरलेली माहिती दुसऱ्या पानावर गेल्यावरही सुरक्षित राहील.</p>
+        <h3 style="color: #065F46; margin: 0; font-weight: 800;">🟢 १. RTI अर्ज व अपील विभाग (ऑफलाइन/टपाल)</h3>
+        <p style="color: #047857; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">थेट प्रिंट काढून कार्यालयात किंवा टपालाने सादर करण्यासाठी परिपूर्ण मसुदा.</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.session_state.rti_type = st.selectbox(
         "अर्जाचा प्रकार निवडा:",
-        ["माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)", "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र ब)", "द्वितीय अपील मसुदा (कलम १९जोडपत्र(क))"],
+        ["माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)", "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र १)", "द्वितीय अपील मसुदा (कलम १९(३))"],
         index=0
     )
     st.session_state.rti_name = st.text_input("अर्जदाराचे पूर्ण नाव:", value=st.session_state.rti_name)
@@ -274,7 +306,7 @@ if st.session_state.page == "rti":
 ठिकाण: ____________"""
 
                 st.session_state.history_list.append({
-                    "type": "🟢 RTI अर्ज",
+                    "type": "🟢 RTI अर्ज (ऑफलाइन)",
                     "title": f"{st.session_state.rti_dept} - {st.session_state.rti_name}",
                     "content": st.session_state.rti_result,
                     "time": datetime.now().strftime("%d-%m-%Y %H:%M")
@@ -312,8 +344,8 @@ if st.session_state.page == "rti":
 elif st.session_state.page == "complaint":
     st.markdown("""
     <div style="background: #FEF2F2; border-left: 6px solid #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #991B1B; margin: 0; font-weight: 800;">🔴 शासकीय तक्रार अर्ज विभाग</h3>
-        <p style="color: #B91C1C; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">येथे भरलेली माहिती दुसऱ्या पानावर गेल्यावरही सुरक्षित राहील.</p>
+        <h3 style="color: #991B1B; margin: 0; font-weight: 800;">🔴 २. शासकीय तक्रार अर्ज विभाग</h3>
+        <p style="color: #B91C1C; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">प्रशासकीय दिरंगाई, अनागोंदी व समस्यांविरुद्ध कडक तक्रार अर्ज.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -347,7 +379,7 @@ elif st.session_state.page == "complaint":
                     except Exception as e:
                         st.error(f"AI त्रुटी: {e}")
                 else:
-                    st.session_state.complaint_result = f"""प्रति,
+                    st.session_state.comp_result = f"""प्रति,
 मा. {st.session_state.comp_dept},
 
 विषय: {st.session_state.comp_subject} बाबत तातडीने कठोर कारवाई करणेबाबत.
@@ -367,7 +399,7 @@ elif st.session_state.page == "complaint":
                 st.session_state.history_list.append({
                     "type": "🔴 तक्रार अर्ज",
                     "title": f"{st.session_state.comp_dept} - {st.session_state.comp_subject}",
-                    "content": st.session_state.complaint_result,
+                    "content": st.session_state.comp_result,
                     "time": datetime.now().strftime("%d-%m-%Y %H:%M")
                 })
 
@@ -379,7 +411,7 @@ elif st.session_state.page == "complaint":
         st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
         
         if not st.session_state.complaint_paid:
-            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि १२-अंकी UPI UTR नंबर टाका.**")
+            st.info("📌 **A4 साईझ प्रिंट-रेडी PDF मिळवण्यासाठी ₹१० पेमेंट करा आणि १२-अंकी UPI UTR नंबर टाकून अनलॉक करा.**")
             upi_id = "satishpradhan3392@ybl"
             qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26am=10%26cu=INR"
             
@@ -399,7 +431,78 @@ elif st.session_state.page == "complaint":
         else:
             render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.comp_result, "#DC2626")
 
-# ==================== पान ३: हिस्ट्री (History) ====================
+# ==================== पान ३: ऑनलाइन RTI पोर्टल मसुदा ====================
+elif st.session_state.page == "online_portal":
+    st.markdown("""
+    <div style="background: #FFFBEB; border-left: 6px solid #D97706; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <h3 style="color: #92400E; margin: 0; font-weight: 800;">🟠 ३. ऑनलाइन RTI पोर्टल मसुदा (महा-RTI / RTI Online)</h3>
+        <p style="color: #B45309; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">शासकीय ऑनलाइन पोर्टलच्या 'Description Box' मध्ये थेट कॉपी-पेस्ट करण्यासाठी १५० शब्दांत अचूक मसुदा.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.session_state.online_dept = st.text_input("संबंधित अधिकारी / विभागाचे नाव:", value=st.session_state.online_dept, placeholder="उदा. श्री. महेश महाजन (तलाठी, आधार भवन, जिल्हाधिकारी कार्यालय)")
+    st.session_state.online_subject = st.text_input("माहितीचा मुख्य विषय:", value=st.session_state.online_subject, placeholder="उदा. मूळ नियुक्ती, शैक्षणिक प्रमाणपत्रे व सेवापुस्तिका बाबत")
+    st.session_state.online_query = st.text_area("कोणती माहिती हवी आहे? (मुद्दे साध्या भाषेत लिहा):", value=st.session_state.online_query, placeholder="उदा. शैक्षणिक प्रमाणपत्रे, पडताळणी अहवाल, सेवापुस्तिका, रजेचे रेकॉर्ड, मूळ आदेश")
+
+    if st.button("🚀 ऑनलाइन पोर्टल मसुदा तयार करा"):
+        if not st.session_state.online_dept or not st.session_state.online_query:
+            st.warning("कृपया विभाग/अधिकारी आणि मागितलेली माहिती भरा.")
+        else:
+            with st.spinner("ऑनलाइन पोर्टलच्या १५० शब्दांच्या मर्यादेत मसुदा तयार होत आहे..."):
+                if api_key:
+                    try:
+                        genai.configure(api_key=api_key)
+                        model = genai.GenerativeModel("gemini-1.5-flash")
+                        prompt = f"""
+तुम्ही RTI ऑनलाइन पोर्टल मसुदा तज्ञ आहात. 
+सरकारी ऑनलाइन पोर्टलवर (Online RTI Portal) टेक्स्ट बॉक्समध्ये थेट कॉपी-पेस्ट करण्यासाठी खालील माहितीवरून अत्यंत संक्षिप्त, मुद्देसूद आणि जास्तीत जास्त १५० शब्दांच्या मर्यादेत मसुदा बनवा.
+
+अधिकारी/विभाग: {st.session_state.online_dept}
+विषय: {st.session_state.online_subject}
+मागितलेली माहिती: {st.session_state.online_query}
+
+नियम:
+१. अर्जात कोणताही पत्ता, नमुना अ, किंवा कोर्ट फी चा लांबलचक मजकूर नको.
+२. थेट फॉरमॅट असा असावा:
+विषय: {st.session_state.online_subject} बाबत माहिती अधिकार अर्ज.
+महोदय,
+माहिती अधिकार अधिनियम २००५ अंतर्गत खालील माहिती प्रमाणित प्रतीसह मिळणेबाबत:
+१. ...
+२. ...
+३. ...
+विहित मुदतीत माहिती देण्यात यावी.
+"""
+                        res = model.generate_content(prompt, generation_config={"temperature": 0.2})
+                        st.session_state.online_result = res.text
+                    except Exception as e:
+                        st.error(f"AI त्रुटी: {e}")
+                else:
+                    st.session_state.online_result = f"""विषय: {st.session_state.online_dept} - {st.session_state.online_subject} बाबत माहिती अधिकार अर्ज.
+
+महोदय,
+माहिती अधिकार अधिनियम २००५ अंतर्गत खालील माहिती प्रमाणित प्रतीसह मिळणेबाबत:
+१. {st.session_state.online_query}
+२. संबंधित विषयाच्या सर्व मूळ नोंदी, आदेश व अद्ययावत कार्यभार तपशील.
+३. पडताळणी अहवाल व तक्रार निवारण कार्यवाही प्रत.
+
+विहित मुदतीत माहिती देण्यात यावी."""
+
+                st.session_state.history_list.append({
+                    "type": "🟠 ऑनलाइन RTI पोर्टल",
+                    "title": f"{st.session_state.online_dept}",
+                    "content": st.session_state.online_result,
+                    "time": datetime.now().strftime("%d-%m-%Y %H:%M")
+                })
+
+    if st.session_state.online_result:
+        st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे! (खालील काळ्या बॉक्समधून थेट कॉपी करा)")
+        
+        # थेट कॉपी-पेस्टसाठी आकर्षक काळा बॉक्स (Black Box)
+        st.code(st.session_state.online_result, language="text")
+        
+        st.info("💡 **टीप:** वरील काळ्या बॉक्सच्या उजव्या बाजूला असलेल्या **कॉपी चिन्हावर (📋 Copy)** क्लिक करा आणि शासनाच्या ऑनलाइन RTI पोर्टलच्या मजकूर बॉक्समध्ये (Text Box) थेट **Paste** करा.")
+
+# ==================== पान ४: हिस्ट्री (History) ====================
 elif st.session_state.page == "history":
     st.markdown("<h3>📜 माझी सेव्ह केलेली हिस्ट्री</h3>", unsafe_allow_html=True)
     if not st.session_state.history_list:
@@ -407,19 +510,19 @@ elif st.session_state.page == "history":
     else:
         for idx, item in enumerate(reversed(st.session_state.history_list)):
             with st.expander(f"{item['type']} | {item['title']} ({item['time']})"):
-                st.text_area(f"मसुदा {idx+1}:", value=item['content'], height=200, key=f"hist_{idx}")
+                st.text_area(f"मसुदा {idx+1}:", value=item['content'], height=180, key=f"hist_{idx}")
 
-# ==================== पान ४: मुख्य माहिती ====================
+# ==================== पान ५: मुख्य माहिती ====================
 elif st.session_state.page == "home":
     st.markdown("""
     <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
         <h3 style="color: #1E40AF; margin-top: 0; font-weight: 800;">🔵 मुख्य माहिती व नियम</h3>
         <ul style="font-size: 15px; color: #1F2937; line-height: 1.8;">
-            <li><b>🟢 हिरवा बॉक्स (RTI अर्ज):</b> सरकारी माहिती व कागदपत्रे मिळवण्यासाठी.</li>
-            <li><b>🔴 लाल बॉक्स (तक्रार अर्ज):</b> शासकीय गैरव्यवहार व दिरंगाईविरोधात तक्रार करण्यासाठी.</li>
+            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF.</li>
+            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज.</li>
+            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI / केंद्र सरकारच्या पोर्टलवर १५० शब्दांच्या मर्यादेत थेट कॉपी-पेस्ट करण्यासाठी मसुदा.</li>
             <li><b>📜 माझी हिस्ट्री:</b> तयार केलेले सर्व मसुदे आपोआप सेव्ह राहतात.</li>
             <li><b>🔄 सर्व रिसेट करा:</b> सर्व माहिती एका क्लिकवर पुसून नव्याने सुरुवात करण्यासाठी.</li>
-            <li><b>📄 १ पान मर्यादा:</b> तयार होणारी PDF थेट प्रिंट करण्यासाठी एकाच A4 पानात बसते.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
