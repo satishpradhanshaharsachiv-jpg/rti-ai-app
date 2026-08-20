@@ -1,2 +1,2 @@
 fonts-noto-core
-
+fonts-indic
