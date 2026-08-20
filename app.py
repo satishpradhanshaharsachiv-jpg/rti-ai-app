@@ -76,6 +76,30 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# 🌐 ॲप शेअर बटण (आता अगदी बटनांच्या खाली आणि १००% चालणारे)
+app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
+st.markdown(f"""
+    <div style="text-align: center; margin: 15px 0;">
+        <button onclick="
+            navigator.clipboard.writeText('{app_url}');
+            alert('ॲपची लिंक कॉपी झाली आहे! आता तुम्ही ती कोठेही पेस्ट करून शेअर करू शकता.');
+        " style="
+            background: linear-gradient(135deg, #0284C7, #0369A1); 
+            color: white; 
+            padding: 16px 30px; 
+            border: none; 
+            border-radius: 30px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 100%;
+        ">
+            📤 ॲपची लिंक कॉपी करा (शेअर करण्यासाठी)
+        </button>
+    </div>
+""", unsafe_allow_html=True)
+
 st.markdown("---")
 page = st.session_state.get("page", "home")
 
@@ -92,7 +116,7 @@ if page == "home":
         st.markdown("""
         <div style="background-color: #FEF3C7; padding: 15px; border-radius: 10px; border: 1px solid #F59E0B;">
             <p style="font-weight: bold; color: #92400E; margin: 0;">💳 पेमेंट माहिती:</p>
-            <p style="margin: 5px 0 0 0; color: #1F2937;">प्रत्येक अर्जासाठी कृपया खालील UPI वर स्कॅन करून किंवा नंबरवर ₹10 पाठवा:</p>
+            <p style="margin: 5px 0 0 0; color: #1F2937;">प्रत्येक अर्जासाठी कृपया खालील UPI वर स्कॅन करून किंवा नंबरवर पेमेंट करा:</p>
             <p style="font-size: 18px; font-weight: bold; color: #1E3A8A; margin: 5px 0;">UPI ID: <code>satishpradhan3392@ybl</code></p>
         </div>
         """, unsafe_allow_html=True)
@@ -101,42 +125,6 @@ if page == "home":
             st.session_state.is_paid = True
             st.success("तुमचे पेमेंट गृहीत धरले आहे. आता तुम्ही पुढील अर्ज तयार करू शकता!")
             st.rerun()
-
-    st.markdown("---")
-    st.markdown("<p style='font-size: 15px; font-weight: bold; color: #374151;'>🌐 हे ॲप मित्रांना व गरजू नागरिकांना शेअर करा:</p>", unsafe_allow_html=True)
-    
-    app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
-    
-    # कार्यक्षम शेअर बटण (WhatsApp शब्द काढलेला)
-    st.markdown(f"""
-        <div style="text-align: center; margin: 25px 0;">
-            <button onclick="
-                if (navigator.share) {{
-                    navigator.share({{
-                        title: 'RTI व तक्रार अर्ज AI सहाय्यक',
-                        text: 'घरबसल्या सहज आरटीआय आणि तक्रार अर्ज तयार करण्यासाठी हे ॲप वापरा:',
-                        url: '{app_url}'
-                    }});
-                }} else {{
-                    alert('लिंक कॉपी करा: {app_url}');
-                }}
-            " style="
-                background: linear-gradient(135deg, #25D366, #128C7E); 
-                color: white; 
-                padding: 20px 40px; 
-                border: none; 
-                border-radius: 50px; 
-                font-size: 20px; 
-                font-weight: bold; 
-                cursor: pointer; 
-                box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-                width: 100%;
-                max-width: 400px;
-            ">
-                📤 ॲप शेअर करा
-            </button>
-        </div>
-    """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("<p style='font-size: 12px; color: #4B5563;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
