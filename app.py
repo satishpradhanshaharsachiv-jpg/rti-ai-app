@@ -191,3 +191,11 @@ if submitted:
                 file_name=f"{filename_prefix}_{user_name}.txt",
                 mime="text/plain"
             )
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
