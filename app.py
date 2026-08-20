@@ -84,7 +84,7 @@ div.st-key-btn_online button p {
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# २. सेशन स्टेट मॅनेजमेंट (डेटा टिकवून ठेवण्यासाठी)
+# २. सेशन स्टेट मॅनेजमेंट
 if 'page' not in st.session_state:
     st.session_state.page = "rti"
 
@@ -130,13 +130,12 @@ with col2:
     if st.button("🔴 २. शासकीय तक्रार अर्ज\n(कडक तक्रार मसुदा)", key="btn_comp"):
         st.session_state.page = "complaint"
 
-# तिसरे स्वतंत्र व मोठे ऑनलाइन पोर्टल बटन
 if st.button("🟠 ३. ऑनलाइन RTI पोर्टल मसुदा (थेट कॉपी-पेस्टसाठी)", key="btn_online"):
     st.session_state.page = "online_portal"
 
 st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 
-# उप-नेव्हिगेशन (होम, हिस्ट्री आणि रिसेट)
+# उप-नेव्हिगेशन
 nav1, nav2, nav3 = st.columns(3)
 with nav1:
     st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
@@ -193,10 +192,10 @@ st.markdown(f"""
 
 st.markdown("---")
 
-# API Key इनपुट (साइडबार)
+# API Key इनपुट
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 
-# १-पान A4 प्रिंट/PDF तयार करण्याचे फंक्शन
+# १-पान A4 प्रिंट/PDF फंक्शन
 def render_printable_marathi_doc(title, content, theme_color):
     html_content = content.replace('\n', '<br>')
     printable_html = f"""
@@ -242,7 +241,7 @@ def render_printable_marathi_doc(title, content, theme_color):
     """
     st.components.v1.html(printable_html, height=540, scrolling=True)
 
-# ==================== पान १: RTI अर्ज (ऑफलाइन) ====================
+# ==================== पान १: RTI अर्ज ====================
 if st.session_state.page == "rti":
     st.markdown("""
     <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
@@ -251,9 +250,14 @@ if st.session_state.page == "rti":
     </div>
     """, unsafe_allow_html=True)
 
+    # सुधारित पर्याय (योग्य कायदेशीर कलमांसह)
     st.session_state.rti_type = st.selectbox(
         "अर्जाचा प्रकार निवडा:",
-        ["माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)", "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र (ब)", "द्वितीय अपील मसुदा (कलम १९(क))"],
+        [
+            "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')",
+            "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र 'ब')",
+            "द्वितीय अपील मसुदा (कलम १९(३) - नमुना जोडपत्र 'क')"
+        ],
         index=0
     )
     st.session_state.rti_name = st.text_input("अर्जदाराचे पूर्ण नाव:", value=st.session_state.rti_name)
@@ -278,29 +282,28 @@ if st.session_state.page == "rti":
 कार्यालय: {st.session_state.rti_dept}
 माहिती: {st.session_state.rti_query}
 
-नियम: कलम ६(१), ६(३) (५ दिवसांत वर्ग करणे), ७(१) (३० दिवसांची मुदत) व ₹१० कोर्ट फी स्टॅम्पचा उल्लेख करा. भाषा स्पष्ट व संक्षिप्त ठेवा.
+नियम: कलम ६(१), ६(३) (५ दिवसांत वर्ग करणे), ७(१) (३० दिवसांची मुदत), १९(१), १९(३) व ₹१० कोर्ट फी स्टॅम्पचा उल्लेख करा. भाषा स्पष्ट व संक्षिप्त ठेवा.
 """
                         res = model.generate_content(prompt, generation_config={"temperature": 0.2})
                         st.session_state.rti_result = res.text
                     except Exception as e:
                         st.error(f"AI त्रुटी: {e}")
                 else:
-                    st.session_state.rti_result = f"""माहितीचा अधिकार अधिनियम २००५ चे कलम ६(१) अन्वये अर्ज
-(नमुना - जोडपत्र 'अ')
+                    st.session_state.rti_result = f"""{st.session_state.rti_type}
 
 प्रति,
-जन माहिती अधिकारी,
+जन माहिती अधिकारी / प्रथम अपीलीय अधिकारी,
 कार्यालय: {st.session_state.rti_dept}
 
 १. अर्जदाराचे नाव: {st.session_state.rti_name}
 २. पत्ता व संपर्क: {st.session_state.rti_address}
-३. मागितलेल्या माहितीचा तपशील:
+३. मागितलेल्या माहितीचा तपशील / अपीलाचे कारण:
 {st.session_state.rti_query}
 
 ४. माहितीचा कालावधी: चालू वर्ष व मागील अभिलेख
 ५. माहितीचा प्रकार: प्रमाणित सत्यप्रतीसह व्यक्तिशः / टपालाने
 
-सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील करण्यात येईल. माहिती आपल्या अखत्यारीतील नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी. अर्जासोबत ₹१० चा कोर्ट फी स्टॅम्प जोडला आहे.
+सदर माहिती विहित मुदतीत न मिळाल्यास वरिष्ठ स्तरावर अपील करण्यात येईल. माहिती आपल्या अखत्यारीतील नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी. अर्जासोबत ₹१० चा कोर्ट फी स्टॅम्प जोडला आहे.
 
 तारीख: ____________                                अर्जदाराची स्वाक्षरी: {st.session_state.rti_name}
 ठिकाण: ____________"""
@@ -496,13 +499,10 @@ elif st.session_state.page == "online_portal":
 
     if st.session_state.online_result:
         st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे! (खालील काळ्या बॉक्समधून थेट कॉपी करा)")
-        
-        # थेट कॉपी-पेस्टसाठी आकर्षक काळा बॉक्स (Black Box)
         st.code(st.session_state.online_result, language="text")
-        
         st.info("💡 **टीप:** वरील काळ्या बॉक्सच्या उजव्या बाजूला असलेल्या **कॉपी चिन्हावर (📋 Copy)** क्लिक करा आणि शासनाच्या ऑनलाइन RTI पोर्टलच्या मजकूर बॉक्समध्ये (Text Box) थेट **Paste** करा.")
 
-# ==================== पान ४: हिस्ट्री (History) ====================
+# ==================== पान ४: हिस्ट्री ====================
 elif st.session_state.page == "history":
     st.markdown("<h3>📜 माझी सेव्ह केलेली हिस्ट्री</h3>", unsafe_allow_html=True)
     if not st.session_state.history_list:
