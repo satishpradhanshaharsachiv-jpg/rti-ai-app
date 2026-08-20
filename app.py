@@ -17,12 +17,13 @@ footer {visibility: hidden;}
 h1 { color: #1E3A8A; font-weight: bold; }
 h2 { color: #047857; font-weight: bold; }
 .stButton>button {
-    font-size: 18px !important;
+    font-size: 20px !important;
     font-weight: bold !important;
-    padding: 12px 20px !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    padding: 16px 20px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     width: 100%;
+    margin-bottom: 10px;
 }
 </style>
 """
@@ -48,7 +49,7 @@ def generate_pdf(content_text):
     buffer.seek(0)
     return buffer
 
-# ३. सेशन स्टेटद्वारे पानांचे व्यवस्थापन (मोठ्या बटनांसाठी)
+# ३. सेशन स्टेटद्वारे पानांचे व्यवस्थापन
 if 'page' not in st.session_state:
     st.session_state.page = "🏠 मुख्य पान व माहिती"
 
@@ -56,22 +57,20 @@ st.markdown("<h1 style='text-align: center; color: #B91C1C;'>🏛️ RTI व त
 st.markdown("<p style='text-align: center; font-size: 18px; font-weight: bold;'>घरबसल्या सहज तयार करा कायदेशीर RTI अर्ज, अपील आणि शासकीय तक्रार अर्ज!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# मोठे रंगीत नेव्हिगेशन बटन्स (रेश किंवा वर्तुळ नाही, तर थेट मोठे टच बटन्स)
-st.markdown("<h3 style='text-align: center; color: #374151;'>👇 पुढील पानावर जाण्यासाठी खालील बटनावर टच करा:</h3>", unsafe_allow_html=True)
-col_b1, col_b2, col_b3 = st.columns(3)
+# **मोठमोठे आणि उठून दिसणारे मुख्य बटना (Full Width Large Buttons)**
+st.markdown("<h3 style='text-align: center; color: #1E3A8A;'>👇 खालीलपैकी हवा असलेला मोठा पर्याय निवडा:</h3>", unsafe_allow_html=True)
 
-with col_b1:
-    if st.button("🏠 मुख्य पान"):
-        st.session_state.page = "🏠 मुख्य पान व माहिती"
-        st.rerun()
-with col_b2:
-    if st.button("📜 RTI अर्ज"):
-        st.session_state.page = "📜 RTI अर्ज व अपील तयार करा"
-        st.rerun()
-with col_b3:
-    if st.button("📝 तक्रार अर्ज"):
-        st.session_state.page = "📝 तक्रार अर्ज तयार करा"
-        st.rerun()
+if st.button("🏠 मुख्य पान व माहिती"):
+    st.session_state.page = "🏠 मुख्य पान व माहिती"
+    st.rerun()
+
+if st.button("📜 ➔ RTI अर्ज व अपील तयार करा"):
+    st.session_state.page = "📜 RTI अर्ज व अपील तयार करा"
+    st.rerun()
+
+if st.button("📝 ➔ शासकीय तक्रार अर्ज तयार करा"):
+    st.session_state.page = "📝 तक्रार अर्ज तयार करा"
+    st.rerun()
 
 st.markdown("---")
 page = st.session_state.page
@@ -86,7 +85,7 @@ if page == "🏠 मुख्य पान व माहिती":
     st.write("शासकीय कार्यालयातील दिरंगाई, समस्या किंवा तक्रारीसाठी थेट कायदेशीर अर्ज तयार करा.")
     
     st.markdown("---")
-    st.markdown("## 🌐 हे ॲप आपल्या मित्रांना आणि सोशल मीडियावर शेअर करा:")
+    st.markdown("## 🌐 हे ॲप मित्रांना शेअर करा:")
     
     data_text = "🏛️ RTI व तक्रार अर्ज AI सहाय्यक - आता घरबसल्या मोबाईलवरून आरटीआय आणि तक्रार अर्ज तयार करा! लिंक उघडा:"
     app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
@@ -95,26 +94,14 @@ if page == "🏠 मुख्य पान व माहिती":
     facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={app_url}"
     telegram_url = f"https://t.me/share/url?url={app_url}&text={data_text}"
     
-    # एकदम मोठे, आकर्षक आणि डिझायनर शेअर बटनार (WhatsApp, Facebook, Telegram)
-    st.markdown(f"""
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-            <a href="{whatsapp_url}" target="_blank" style="text-decoration: none;">
-                <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
-                    💬 WhatsApp वर भव्य शेअर करा
-                </div>
-            </a>
-            <a href="{facebook_url}" target="_blank" style="text-decoration: none;">
-                <div style="background: linear-gradient(135deg, #1877F2, #0d56b3); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
-                    📘 Facebook वर शेअर करा
-                </div>
-            </a>
-            <a href="{telegram_url}" target="_blank" style="text-decoration: none;">
-                <div style="background: linear-gradient(135deg, #0088cc, #005f8f); color: white; padding: 16px; border-radius: 14px; text-align: center; font-weight: bold; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
-                    ✈️ Telegram / इतर ॲप्सवर शेअर करा
-                </div>
-            </a>
-        </div>
-    """, unsafe_allow_html=True)
+    # **लहान आणि नेटके शेअरिंग बटन्स (Small & Compact Share Buttons)**
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(f'<a href="{whatsapp_url}" target="_blank" style="text-decoration: none;"><div style="background-color:#25D366; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold; font-size:13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">💬 WhatsApp</div></a>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'<a href="{facebook_url}" target="_blank" style="text-decoration: none;"><div style="background-color:#1877F2; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold; font-size:13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">📘 Facebook</div></a>', unsafe_allow_html=True)
+    with col3:
+        st.markdown(f'<a href="{telegram_url}" target="_blank" style="text-decoration: none;"><div style="background-color:#0088cc; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold; font-size:13px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">✈️ Telegram</div></a>', unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 👤 विकासक व संपर्क माहिती:")
