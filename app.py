@@ -1,12 +1,11 @@
 import streamlit as st
 import google.generativeai as genai
 import urllib.parse
-import re
 
-# १. पेज कॉन्फिगरेशन आणि संपूर्ण वॉटरमार्क / ब्रँडिंग लपवणे
+# १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
 st.set_page_config(page_title="RTI व शासकीय तक्रार सहाय्यक", page_icon="🏛️", layout="centered")
 
-hide_all_branding = """
+hide_and_style = """
 <style>
 #MainMenu {visibility: hidden; display: none;}
 footer {visibility: hidden; display: none;}
@@ -16,11 +15,47 @@ header {visibility: hidden; display: none;}
 [data-testid="stStatusWidget"] {visibility: hidden; display: none;}
 div[class^="viewerBadge"] {visibility: hidden; display: none !important;}
 button[title="View source"] {display: none;}
-h1 { color: #1E3A8A; font-weight: bold; text-align: center; font-size: 24px; }
-.stButton>button { width: 100%; border-radius: 10px; font-weight: bold; }
+
+h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 26px; margin-bottom: 5px; }
+
+/* मोठ्या आणि ठळक बटनांचे स्पेशल CSS */
+.home-btn div.stButton > button {
+    background: linear-gradient(135deg, #1E3A8A, #3B82F6) !important;
+    color: white !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    height: 55px !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3) !important;
+}
+
+.rti-btn div.stButton > button {
+    background: linear-gradient(135deg, #047857, #10B981) !important;
+    color: white !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    height: 75px !important;
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 6px 15px rgba(4, 120, 87, 0.35) !important;
+    margin-bottom: 10px !important;
+}
+
+.complaint-btn div.stButton > button {
+    background: linear-gradient(135deg, #B91C1C, #F59E0B) !important;
+    color: white !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    height: 75px !important;
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 6px 15px rgba(185, 28, 28, 0.35) !important;
+    margin-bottom: 10px !important;
+}
 </style>
 """
-st.markdown(hide_all_branding, unsafe_allow_html=True)
+st.markdown(hide_and_style, unsafe_allow_html=True)
 
 # २. सेशन स्टेट
 if 'page' not in st.session_state:
@@ -31,28 +66,32 @@ if 'complaint_paid' not in st.session_state:
     st.session_state.complaint_paid = False
 
 st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 14px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ३. नेव्हिगेशन बटने
-c1, c2, c3 = st.columns(3)
-with c1:
-    if st.button("🏠 मुख्य माहिती"):
-        st.session_state.page = "home"
-with c2:
-    if st.button("📜 RTI अर्ज"):
-        st.session_state.page = "rti"
-with c3:
-    if st.button("📝 तक्रार अर्ज"):
-        st.session_state.page = "complaint"
+# ३. मोठी आणि ठळक नेव्हिगेशन बटने
+st.markdown('<div class="rti-btn">', unsafe_allow_html=True)
+if st.button("📜 RTI अर्ज व अपील तयार करा (येथे क्लिक करा)"):
+    st.session_state.page = "rti"
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="complaint-btn">', unsafe_allow_html=True)
+if st.button("📝 शासकीय तक्रार अर्ज तयार करा (येथे क्लिक करा)"):
+    st.session_state.page = "complaint"
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<div class="home-btn">', unsafe_allow_html=True)
+if st.button("🏠 मुख्य पान व माहिती"):
+    st.session_state.page = "home"
+st.markdown('</div>', unsafe_allow_html=True)
 
 # WhatsApp शेअर बटण
 app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
 share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
 st.markdown(f"""
-    <div style="margin: 10px 0;">
+    <div style="margin: 15px 0 10px 0;">
         <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 10px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: bold;">
+            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 12px; border-radius: 12px; text-align: center; font-size: 16px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
                 📲 WhatsApp वर मित्रांना शेअर करा
             </div>
         </a>
@@ -64,7 +103,7 @@ st.markdown("---")
 # API Key इनपुट (साइडबार)
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 
-# शुद्ध मराठी A4 PDF / प्रिंट तयार करण्याचे HTML फंक्शन (अक्षरे तुटत नाहीत)
+# ४. शुद्ध मराठी १-पान A4 PDF / प्रिंट तयार करण्याचे HTML फंक्शन
 def render_printable_marathi_doc(title, content):
     html_content = content.replace('\n', '<br>')
     printable_html = f"""
@@ -96,8 +135,8 @@ def render_printable_marathi_doc(title, content):
         " style="
             background: #1E3A8A;
             color: white;
-            padding: 12px 25px;
-            font-size: 16px;
+            padding: 14px 28px;
+            font-size: 17px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
@@ -108,23 +147,24 @@ def render_printable_marathi_doc(title, content):
         </button>
     </div>
     """
-    st.components.v1.html(printable_html, height=520, scrolling=True)
+    st.components.v1.html(printable_html, height=530, scrolling=True)
 
-# ==================== मुख्य पान ====================
+# ==================== पान १: मुख्य पान ====================
 if st.session_state.page == "home":
     st.markdown("### 📌 ॲपची वैशिष्ट्ये:")
     st.markdown("""
-    * **कायदेशीर अचूकता:** RTI कायदा कलम ६(१), ६(३), ७(१) व २०(१) नुसार परिपूर्ण मसुदा.
-    * **१ पान मर्यादा:** डाऊनलोड होणारी PDF थेट प्रिंट काढण्यासाठी एकाच A4 पानावर सुटसुटीत बसते.
+    * **कायदेशीर RTI अर्ज:** नमुना जोडपत्र अ (कलम ६(१)), प्रथम अपील (कलम १९(१)) आणि द्वितीय अपीलचे कायदेशीर मसुदे.
+    * **शासकीय तक्रार अर्ज:** शासकीय कार्यालयातील दिरंगाई व गैरव्यवहाराविरुद्ध कडक व प्रभावी तक्रार.
+    * **१ पान मर्यादा:** डाऊनलोड होणारी PDF थेट प्रिंट काढण्यासाठी एकाच A4 पानावर व्यवस्थित बसते.
     * **अक्षरांची अचूकता:** सर्व मराठी जोडाक्षरे १००% शुद्ध आणि स्पष्ट दिसतात.
-    * **शुल्क:** मसुदा पाहणे विनामूल्य आहे. अधिकृत प्रिंट-रेडी PDF डाऊनलोड करण्यासाठी केवळ **₹१०** शुल्क आहे.
+    * **शुल्क:** मसुदा पाहणे विनामूल्य आहे. अधिकृत A4 PDF डाऊनलोड करण्यासाठी केवळ **₹१०** शुल्क आहे.
     """)
     st.markdown("---")
-    st.markdown("<p style='font-size: 12px; color: #6B7280;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 13px; color: #6B7280;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
 
-# ==================== RTI अर्ज पान ====================
+# ==================== पान २: RTI अर्ज ====================
 elif st.session_state.page == "rti":
-    st.markdown("<h3>📜 RTI अर्ज व अपील मसुदा तयार करा</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #047857;'>📜 RTI अर्ज व अपील मसुदा तयार करा</h2>", unsafe_allow_html=True)
 
     with st.form("rti_form"):
         doc_type = st.selectbox("अर्जाचा प्रकार निवडा:", [
@@ -136,7 +176,7 @@ elif st.session_state.page == "rti":
         user_address = st.text_area("अर्जदाराचा संपूर्ण पत्ता व संपर्क:")
         dept_name = st.text_input("सरकारी कार्यालय / विभागाचे नाव:")
         query = st.text_area("मागितलेली माहिती / अपीलाचे कारण:")
-        submitted = st.form_submit_button("🚀 RTI अर्ज तयार करा")
+        submitted = st.form_submit_button("🚀 कायदेशीर RTI अर्ज तयार करा")
 
     if submitted:
         if not user_name or not query or not dept_name:
@@ -215,9 +255,9 @@ elif st.session_state.page == "rti":
         else:
             render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result)
 
-# ==================== शासकीय तक्रार पान ====================
+# ==================== पान ३: शासकीय तक्रार ====================
 elif st.session_state.page == "complaint":
-    st.markdown("<h3>📝 शासकीय तक्रार अर्ज तयार करा</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #B91C1C;'>📝 शासकीय तक्रार अर्ज तयार करा</h2>", unsafe_allow_html=True)
 
     with st.form("complaint_form"):
         c_name = st.text_input("तक्रारदाराचे पूर्ण नाव:")
@@ -225,7 +265,7 @@ elif st.session_state.page == "complaint":
         c_dept = st.text_input("कार्यालय / अधिकारी (उदा. आयुक्त / जिल्हाधिकारी):")
         c_subject = st.text_input("तक्रारीचा मुख्य विषय:")
         c_query = st.text_area("तक्रारीचा सविस्तर तपशील:")
-        c_submitted = st.form_submit_button("🚀 तक्रार अर्ज तयार करा")
+        c_submitted = st.form_submit_button("🚀 कडक तक्रार अर्ज तयार करा")
 
     if c_submitted:
         if not c_name or not c_dept or not c_query:
