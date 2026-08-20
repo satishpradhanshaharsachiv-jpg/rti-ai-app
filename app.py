@@ -4,11 +4,11 @@ import urllib.parse
 from datetime import datetime
 
 # १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
-st.set_page_config(page_title="RTI व शासकीय तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
+st.set_page_config(page_title="RTI व शासकीय तक्रार सहाय्यक", page_icon="🏛️", layout="centered")
 
 custom_css = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
 
 * {
     font-family: 'Mukta', sans-serif !important;
@@ -23,34 +23,38 @@ header {visibility: hidden; display: none;}
 div[class^="viewerBadge"] {visibility: hidden; display: none !important;}
 button[title="View source"] {display: none;}
 
-h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 24px; margin-bottom: 2px; }
+h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 25px; margin-bottom: 2px; }
 
-/* 🟢 आडवे मोठे हिरवे RTI बटन */
-.rti-col div.stButton > button {
+/* 🟢 १. मोठे व ठळक हिरवे RTI बटन */
+div.st-key-btn_rti button {
     background: linear-gradient(135deg, #059669, #10B981) !important;
-    color: white !important;
-    font-size: 19px !important;
-    font-weight: 800 !important;
-    height: 90px !important;
+    color: #ffffff !important;
+    height: 80px !important;
     border-radius: 14px !important;
     border: 2px solid #047857 !important;
-    box-shadow: 0 5px 12px rgba(5, 150, 105, 0.35) !important;
-    white-space: normal !important;
-    line-height: 1.3 !important;
+    box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4) !important;
+}
+div.st-key-btn_rti button p {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
 }
 
-/* 🔴 आडवे मोठे लाल तक्रार बटन */
-.comp-col div.stButton > button {
+/* 🔴 २. मोठे व ठळक लाल तक्रार बटन */
+div.st-key-btn_comp button {
     background: linear-gradient(135deg, #DC2626, #EF4444) !important;
-    color: white !important;
-    font-size: 19px !important;
-    font-weight: 800 !important;
-    height: 90px !important;
+    color: #ffffff !important;
+    height: 80px !important;
     border-radius: 14px !important;
     border: 2px solid #B91C1C !important;
-    box-shadow: 0 5px 12px rgba(220, 38, 38, 0.35) !important;
-    white-space: normal !important;
-    line-height: 1.3 !important;
+    box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4) !important;
+}
+div.st-key-btn_comp button p {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
 }
 
 /* लहान नेव्हिगेशन बटने */
@@ -64,9 +68,9 @@ h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 24px; marg
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# २. सेशन स्टेट सुरू करणे (डेटा नष्ट न होण्यासाठी)
+# २. सेशन स्टेट मॅनेजमेंट (डेटा सुरक्षित ठेवण्यासाठी)
 if 'page' not in st.session_state:
-    st.session_state.page = "rti"  # सुरुवातीला RTI उघडा राहील
+    st.session_state.page = "rti"
 
 # RTI चे सेव्ह व्हेरिएबल्स
 if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)"
@@ -84,9 +88,9 @@ if 'comp_dept' not in st.session_state: st.session_state.comp_dept = ""
 if 'comp_subject' not in st.session_state: st.session_state.comp_subject = ""
 if 'comp_query' not in st.session_state: st.session_state.comp_query = ""
 if 'comp_result' not in st.session_state: st.session_state.comp_result = ""
-if 'comp_paid' not in st.session_state: st.session_state.complaint_paid = False
+if 'complaint_paid' not in st.session_state: st.session_state.complaint_paid = False
 
-# हिस्ट्री यादी (History List)
+# सेव्ह केलेली हिस्ट्री
 if 'history_list' not in st.session_state:
     st.session_state.history_list = []
 
@@ -95,20 +99,16 @@ st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सह
 st.markdown("<p style='text-align: center; font-size: 14px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज आणि शासकीय तक्रार!</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# ४. मुख्य आडवे दोन मोठे चौकोनी बॉक्सेस (🟢 RTI व 🔴 तक्रार)
+# ४. मुख्य आडवे दोन मोठे आकर्षक बॉक्सेस (🟢 RTI व 🔴 तक्रार)
 col_rti, col_comp = st.columns(2)
 
 with col_rti:
-    st.markdown('<div class="rti-col">', unsafe_allow_html=True)
-    if st.button("🟢 १. RTI अर्ज व अपील\n(हिरवा बॉक्स दाबा)"):
+    if st.button("🟢 RTI अर्ज व अपील अर्ज", key="btn_rti"):
         st.session_state.page = "rti"
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_comp:
-    st.markdown('<div class="comp-col">', unsafe_allow_html=True)
-    if st.button("🔴 २. शासकीय तक्रार अर्ज\n(लाल बॉक्स दाबा)"):
+    if st.button("🔴 शासकीय तक्रार अर्ज", key="btn_comp"):
         st.session_state.page = "complaint"
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # लहान उप-नेव्हिगेशन (होम, हिस्ट्री आणि रिसेट)
 nav1, nav2, nav3 = st.columns(3)
@@ -120,8 +120,8 @@ with nav1:
 
 with nav2:
     st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    history_count = len(st.session_state.history_list)
-    if st.button(f"📜 माझी हिस्ट्री ({history_count})"):
+    hist_count = len(st.session_state.history_list)
+    if st.button(f"📜 माझी हिस्ट्री ({hist_count})"):
         st.session_state.page = "history"
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -150,9 +150,9 @@ with nav3:
 app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
 share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज व शासकीय तक्रार १ सेकंदात तयार करा: {app_url}")
 st.markdown(f"""
-    <div style="margin: 10px 0;">
+    <div style="margin: 10px 0 15px 0;">
         <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 10px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: bold;">
+            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 11px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
                 📲 WhatsApp वर मित्रांना शेअर करा
             </div>
         </a>
@@ -164,7 +164,7 @@ st.markdown("---")
 # API Key इनपुट (साइडबार)
 api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 
-# १-पान A4 प्रिंट/PDF तयार करण्याचे सुरक्षित फंक्शन
+# १-पान A4 प्रिंट/PDF तयार करण्याचे फंक्शन
 def render_printable_marathi_doc(title, content, theme_color):
     html_content = content.replace('\n', '<br>')
     printable_html = f"""
@@ -214,12 +214,11 @@ def render_printable_marathi_doc(title, content, theme_color):
 if st.session_state.page == "rti":
     st.markdown("""
     <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #065F46; margin: 0;">🟢 RTI अर्ज व अपील विभाग</h3>
+        <h3 style="color: #065F46; margin: 0; font-weight: 800;">🟢 RTI अर्ज व अपील विभाग</h3>
         <p style="color: #047857; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">येथे भरलेली माहिती दुसऱ्या पानावर गेल्यावरही सुरक्षित राहील.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # व्हॅल्यूज session_state मधून थेट जोडल्या आहेत (डेटा उडणार नाही)
     st.session_state.rti_type = st.selectbox(
         "अर्जाचा प्रकार निवडा:",
         ["माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र अ)", "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र १)", "द्वितीय अपील मसुदा (कलम १९(३))"],
@@ -274,7 +273,6 @@ if st.session_state.page == "rti":
 तारीख: ____________                                अर्जदाराची स्वाक्षरी: {st.session_state.rti_name}
 ठिकाण: ____________"""
 
-                # हिस्ट्रीमध्ये सेव्ह करणे
                 st.session_state.history_list.append({
                     "type": "🟢 RTI अर्ज",
                     "title": f"{st.session_state.rti_dept} - {st.session_state.rti_name}",
@@ -314,12 +312,11 @@ if st.session_state.page == "rti":
 elif st.session_state.page == "complaint":
     st.markdown("""
     <div style="background: #FEF2F2; border-left: 6px solid #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #991B1B; margin: 0;">🔴 शासकीय तक्रार अर्ज विभाग</h3>
+        <h3 style="color: #991B1B; margin: 0; font-weight: 800;">🔴 शासकीय तक्रार अर्ज विभाग</h3>
         <p style="color: #B91C1C; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">येथे भरलेली माहिती दुसऱ्या पानावर गेल्यावरही सुरक्षित राहील.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # व्हॅल्यूज session_state मधून थेट जोडल्या आहेत
     st.session_state.comp_name = st.text_input("तक्रारदाराचे पूर्ण नाव:", value=st.session_state.comp_name)
     st.session_state.comp_address = st.text_area("पत्ता व मोबाईल नंबर:", value=st.session_state.comp_address)
     st.session_state.comp_dept = st.text_input("कार्यालय / अधिकारी (उदा. आयुक्त / जिल्हाधिकारी):", value=st.session_state.comp_dept)
@@ -350,7 +347,7 @@ elif st.session_state.page == "complaint":
                     except Exception as e:
                         st.error(f"AI त्रुटी: {e}")
                 else:
-                    st.session_state.comp_result = f"""प्रति,
+                    st.session_state.complaint_result = f"""प्रति,
 मा. {st.session_state.comp_dept},
 
 विषय: {st.session_state.comp_subject} बाबत तातडीने कठोर कारवाई करणेबाबत.
@@ -367,11 +364,10 @@ elif st.session_state.page == "complaint":
 
 प्रत माहितीस्तव: मा. जिल्हाधिकारी महोदय."""
 
-                # हिस्ट्रीमध्ये सेव्ह करणे
                 st.session_state.history_list.append({
                     "type": "🔴 तक्रार अर्ज",
                     "title": f"{st.session_state.comp_dept} - {st.session_state.comp_subject}",
-                    "content": st.session_state.comp_result,
+                    "content": st.session_state.complaint_result,
                     "time": datetime.now().strftime("%d-%m-%Y %H:%M")
                 })
 
@@ -405,7 +401,7 @@ elif st.session_state.page == "complaint":
 
 # ==================== पान ३: हिस्ट्री (History) ====================
 elif st.session_state.page == "history":
-    st.markdown("<h3>📜 माझी सेव्ह केलेली हिस्ट्री (तयार केलेले मसुदे)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>📜 माझी सेव्ह केलेली हिस्ट्री</h3>", unsafe_allow_html=True)
     if not st.session_state.history_list:
         st.info("💡 तुम्ही अद्याप कोणताही अर्ज तयार केलेला नाही. नवीन अर्ज तयार केल्यावर तो येथे आपोआप सेव्ह होईल.")
     else:
@@ -417,7 +413,7 @@ elif st.session_state.page == "history":
 elif st.session_state.page == "home":
     st.markdown("""
     <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
-        <h3 style="color: #1E40AF; margin-top: 0;">🔵 मुख्य माहिती व नियम</h3>
+        <h3 style="color: #1E40AF; margin-top: 0; font-weight: 800;">🔵 मुख्य माहिती व नियम</h3>
         <ul style="font-size: 15px; color: #1F2937; line-height: 1.8;">
             <li><b>🟢 हिरवा बॉक्स (RTI अर्ज):</b> सरकारी माहिती व कागदपत्रे मिळवण्यासाठी.</li>
             <li><b>🔴 लाल बॉक्स (तक्रार अर्ज):</b> शासकीय गैरव्यवहार व दिरंगाईविरोधात तक्रार करण्यासाठी.</li>
@@ -428,4 +424,3 @@ elif st.session_state.page == "home":
     </div>
     """, unsafe_allow_html=True)
     st.markdown("<p style='font-size: 13px; color: #6B7280; text-align: center;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
-
