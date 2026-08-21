@@ -65,7 +65,7 @@ if 'chat_messages' not in st.session_state:
 APP_URL = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
 
 # ==============================================================================
-# ३. सुरक्षित व ऑटो-मॉडेल AI फंक्शन (४०४ त्रुटी कायमची दूर)
+# ३. सुरक्षित मॉडेल हँडलर (४०४ त्रुटी पूर्ण निवारण)
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -76,46 +76,33 @@ def get_ai_multimodal_response(prompt_text, image_data=None):
     try:
         genai.configure(api_key=active_api_key)
         
-        # सपोर्टेड मॉडेल्सची क्रमवारी (Auto-Fallback)
-        models_to_check = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        # अद्ययावत मॉडेल क्रमवारी (३.६ / २.५ / फ्लॅश सपोर्ट)
+        model_candidates = [
+            "gemini-3.6-flash",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-pro"
+        ]
         
-        # उपलब्ध मॉडेल शोधणे
-        try:
-            available_models = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        except Exception:
-            available_models = models_to_check
-
-        selected_model = None
-        for m in models_to_check:
-            if m in available_models:
-                selected_model = m
-                break
+        last_error = ""
+        for m_name in model_candidates:
+            try:
+                model = genai.GenerativeModel(m_name)
+                if image_data:
+                    res = model.generate_content([prompt_text, image_data])
+                else:
+                    res = model.generate_content(prompt_text)
+                
+                if res and res.text:
+                    return res.text
+            except Exception as err:
+                last_error = str(err)
+                continue
         
-        if not selected_model:
-            selected_model = available_models[0] if available_models else 'gemini-1.5-flash'
-
-        model = genai.GenerativeModel(selected_model)
-
-        if image_data:
-            # फोटोसह प्रश्न
-            vision_models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro-vision']
-            for v_m in vision_models:
-                try:
-                    v_model = genai.GenerativeModel(v_m)
-                    res = v_model.generate_content([prompt_text, image_data])
-                    if res and res.text:
-                        return res.text
-                except Exception:
-                    continue
-        
-        res = model.generate_content(prompt_text)
-        if res and res.text:
-            return res.text
-            
+        return f"AI त्रुटी: {last_error}"
     except Exception as e:
         return f"AI त्रुटी: {str(e)}"
-    
-    return "माहिती तयार करण्यात अडचण येत आहे. कृपया पुन्हा प्रयत्न करा."
 
 # ==============================================================================
 # ४. हेडर व शेअर मेनू
@@ -144,7 +131,7 @@ if st.session_state.show_share:
 st.markdown("---")
 
 # ==============================================================================
-# ५. मुख्य ६ नॅव्हिगेशन बटने (Single Clean Grid)
+# ५. मुख्य ६ नॅव्हिगेशन बटने
 # ==============================================================================
 b1, b2, b3, b4, b5, b6 = st.columns(6)
 with b1:
@@ -223,7 +210,7 @@ elif st.session_state.active_tab == "AI चॅटबॉट":
         with st.chat_message("assistant"):
             with st.spinner("AI उत्तर तयार करत आहे..."):
                 img = Image.open(uploaded_img) if uploaded_img else None
-                system_instruction = "तुम्ही एक शक्तिशाली AI सहाय्यक आहात. विचारलेल्या कोणत्याही विषयावर (कायदा, विज्ञान, इतिहास, सामान्य ज्ञान किंवा कागदपत्र विश्लेषण) मराठीत अचूक उत्तर द्या."
+                system_instruction = "तुम्ही एक शक्तिशाली आणि हुशार AI सहाय्यक आहात. विचारलेल्या कोणत्याही विषयावर (कायदा, विज्ञान, इतिहास, फोटो विश्लेषण, सामान्य ज्ञान) मराठीत स्पष्ट, सविस्तर आणि अचूक उत्तर द्या."
                 full_prompt = f"{system_instruction}\n\nप्रश्न: {prompt}"
                 
                 response_text = get_ai_multimodal_response(full_prompt, img)
