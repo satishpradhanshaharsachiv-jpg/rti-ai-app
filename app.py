@@ -1,11 +1,12 @@
 import streamlit as st
 import google.generativeai as genai
+import urllib.parse
 from datetime import datetime
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि डिझाइन
+# १. पेज कॉन्फिगरेशन आणि मोबाइल-फ्रेंडली डिझाइन
 # ==============================================================================
-st.set_page_config(page_title="RTI, तक्रार व न्यायालयीन AI महा-सहाय्यक", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="RTI व कायदेशीर महा-सहाय्यक", page_icon="⚖️", layout="wide")
 
 custom_css = """
 <style>
@@ -15,24 +16,33 @@ custom_css = """
 #MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
     visibility: hidden; display: none !important;
 }
-div[class^="viewerBadge"] { visibility: hidden; display: none !important; }
-button[title="View source"] { display: none; }
 
-h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 22px; margin-bottom: 4px; }
+h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 20px; margin-bottom: 2px; }
 
-/* मुख्य ६ रंगीत बटने */
-div.st-key-btn_tab1 button { background: linear-gradient(135deg, #059669, #10B981) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
-div.st-key-btn_tab2 button { background: linear-gradient(135deg, #2563EB, #3B82F6) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
-div.st-key-btn_tab3 button { background: linear-gradient(135deg, #D97706, #F59E0B) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
-div.st-key-btn_tab4 button { background: linear-gradient(135deg, #0D9488, #14B8A6) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
-div.st-key-btn_tab5 button { background: linear-gradient(135deg, #7C3AED, #8B5CF6) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
-div.st-key-btn_tab6 button { background: linear-gradient(135deg, #DC2626, #EF4444) !important; color: white !important; height: 50px !important; border-radius: 8px !important; font-weight: bold; }
+/* ६ मुख्य रंगीत बटने */
+div.st-key-btn_tab1 button { background: linear-gradient(135deg, #059669, #10B981) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+div.st-key-btn_tab2 button { background: linear-gradient(135deg, #2563EB, #3B82F6) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+div.st-key-btn_tab3 button { background: linear-gradient(135deg, #D97706, #F59E0B) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+div.st-key-btn_tab4 button { background: linear-gradient(135deg, #0D9488, #14B8A6) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+div.st-key-btn_tab5 button { background: linear-gradient(135deg, #7C3AED, #8B5CF6) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+div.st-key-btn_tab6 button { background: linear-gradient(135deg, #DC2626, #EF4444) !important; color: white !important; height: 48px !important; border-radius: 8px !important; font-weight: bold; }
+
+/* चॅट कंटेनर स्क्रोलिंग */
+.chat-scroll-area {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #F9FAFB;
+    margin-bottom: 10px;
+}
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==============================================================================
-# २. ऑटोमॅटिक सेशन स्टेट
+# २. ऑटोमॅटिक सेशन स्टेट मॅनेजमेंट
 # ==============================================================================
 if 'active_tab' not in st.session_state: st.session_state.active_tab = "जोडपत्र 'अ'"
 if 'user_name' not in st.session_state: st.session_state.user_name = ""
@@ -41,9 +51,9 @@ if 'dept_name' not in st.session_state: st.session_state.dept_name = ""
 if 'original_query' not in st.session_state: st.session_state.original_query = ""
 if 'complaint_reason' not in st.session_state: st.session_state.complaint_reason = ""
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
-if 'chat_messages' not in st.session_state: 
-    st.session_state.chat_messages = [
-        {"role": "assistant", "content": "नमस्कार! मी तुमचा कायदेशीर व प्रशासकीय AI सहाय्यक आहे. RTI, न्यायालयीन कायदे किंवा तक्रार अर्जाबाबत कोणताही प्रश्न विचारा."}
+if 'chat_history' not in st.session_state: 
+    st.session_state.chat_history = [
+        {"role": "assistant", "content": "नमस्कार! मी तुमचा AI सहाय्यक आहे. माहिती अधिकार (RTI) किंवा तक्रार अर्जाबाबत कोणताही प्रश्न विचारा."}
     ]
 
 # ==============================================================================
@@ -65,80 +75,51 @@ COURT_ADDRESSES = {
 }
 
 # ==============================================================================
-# ४. अचूक AI फंक्शन व १-पानात PDF प्रिंटर (Isolation Mode)
+# ४. AI फंक्शन व मसुदा नियंत्रक
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key (ऐच्छिक):", type="password")
 active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
 
 def generate_ai_draft(prompt_text):
     if active_api_key:
-        models_to_try = ["gemini-1.5-flash", "gemini-pro", "models/gemini-1.5-flash"]
-        for m_name in models_to_try:
+        models = ["gemini-1.5-flash", "gemini-pro", "models/gemini-1.5-flash"]
+        for m in models:
             try:
                 genai.configure(api_key=active_api_key)
-                model = genai.GenerativeModel(m_name)
+                model = genai.GenerativeModel(m)
                 res = model.generate_content(prompt_text, generation_config={"temperature": 0.2})
-                return res.text
+                if res and res.text:
+                    return res.text
             except Exception:
                 continue
     return None
 
-def render_printable_doc(title, content, theme_color="#1E3A8A"):
-    formatted_content = content.replace('\n', '<br>')
-    printable_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap" rel="stylesheet">
-        <style>
-            body {{ font-family: 'Mukta', sans-serif; margin: 0; padding: 10px; background: transparent; }}
-            #doc-container {{
-                background: #ffffff; color: #000000; padding: 25px 30px;
-                border: 2px solid {theme_color}; border-radius: 6px;
-                line-height: 1.6; font-size: 15px; max-width: 750px; margin: 0 auto;
-                box-sizing: border-box;
-            }}
-            .print-btn {{
-                display: block; width: 280px; margin: 15px auto; padding: 10px 15px;
-                background: {theme_color}; color: #ffffff; font-weight: bold; font-size: 16px;
-                border: none; border-radius: 6px; cursor: pointer; text-align: center;
-                box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            }}
-            .print-btn:hover {{ opacity: 0.9; }}
-        </style>
-    </head>
-    <body>
-        <div id="doc-container">
-            <h3 style="text-align: center; margin-top: 0; margin-bottom: 15px; text-decoration: underline; color: {theme_color};">{title}</h3>
-            <div>{formatted_content}</div>
-        </div>
-        <button class="print-btn" onclick="printCleanDoc()">🖨️ फक्त अर्ज PDF सेव्ह करा</button>
+def render_document_actions(doc_title, doc_text):
+    encoded_text = urllib.parse.quote(f"*{doc_title}*\n\n{doc_text}")
+    whatsapp_url = f"https://api.whatsapp.com/send?text={encoded_text}"
 
-        <script>
-        function printCleanDoc() {{
-            var content = document.getElementById('doc-container').innerHTML;
-            var win = window.open('', '', 'height=800,width=800');
-            win.document.write('<html><head><title>{title}</title>');
-            win.document.write('<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap" rel="stylesheet">');
-            win.document.write('<style>body{{font-family:"Mukta",sans-serif;padding:30px;font-size:14.5px;line-height:1.6;color:#000;}} h3{{text-align:center;text-decoration:underline;margin-bottom:20px;}} @page{{size:A4;margin:15mm;}}</style>');
-            win.document.write('</head><body>');
-            win.document.write(content);
-            win.document.write('</body></html>');
-            win.document.close();
-            win.focus();
-            setTimeout(function(){{ win.print(); win.close(); }}, 350);
-        }}
-        </script>
-    </body>
-    </html>
-    """
-    st.components.v1.html(printable_html, height=520, scrolling=True)
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.download_button(
+            label="📥 मसुदा फाईल डाऊनलोड करा (.txt)",
+            data=doc_text,
+            file_name=f"{doc_title}_{datetime.now().strftime('%d%m%Y')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+    with col_b:
+        st.markdown(
+            f'<a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">'
+            f'<button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">'
+            f'📲 WhatsApp वर पाठवा / शेअर करा</button></a>', 
+            unsafe_allow_html=True
+        )
 
 # ==============================================================================
 # ५. मुख्य नेव्हिगेशन बटने
 # ==============================================================================
 st.markdown("<h1>⚖️ RTI, तक्रार व कायदेशीर महा-सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;font-size:13px;font-weight:bold;color:#4B5563;'>जोडपत्र अ ➔ ब ➔ क ➔ AI सल्लागार ➔ कोर्ट याचिका ➔ शासकीय तक्रार</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;font-size:12px;font-weight:bold;color:#4B5563;'>जोडपत्र अ ➔ ब ➔ क ➔ AI सल्लागार ➔ कोर्ट याचिका ➔ शासकीय तक्रार</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
@@ -155,22 +136,22 @@ with c5:
 with c6:
     if st.button("🔴 शासकीय तक्रार\n(कडक तक्रार)", key="btn_tab6"): st.session_state.active_tab = "शासकीय तक्रार"
 
-st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# विभाग १: जोडपत्र 'अ'
+# विभाग १: जोडपत्र 'अ' (RTI अर्ज)
 # ==============================================================================
 if st.session_state.active_tab == "जोडपत्र 'अ'":
-    st.markdown("### 🟢 नमुना जोडपत्र 'अ' - मूळ माहिती अधिकार अर्ज (कलम ६(१))")
+    st.markdown("### 🟢 जोडपत्र 'अ' - मूळ माहिती अधिकार अर्ज (कलम ६(१))")
     with st.form("form_a"):
         st.session_state.user_name = st.text_input("१. अर्जदाराचे पूर्ण नाव:", value=st.session_state.user_name)
-        st.session_state.user_address = st.text_area("२. अर्जदाराचा संपूर्ण पत्ता व संपर्क:", value=st.session_state.user_address)
-        st.session_state.dept_name = st.text_input("३. सरकारी कार्यालय / विभाग:", value=st.session_state.dept_name)
+        st.session_state.user_address = st.text_area("२. अर्जदाराचा संपूर्ण पत्ता व मोबाइल क्र.:", value=st.session_state.user_address)
+        st.session_state.dept_name = st.text_input("३. सरकारी कार्यालय / विभागाचे नाव:", value=st.session_state.dept_name)
         st.session_state.original_query = st.text_area("४. मागितलेल्या माहितीचा तपशील (मुद्दे):", value=st.session_state.original_query)
         
         if st.form_submit_button("🚀 जोडपत्र 'अ' तयार करा"):
             d_str = datetime.now().strftime("%d/%m/%Y")
-            ai_p = f"महाराष्ट्र RTI कायदा २००५ कलम ६(१) जोडपत्र 'अ' अर्ज बनवा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}. कलम ६(३), कलम ७(१), कलम १० चा उल्लेख असावा."
+            ai_p = f"महाराष्ट्र RTI कायदा २००५ कलम ६(१) जोडपत्र 'अ' अर्ज तयार करा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}. कलम ६(३), कलम ७(१), कलम १० व ₹१० कोर्ट फी चा उल्लेख असावा."
             ai_res = generate_ai_draft(ai_p)
             
             if ai_res:
@@ -183,7 +164,7 @@ if st.session_state.active_tab == "जोडपत्र 'अ'":
 जन माहिती अधिकारी,
 कार्यालय: {st.session_state.dept_name}
 
-१. अर्जदाराचे नाव : {st.session_state.user_name}
+१. अर्जदाराचे पूर्ण नाव : {st.session_state.user_name}
 २. अर्जदाराचा पत्ता व संपर्क : {st.session_state.user_address}
 ३. मागितलेल्या माहितीचा तपशील :
 {st.session_state.original_query}
@@ -192,22 +173,22 @@ if st.session_state.active_tab == "जोडपत्र 'अ'":
 ५. माहितीचा प्रकार : प्रमाणित सत्यप्रतीसह व्यक्तिशः / टपालाने
 ६. अर्ज शुल्क : ₹१०/- (कोर्ट फी स्टॅम्प जोडला आहे).
 
-सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील करण्यात येईल. अर्जात काही गोपनीय भाग असल्यास कलम १० चा वापर करून उर्वरित माहिती विहित मुदतीत पुरवण्यात यावी.
+सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील करण्यात येईल. अर्जात काही गोपनीय भाग असल्यास कलम १० (विभक्तता तत्त्व) चा वापर करून उर्वरित माहिती विहित मुदतीत पुरवण्यात यावी.
 
 दिनांक: {d_str}                                     स्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ जोडपत्र 'अ' तयार झाले!")
 
 # ==============================================================================
-# विभाग २: जोडपत्र 'ब'
+# विभाग २: जोडपत्र 'ब' (प्रथम अपील)
 # ==============================================================================
 elif st.session_state.active_tab == "जोडपत्र 'ब'":
-    st.markdown("### 🔵 नमुना जोडपत्र 'ब' - प्रथम अपील (कलम १९(१))")
+    st.markdown("### 🔵 जोडपत्र 'ब' - प्रथम अपील अर्ज (कलम १९(१))")
     with st.form("form_b"):
-        st.session_state.user_name = st.text_input("१. अपिलकर्त्याचे नाव:", value=st.session_state.user_name)
+        st.session_state.user_name = st.text_input("१. अपिलकर्त्याचे पूर्ण नाव:", value=st.session_state.user_name)
         st.session_state.user_address = st.text_area("२. अपिलकर्त्याचा पत्ता:", value=st.session_state.user_address)
         st.session_state.dept_name = st.text_input("३. प्रथम अपीलीय अधिकारी / विभाग:", value=st.session_state.dept_name)
         st.session_state.original_query = st.text_area("४. मूळ अर्जात मागितलेली माहिती:", value=st.session_state.original_query)
-        st.session_state.complaint_reason = st.text_area("५. अपीलाचे कारण:", value="विहित ३० दिवसांची मुदत संपूनही जन माहिती अधिकाऱ्याने माहिती दिली नाही.")
+        st.session_state.complaint_reason = st.text_area("५. प्रथम अपीलाचे कारण:", value="विहित ३० दिवसांची मुदत संपूनही जन माहिती अधिकाऱ्याने कोणतीही माहिती उपलब्ध करून दिली नाही.")
         
         if st.form_submit_button("🚀 जोडपत्र 'ब' तयार करा"):
             d_str = datetime.now().strftime("%d/%m/%Y")
@@ -231,17 +212,17 @@ elif st.session_state.active_tab == "जोडपत्र 'ब'":
 ५. मूळ माहितीचा तपशील :
 {st.session_state.original_query}
 
-६. मागितलेली दाद : माहिती विनामूल्य उपलब्ध करून देण्याचे आदेश व्हावेत व कलम २० अन्वये कारवाई व्हावी.
+६. मागितलेली दाद : कलम १० नुसार तात्काळ माहिती विनामूल्य द्यावी व दोषी अधिकाऱ्यावर कलम २० अन्वये कारवाई व्हावी.
 
 दिनांक: {d_str}                                     स्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ जोडपत्र 'ब' तयार झाले!")
 
 # ==============================================================================
-# विभाग ३: जोडपत्र 'क'
+# विभाग ३: जोडपत्र 'क' (द्वितीय अपील - माहिती आयोग)
 # ==============================================================================
 elif st.session_state.active_tab == "जोडपत्र 'क'":
-    st.markdown("### 🟠 नमुना जोडपत्र 'क' - द्वितीय अपील (कलम १९(३))")
-    selected_bench = st.selectbox("माहिती आयोग खंडपीठ निवडा:", list(COMMISSION_ADDRESSES.keys()))
+    st.markdown("### 🟠 जोडपत्र 'क' - द्वितीय अपील (कलम १९(३))")
+    selected_bench = st.selectbox("१. माहिती आयोग खंडपीठ निवडा:", list(COMMISSION_ADDRESSES.keys()))
     bench_addr = COMMISSION_ADDRESSES[selected_bench]
     
     with st.form("form_c"):
@@ -249,11 +230,11 @@ elif st.session_state.active_tab == "जोडपत्र 'क'":
         st.session_state.user_address = st.text_area("अपीलकर्त्याचा पत्ता:", value=st.session_state.user_address)
         st.session_state.dept_name = st.text_input("प्रतिवादी कार्यालय / विभाग:", value=st.session_state.dept_name)
         st.session_state.original_query = st.text_area("मूळ मागितलेली माहिती:", value=st.session_state.original_query)
-        st.session_state.complaint_reason = st.text_area("कायदेशीर कारणे / आधार:", value="प्रथम अपीलीय अधिकाऱ्यांनी आदेश देऊनही जन माहिती अधिकाऱ्याने माहिती पुरवली नाही.")
+        st.session_state.complaint_reason = st.text_area("द्वितीय अपीलाचे कायदेशीर आधार:", value="प्रथम अपीलीय अधिकाऱ्यांनी आदेश देऊनही जन माहिती अधिकाऱ्याने माहिती पुरवली नाही.")
 
         if st.form_submit_button("⚖️ जोडपत्र 'क' जनरेट करा"):
             d_str = datetime.now().strftime("%d/%m/%Y")
-            ai_p = f"महाराष्ट्र RTI कलम १९(३) जोडपत्र 'क' बनवा. आयोग: {bench_addr}, अपिलकर्ता: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}, कारण: {st.session_state.complaint_reason}. कलम २०(१) व २०(२) दंड व कारवाईची मागणी जोडा."
+            ai_p = f"महाराष्ट्र RTI कलम १९(३) जोडपत्र 'क' बनवा. आयोग: {bench_addr}, अपिलकर्ता: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}, कारण: {st.session_state.complaint_reason}. कलम २०(१) व २०(२) दंड व कारवाई जोडा."
             ai_res = generate_ai_draft(ai_p)
             
             if ai_res:
@@ -267,7 +248,7 @@ elif st.session_state.active_tab == "जोडपत्र 'क'":
 
 १. अपीलकर्त्याचे नाव : {st.session_state.user_name}
 २. अपीलकर्त्याचा पत्ता : {st.session_state.user_address}
-३. प्रतिवादी जन माहिती अधिकारी : {st.session_state.dept_name}
+३. प्रतिवादी अधिकारी : जन माहिती अधिकारी, {st.session_state.dept_name}
 ४. मूळ मागितलेली माहिती :
 {st.session_state.original_query}
 
@@ -278,28 +259,38 @@ elif st.session_state.active_tab == "जोडपत्र 'क'":
             st.success("✅ जोडपत्र 'क' तयार झाले!")
 
 # ==============================================================================
-# विभाग ४: कायदेशीर AI सहाय्यक
+# विभाग ४: कॉम्पॅक्ट AI कायदेशीर सल्लागार (Compact Chatbot)
 # ==============================================================================
 elif st.session_state.active_tab == "AI सल्लागार":
     st.markdown("### 🤖 कायदेशीर व प्रशासकीय AI सल्लागार")
-    for msg in st.session_state.chat_messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    st.caption("कायदेशीर सल्ला किंवा नियमांबाबत प्रश्न विचारा:")
 
-    if user_prompt := st.chat_input("तुमचा प्रश्न येथे विचारा..."):
-        st.session_state.chat_messages.append({"role": "user", "content": user_prompt})
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
+    # मर्यादित उंचीचा स्क्रोल चॅट कंटेनर
+    st.markdown('<div class="chat-scroll-area">', unsafe_allow_html=True)
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.markdown(f"**👤 तुम्ही:** {msg['content']}")
+        else:
+            st.markdown(f"**🤖 AI सहाय्यक:** {msg['content']}")
+        st.markdown("---")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        with st.chat_message("assistant"):
-            bot_reply = generate_ai_draft(f"तुम्ही एक कायदेतज्ञ आहात. मराठीत अचूक कायदेशीर सल्ला द्या. प्रश्न: {user_prompt}")
-            if not bot_reply:
-                bot_reply = "माफ करा, उत्तर तयार करण्यात अडचण येत आहे. कृपया तुमची API Key तपासा."
-            st.markdown(bot_reply)
-            st.session_state.chat_messages.append({"role": "assistant", "content": bot_reply})
+    with st.form("chat_form", clear_on_submit=True):
+        user_input = st.text_input("येथे प्रश्न लिहा:", placeholder="उदा. जन माहिती अधिकाऱ्याने मुदतीत माहिती दिली नाही तर काय करावे?")
+        send_btn = st.form_submit_button("🚀 प्रश्न विचारा")
+
+        if send_btn and user_input.strip():
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            
+            ai_reply = generate_ai_draft(f"तुम्ही एक अनुभवी कायदेतज्ञ आहात. मराठीत अचूक कायदेशीर सल्ला द्या. प्रश्न: {user_input}")
+            if not ai_reply:
+                ai_reply = "माहिती अधिकार २००५ नुसार विहित ३० दिवसांत माहिती न मिळाल्यास कलम १९(१) अन्वये प्रथम अपीलीय अधिकाऱ्यांकडे प्रथम अपील दाखल करावे लागते."
+            
+            st.session_state.chat_history.append({"role": "assistant", "content": ai_reply})
+            st.rerun()
 
 # ==============================================================================
-# विभाग ५: न्यायालयीन मसुदा (व्यवस्थित मांडणी)
+# विभाग ५: न्यायालयीन मसुदा (Court Draft)
 # ==============================================================================
 elif st.session_state.active_tab == "न्यायालयीन मसुदा":
     st.markdown("### 🟣 न्यायालयीन याचिका व कायदेशीर मसुदा")
@@ -307,23 +298,18 @@ elif st.session_state.active_tab == "न्यायालयीन मसुद
     court_full = COURT_ADDRESSES[court_choice]
 
     with st.form("form_court"):
-        st.session_state.user_name = st.text_input("१. याचिकाकर्ता / वादीचे नाव (Petitioner):", value=st.session_state.user_name)
+        st.session_state.user_name = st.text_input("१. याचिकाकर्ता / वादी (Petitioner):", value=st.session_state.user_name)
         st.session_state.user_address = st.text_area("२. पत्ता व संपर्क:", value=st.session_state.user_address)
-        st.session_state.dept_name = st.text_input("३. प्रतिवादी कार्यालय / व्यक्ती (Respondent):", value=st.session_state.dept_name)
-        court_subj = st.text_input("४. याचिकेचा संक्षिप्त विषय:", value="प्रशासकीय दिरंगाई व कायदेशीर हक्काचे उल्लंघन बाबत")
-        court_facts = st.text_area("५. प्रकरणाची वस्तुस्थिती / हकीकत:", value=st.session_state.original_query)
-        court_prayer = st.text_area("६. न्यायालयाकडून मागितलेली दाद (Prayer):", value="प्रतिवादीस तात्काळ आदेश देऊन कायदेशीर कारवाई करण्यात यावी व योग्य दिलासा मिळावा.")
+        st.session_state.dept_name = st.text_input("३. प्रतिवादी (Respondent):", value=st.session_state.dept_name)
+        court_subj = st.text_input("४. याचिकेचा विषय:", value="प्रशासकीय दिरंगाई व कायदेशीर हक्काचे उल्लंघन बाबत")
+        court_facts = st.text_area("५. वस्तुस्थिती / हकीकत:", value=st.session_state.original_query)
+        court_prayer = st.text_area("६. मागितलेली दाद (Prayer):", value="प्रतिवादीस तात्काळ आदेश देऊन कायदेशीर कारवाई करण्यात यावी.")
 
-        if st.form_submit_button("⚖️ न्यायालयीन मसुदा जनरेट करा"):
+        if st.form_submit_button("⚖️ न्यायालयीन मसुदा तयार करा"):
             d_str = datetime.now().strftime("%d/%m/%Y")
-            ai_p = f"""तुम्ही कायदेतज्ञ आहात. खालील तपशिलावरून अधिकृत मराठी न्यायालयीन मसुदा बनवा:
-न्यायालय: {court_full}
-याचिकाकर्ता: {st.session_state.user_name}, रा. {st.session_state.user_address}
-प्रतिवादी: {st.session_state.dept_name}
-विषय: {court_subj}
-वस्तुस्थिती: {court_facts}
-प्रार्थना: {court_prayer}"""
+            ai_p = f"न्यायालयीन मसुदा बनवा. न्यायालय: {court_full}, याचिकाकर्ता: {st.session_state.user_name}, प्रतिवादी: {st.session_state.dept_name}, विषय: {court_subj}, तथ्ये: {court_facts}, प्रार्थना: {court_prayer}"
             ai_res = generate_ai_draft(ai_p)
+            
             if ai_res:
                 st.session_state.final_draft = ai_res
             else:
@@ -343,15 +329,14 @@ elif st.session_state.active_tab == "न्यायालयीन मसुद
 
 याचिकाकर्त्याची सविनय विनंती खालीलप्रमाणे आहे:
 
-१. प्रकरणाची वस्तुस्थिती (Facts of the Case):
+१. वस्तुस्थिती (Brief Facts):
 {court_facts}
 
-२. कायदेशीर आधार:
-प्रतिवादीने वैधानिक कर्तव्य पार पाडण्यात कसूर केली असून नैसर्गिक न्यायतत्त्वांचे उल्लंघन केले आहे.
+२. कायदेशीर आधार: प्रतिवादीने वैधानिक कर्तव्याचे उल्लंघन केले आहे.
 
 ३. प्रार्थना (Prayer):
 अ) {court_prayer}
-ब) या प्रकरणाचा सर्व खर्च प्रतिवादीकडून भरून देण्यात यावा.
+ब) अर्जाचा संपूर्ण खर्च प्रतिवादीकडून याचिकाकर्त्यास देण्यात यावा.
 
 सत्यप्रतिज्ञा (Verification):
 मी, {st.session_state.user_name}, याद्वारे जाहीर करतो की वरील सर्व मजकूर माझ्या माहितीनुसार सत्य व बिनचूक आहे.
@@ -367,19 +352,14 @@ elif st.session_state.active_tab == "शासकीय तक्रार":
     with st.form("form_comp"):
         st.session_state.user_name = st.text_input("१. तक्रारदाराचे पूर्ण नाव:", value=st.session_state.user_name)
         st.session_state.user_address = st.text_area("२. तक्रारदाराचा पत्ता व मोबाईल क्र.:", value=st.session_state.user_address)
-        st.session_state.dept_name = st.text_input("३. प्रति / सक्षम प्राधिकारी (उदा. जिल्हाधिकारी / महापालिका आयुक्त):", value=st.session_state.dept_name)
-        comp_sub = st.text_input("४. तक्रारीचा विषय:", value="दिव्यांगांना जागा उपलब्ध करून देण्याबाबत व प्रशासकीय दिरंगाईवर कारवाईबाबत")
-        comp_facts = st.text_area("५. तक्रारीची पार्श्वभूमी व वस्तुस्थिती:", value=st.session_state.original_query)
-        comp_demand = st.text_area("६. केलेली मुख्य मागणी / कारवाईचा इशारा:", value="सदर प्रकरणी ७ दिवसांत योग्य निर्णय घेऊन जागा उपलब्ध करून द्यावी, अन्यथा वरिष्ठ स्तरावर व न्यायालयात दाद मागण्यात येईल.")
+        st.session_state.dept_name = st.text_input("३. प्रति / सक्षम अधिकारी (उदा. जिल्हाधिकारी / महापालिका आयुक्त):", value=st.session_state.dept_name)
+        comp_sub = st.text_input("४. तक्रारीचा विषय:", value="दिव्यांगांना जागा उपलब्ध करून देण्याबाबत व कारवाईबाबत")
+        comp_facts = st.text_area("५. तक्रारीची पार्श्वभूमी व तपशील:", value=st.session_state.original_query)
+        comp_demand = st.text_area("६. मुख्य मागणी / कारवाईचा इशारा:", value="सदर प्रकरणी ७ दिवसांत योग्य निर्णय घेऊन जागा उपलब्ध करून द्यावी, अन्यथा वरिष्ठ स्तरावर व न्यायालयात दाद मागण्यात येईल.")
 
         if st.form_submit_button("🚀 शासकीय तक्रार अर्ज तयार करा"):
             d_str = datetime.now().strftime("%d/%m/%Y")
-            ai_p = f"""खालील माहितीवरून कडक व नियमानुसार शासकीय तक्रार अर्ज मराठीत तयार करा:
-प्रति: मा. {st.session_state.dept_name}
-तक्रारदार: {st.session_state.user_name}, रा. {st.session_state.user_address}
-विषय: {comp_sub}
-तपशील: {comp_facts}
-मागणी: {comp_demand}"""
+            ai_p = f"शासकीय तक्रार अर्ज मराठीत बनवा. प्रति: मा. {st.session_state.dept_name}, तक्रारदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, विषय: {comp_sub}, तपशील: {comp_facts}, मागणी: {comp_demand}."
             ai_res = generate_ai_draft(ai_p)
             
             if ai_res:
@@ -389,16 +369,16 @@ elif st.session_state.active_tab == "शासकीय तक्रार":
 मा. {st.session_state.dept_name},
 
 विषय: {comp_sub}
-संदर्भ: अर्जदार {st.session_state.user_name} यांचा अधिकृत तक्रार अर्ज.
+तक्रारदार: {st.session_state.user_name}, रा. {st.session_state.user_address}
 
 महोदय,
 
 मी खालीलप्रमाणे वस्तुस्थिती आपल्या निदर्शनास आणून देत आहे:
 
-१. प्रकरणाची पार्श्वभूमी व तपशील:
+१. प्रकरणाचा तपशील व पार्श्वभूमी:
 {comp_facts}
 
-२. अर्जदाराची मुख्य मागणी:
+२. तक्रारदाराची मुख्य मागणी:
 {comp_demand}
 
 सदर प्रकरणात तातडीने चौकशी करून न्याय मिळवून देण्यात यावा, ही नम्र विनंती.
@@ -412,12 +392,11 @@ elif st.session_state.active_tab == "शासकीय तक्रार":
             st.success("✅ शासकीय तक्रार अर्ज व्यवस्थित तयार झाला!")
 
 # ==============================================================================
-# अंतिम निकाल व प्रिंट पर्याय
+# अंतिम निकाल, डाऊनलोड व शेअर पर्याय
 # ==============================================================================
 if st.session_state.final_draft and st.session_state.active_tab != "AI सल्लागार":
     st.markdown("---")
     st.markdown("### 📄 तयार झालेला अंतिम कायदेशीर मसुदा:")
-    st.text_area("मसुदा तपासा किंवा कॉपी करा:", value=st.session_state.final_draft, height=240)
+    st.text_area("मसुदा तपासा किंवा कॉपी करा:", value=st.session_state.final_draft, height=220)
     
-    st.markdown("### 📥 १-पानात PDF डाऊनलोड / प्रिंट")
-    render_printable_doc(st.session_state.active_tab, st.session_state.final_draft, "#1E3A8A")
+    render_document_actions(st.session_state.active_tab, st.session_state.final_draft)
