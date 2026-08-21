@@ -33,20 +33,60 @@ st.markdown("""
     margin-bottom: 15px;
 }
 
-/* पोस्टरप्रमाणे ६ कार्ड्स / टाइल्स बटणे */
+/* ==========================================================================
+   पोस्टर स्टाईल ६ रंगीत कार्ड्स बटणे (२ कॉलम्स ग्रिड)
+   ========================================================================== */
 div[data-testid="stColumn"] .stButton > button {
-    height: 70px;
-    width: 100%;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease-in-out;
+    height: 95px !important;
+    width: 100% !important;
+    border-radius: 16px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18) !important;
+    white-space: pre-wrap !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
 }
+
 div[data-testid="stColumn"] .stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.25) !important;
+}
+
+/* १. जोडपत्र 'अ' (व्हॉट्सॲप / हिरवा रंग) */
+div[data-testid="stColumn"]:nth-of-type(1) div.stButton:nth-of-type(1) > button {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+}
+
+/* २. प्रथम अपील (इन्स्टाग्राम ग्रेडियंट / गुलाबी-केशरी) */
+div[data-testid="stColumn"]:nth-of-type(2) div.stButton:nth-of-type(1) > button {
+    background: linear-gradient(135deg, #E1306C, #F77737) !important;
+}
+
+/* ३. माहिती आयोग (पोलीस / नेव्ही ब्लू रंग) */
+div[data-testid="stColumn"]:nth-of-type(1) div.stButton:nth-of-type(2) > button {
+    background: linear-gradient(135deg, #0F172A, #1E3A8A) !important;
+}
+
+/* ४. AI चॅट (मॉडर्न गूगल / व्हायलेट निळा रंग) */
+div[data-testid="stColumn"]:nth-of-type(2) div.stButton:nth-of-type(2) > button {
+    background: linear-gradient(135deg, #2563EB, #7C3AED) !important;
+}
+
+/* ५. कोर्ट याचिका (फोनपे जांभळा रंग) */
+div[data-testid="stColumn"]:nth-of-type(1) div.stButton:nth-of-type(3) > button {
+    background: linear-gradient(135deg, #5F259F, #3F1070) !important;
+}
+
+/* ६. शासकीय तक्रार (डार्क रेड / शासकीय तक्रार रंग) */
+div[data-testid="stColumn"]:nth-of-type(2) div.stButton:nth-of-type(3) > button {
+    background: linear-gradient(135deg, #DC2626, #991B1B) !important;
 }
 
 /* चॅट बबल्स */
@@ -93,7 +133,7 @@ if 'chat_messages' not in st.session_state:
 APP_URL = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
 
 # ==============================================================================
-# ३. AI इंजिन (चालू मॉडेल सपोर्टसह)
+# ३. AI इंजिन (त्रुटीमुक्त चालू मॉडेल लिस्ट)
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -105,7 +145,9 @@ def ask_ai(prompt_text, image_obj=None):
     
     model_list = [
         "gemini-1.5-flash",
-        "gemini-1.5-pro"
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro",
+        "gemini-pro"
     ]
     
     last_err = ""
@@ -126,7 +168,7 @@ def ask_ai(prompt_text, image_obj=None):
     return f"AI त्रुटी: {last_err}"
 
 # ==============================================================================
-# ४. मुख्य हेडर व शेअर
+# ४. मुख्य शीर्षक व शेअर
 # ==============================================================================
 st.markdown("<h1 class='main-title'>⚖️ RTI व कायदेशीर AI महा-सहाय्यक</h1>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>तुमचा अधिकार, तुमच्या हातात – सर्व सेवा एकाच ठिकाणी</div>", unsafe_allow_html=True)
@@ -147,28 +189,24 @@ if st.session_state.show_share:
     """, unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. पोस्टरनुसार ६ मुख्य बटणे (३ बाय २ ग्रिड)
+# ५. पोस्टरनुसार ६ मुख्य ॲप बटणे (२ बाय ३ ग्रिड)
 # ==============================================================================
-r1_c1, r1_c2, r1_c3 = st.columns(3)
-with r1_c1:
-    if st.button("📄 जोडपत्र 'अ'\n(RTI कलम ६(१))", key="tab1", use_container_width=True):
-        st.session_state.active_tab = "जोडपत्र 'अ'"
-with r1_c2:
-    if st.button("⚖️ प्रथम अपील\n(जोडपत्र 'ब')", key="tab2", use_container_width=True):
-        st.session_state.active_tab = "जोडपत्र 'ब'"
-with r1_c3:
-    if st.button("🏛️ माहिती आयोग\n(द्वितीय अपील 'क')", key="tab3", use_container_width=True):
-        st.session_state.active_tab = "जोडपत्र 'क'"
+col1, col2 = st.columns(2)
 
-r2_c1, r2_c2, r2_c3 = st.columns(3)
-with r2_c1:
-    if st.button("✨ AI चॅट व फोटो\n(सर्वसमावेशक)", key="tab4", use_container_width=True):
-        st.session_state.active_tab = "AI चॅट"
-with r2_c2:
-    if st.button("📜 कोर्ट याचिका\n(कायदेशीर मसुदा)", key="tab5", use_container_width=True):
+with col1:
+    if st.button("📄\nजोडपत्र 'अ'\n(कलम ६(१))", key="tab1"):
+        st.session_state.active_tab = "जोडपत्र 'अ'"
+    if st.button("🏛️\nमाहिती आयोग\n(द्वितीय अपील)", key="tab3"):
+        st.session_state.active_tab = "जोडपत्र 'क'"
+    if st.button("📜\nकोर्ट याचिका\n(Petition)", key="tab5"):
         st.session_state.active_tab = "न्यायालयीन मसुदा"
-with r2_c3:
-    if st.button("📢 शासकीय तक्रार\n(प्रशासकीय अर्ज)", key="tab6", use_container_width=True):
+
+with col2:
+    if st.button("⚖️\nप्रथम अपील\n(कलम १९(१))", key="tab2"):
+        st.session_state.active_tab = "जोडपत्र 'ब'"
+    if st.button("✨\nAI महा-सहाय्यक\n(चॅट व फोटो)", key="tab4"):
+        st.session_state.active_tab = "AI चॅट"
+    if st.button("📢\nशासकीय तक्रार\n(प्रशासकीय अर्ज)", key="tab6"):
         st.session_state.active_tab = "शासकीय तक्रार"
 
 st.markdown("---")
