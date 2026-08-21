@@ -1,204 +1,52 @@
-import streamlit as st
-import google.generativeai as genai
+import io
 import urllib.parse
 from datetime import datetime
+import streamlit as st
+import google.generativeai as genai
 
-# १. पेज कॉन्फिगरेशन आणि ब्रँडिंग लपवणे
+# १. पेज कॉन्फिगरेशन
 st.set_page_config(page_title="RTI व शासकीय तक्रार AI सहाय्यक", page_icon="🏛️", layout="centered")
 
-custom_css = """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
-
-* {
-    font-family: 'Mukta', sans-serif !important;
-}
-
-#MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
-    visibility: hidden;
-    display: none !important;
-}
-div[class^="viewerBadge"] { visibility: hidden; display: none !important; }
-button[title="View source"] { display: none; }
-
-h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 24px; margin-bottom: 2px; }
-
-/* 🟢 १. मोठे हिरवे RTI बटन */
-div.st-key-btn_rti button {
-    background: linear-gradient(135deg, #059669, #10B981) !important;
-    color: #ffffff !important;
-    height: 75px !important;
-    border-radius: 14px !important;
-    border: 2px solid #047857 !important;
-    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35) !important;
-}
-div.st-key-btn_rti button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
-
-/* 🔴 २. मोठे लाल तक्रार बटन */
-div.st-key-btn_comp button {
-    background: linear-gradient(135deg, #DC2626, #EF4444) !important;
-    color: #ffffff !important;
-    height: 75px !important;
-    border-radius: 14px !important;
-    border: 2px solid #B91C1C !important;
-    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.35) !important;
-}
-div.st-key-btn_comp button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
-
-/* 🟠 ३. मोठे केशरी ऑनलाइन पोर्टल बटन */
-div.st-key-btn_online button {
-    background: linear-gradient(135deg, #D97706, #F59E0B) !important;
-    color: #ffffff !important;
-    height: 75px !important;
-    border-radius: 14px !important;
-    border: 2px solid #B45309 !important;
-    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.35) !important;
-}
-div.st-key-btn_online button p { font-size: 17px !important; font-weight: 800 !important; color: #ffffff !important; line-height: 1.2 !important; }
-
-/* लहान नेव्हिगेशन बटने */
-.nav-btn div.stButton > button { font-size: 14px !important; font-weight: 700 !important; height: 42px !important; border-radius: 10px !important; }
-</style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# २. सेशन स्टेट मॅनेजमेंट
-if 'page' not in st.session_state: st.session_state.page = "rti"
-
-# RTI व्हेरिएबल्स
+# २. सेशन स्टेट मॅनेजमेंट (डेटा कायम टिकवून ठेवण्यासाठी)
+if 'user_name' not in st.session_state: st.session_state.user_name = ""
+if 'user_address' not in st.session_state: st.session_state.user_address = ""
+if 'dept_name' not in st.session_state: st.session_state.dept_name = ""
+if 'query' not in st.session_state: st.session_state.query = ""
+if 'selected_bench' not in st.session_state: st.session_state.selected_bench = "छत्रपती संभाजीनगर खंडपीठ (राज्य माहिती आयोग)"
 if 'rti_type' not in st.session_state: st.session_state.rti_type = "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')"
-if 'rti_name' not in st.session_state: st.session_state.rti_name = ""
-if 'rti_address' not in st.session_state: st.session_state.rti_address = ""
-if 'rti_dept' not in st.session_state: st.session_state.rti_dept = ""
-if 'rti_query' not in st.session_state: st.session_state.rti_query = ""
-if 'rti_result' not in st.session_state: st.session_state.rti_result = ""
-
-# तक्रार अर्ज व्हेरिएबल्स
-if 'comp_name' not in st.session_state: st.session_state.comp_name = ""
-if 'comp_address' not in st.session_state: st.session_state.comp_address = ""
-if 'comp_dept' not in st.session_state: st.session_state.comp_dept = ""
-if 'comp_subject' not in st.session_state: st.session_state.comp_subject = ""
-if 'comp_query' not in st.session_state: st.session_state.comp_query = ""
-if 'comp_result' not in st.session_state: st.session_state.comp_result = ""
-
-# ऑनलाइन पोर्टल मसुदा व्हेरिएबल्स
-if 'online_dept' not in st.session_state: st.session_state.online_dept = ""
-if 'online_subject' not in st.session_state: st.session_state.online_subject = ""
-if 'online_query' not in st.session_state: st.session_state.online_query = ""
-if 'online_result' not in st.session_state: st.session_state.online_result = ""
-
+if 'result_text' not in st.session_state: st.session_state.result_text = ""
 if 'history_list' not in st.session_state: st.session_state.history_list = []
 
-# ३. शीर्ष शीर्षक
-st.markdown("<h1>🏛️ RTI व शासकीय तक्रार AI सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>घरबसल्या १ सेकंदात तयार करा कायदेशीर RTI अर्ज, तक्रार व ऑनलाइन पोर्टल मसुदा!</p>", unsafe_allow_html=True)
-st.markdown("---")
+# ३. माहिती आयोगांची अधिकृत पत्ते यादी (State & Central Commissions)
+COMMISSION_ADDRESSES = {
+    "छत्रपती संभाजीनगर खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ छत्रपती संभाजीनगर, शासकीय सुभेदारी विश्रामगृह समोर, बाबा पेट्रोल पंपाजवळ, छत्रपती संभाजीनगर - ४३१००१ (फोन: ०२४०-२३५२५४४)",
+    "मुंबई मुख्य खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य मुख्य माहिती आयुक्त, राज्य माहिती आयोग, १३ वा मजला, नवीन प्रशासकीय इमारत, मंत्रालयासमोर, मादाम कामा रोड, मुंबई - ४०००३२ (फोन: ०२२-२२८५६०७८)",
+    "पुणे खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ पुणे, नवीन प्रशासकीय इमारत, कौन्सिल हॉल समोर, पुणे - ४११००१ (फोन: ०२०-२६०५०५८०)",
+    "नागपूर खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ नागपूर, रवी भवन, नागपूर - ४४०००१ (फोन: ०७१२-२५६५१९२)",
+    "नाशिक खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ नाशिक, जिल्हाधिकारी कार्यालय आवार, नाशिक - ४२२००२ (फोन: ०२५३-२२३२७६४)",
+    "अमरावती खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ अमरावती, प्रशासकीय इमारत, अमरावती - ४४४६०१ (फोन: ०७२१-२६७३२३८)",
+    "कोकण खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ कोकण भवन, सी.बी.डी. बेलापूर, नवी मुंबई - ४००६१४ (फोन: ०२२-२७५७९४६३)",
+    "केंद्रीय माहिती आयोग (CIC New Delhi - केंद्रीय विभाग)": "मा. मुख्य माहिती आयुक्त, केंद्रीय माहिती आयोग (CIC), बाबा गंगनाथ मार्ग, मुनिरका, नवी दिल्ली - ११००६७ (फोन: ०११-२६१८३९९६)"
+}
 
-# ४. मुख्य ३ मोठे रंगीत बॉक्सेस
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🟢 १. RTI अर्ज व अपील\n(ऑफलाइन/टपाल)", key="btn_rti"):
-        st.session_state.page = "rti"
-with col2:
-    if st.button("🔴 २. शासकीय तक्रार अर्ज\n(कडक तक्रार मसुदा)", key="btn_comp"):
-        st.session_state.page = "complaint"
-
-if st.button("🟠 ३. ऑनलाइन RTI पोर्टल मसुदा (थेट कॉपी-पेस्टसाठी)", key="btn_online"):
-    st.session_state.page = "online_portal"
-
-st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
-
-# उप-नेव्हिगेशन
-nav1, nav2, nav3 = st.columns(3)
-with nav1:
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🔵 मुख्य माहिती"): st.session_state.page = "home"
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with nav2:
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    hist_count = len(st.session_state.history_list)
-    if st.button(f"📜 माझी हिस्ट्री ({hist_count})"): st.session_state.page = "history"
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with nav3:
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🔄 सर्व रिसेट करा"):
-        st.session_state.rti_name = ""
-        st.session_state.rti_address = ""
-        st.session_state.rti_dept = ""
-        st.session_state.rti_query = ""
-        st.session_state.rti_result = ""
-        
-        st.session_state.comp_name = ""
-        st.session_state.comp_address = ""
-        st.session_state.comp_dept = ""
-        st.session_state.comp_subject = ""
-        st.session_state.comp_query = ""
-        st.session_state.comp_result = ""
-
-        st.session_state.online_dept = ""
-        st.session_state.online_subject = ""
-        st.session_state.online_query = ""
-        st.session_state.online_result = ""
-
-        st.success("सर्व माहिती रिसेट झाली!")
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# WhatsApp शेअर बटण
-app_url = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
-share_text = urllib.parse.quote(f"🏛️ घरबसल्या RTI अर्ज, तक्रार व ऑनलाइन पोर्टल मसुदा १ सेकंदात तयार करा: {app_url}")
-st.markdown(f"""
-    <div style="margin: 10px 0 15px 0;">
-        <a href="https://api.whatsapp.com/send?text={share_text}" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 11px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
-                📲 WhatsApp वर मित्रांना शेअर करा
-            </div>
-        </a>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown("---")
-
-api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
-
-# ऐच्छिक सहकार्य QR कोड दाखवणारे फंक्शन
-def render_voluntary_support_box():
-    upi_id = "satishpradhan3392@ybl"
-    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa={upi_id}%26pn=Satish%20Pradhan%26cu=INR"
-    
-    st.markdown("---")
-    st.markdown(f"""
-    <div style="background: #F8FAFC; border: 2px dashed #94A3B8; border-radius: 12px; padding: 15px; text-align: center; margin-top: 20px;">
-        <h4 style="color: #1E293B; margin: 0 0 5px 0;">🙏 ॲप आवडल्यास विकासकाला ऐच्छिक सहकार्य करा</h4>
-        <p style="color: #64748B; font-size: 13px; margin: 0 0 10px 0;">सामान्य नागरिकांच्या मदतीसाठी ही सेवा मोफत आहे. आपल्या इच्छेनुसार <b>₹१० ते ₹१०,००,०००</b> पर्यंत सहकार्य करू शकता.</p>
-        <div style="display: flex; justify-content: center; margin-bottom: 8px;">
-            <img src="{qr_url}" width="130" style="border: 2px solid #CBD5E1; border-radius: 8px; padding: 4px; background: white;" />
-        </div>
-        <p style="color: #0F172A; font-weight: bold; font-size: 14px; margin: 0;">UPI ID: <code style="background: #E2E8F0; padding: 3px 8px; border-radius: 6px;">{upi_id}</code></p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# १-पान A4 प्रिंट/PDF फंक्शन
-def render_printable_marathi_doc(title, content, theme_color):
+# ४. प्रिंट व १-पान PDF फंक्शन
+def render_printable_doc(title, content, theme_color="#059669"):
     html_content = content.replace('\n', '<br>')
     printable_html = f"""
-    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&display=swap" rel="stylesheet">
     <div id="printArea" style="
         font-family: 'Mukta', sans-serif;
         background: #ffffff;
         color: #000000;
-        padding: 30px 40px;
-        border: 3px solid {theme_color};
+        padding: 25px 30px;
+        border: 2px solid {theme_color};
         border-radius: 8px;
-        line-height: 1.6;
-        font-size: 15px;
+        line-height: 1.5;
+        font-size: 13.5px;
         max-width: 750px;
         margin: 10px auto;
         box-sizing: border-box;
     ">
-        <h3 style="text-align: center; font-size: 18px; margin-bottom: 20px; color: {theme_color}; text-decoration: underline;">{title}</h3>
+        <h3 style="text-align: center; font-size: 16px; margin-bottom: 12px; color: {theme_color}; text-decoration: underline;">{title}</h3>
         <div>{html_content}</div>
     </div>
     <div style="text-align: center; margin-top: 15px;">
@@ -212,13 +60,13 @@ def render_printable_marathi_doc(title, content, theme_color):
         " style="
             background: {theme_color};
             color: white;
-            padding: 14px 30px;
-            font-size: 18px;
+            padding: 12px 25px;
+            font-size: 16px;
             font-weight: bold;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         ">
             🖨️ १ पानात PDF सेव्ह / प्रिंट करा (Save as PDF)
         </button>
@@ -226,308 +74,148 @@ def render_printable_marathi_doc(title, content, theme_color):
     """
     st.components.v1.html(printable_html, height=540, scrolling=True)
 
-# ==================== पान १: RTI अर्ज (ऑफलाइन) ====================
-if st.session_state.page == "rti":
-    st.markdown("""
-    <div style="background: #ECFDF5; border-left: 6px solid #059669; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #065F46; margin: 0; font-weight: 800;">🟢 १. RTI अर्ज व अपील विभाग (ऑफलाइन/टपाल)</h3>
-        <p style="color: #047857; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">थेट प्रिंट काढून कार्यालयात किंवा टपालाने सादर करण्यासाठी परिपूर्ण मसुदा.</p>
-    </div>
-    """, unsafe_allow_html=True)
+# ५. शीर्षक
+st.markdown("<h1>🏛️ RTI व शासकीय अपील AI सहाय्यक</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-weight: bold; color: #4B5563;'>जोडपत्र अ, ब (प्रथम अपील) आणि क (माहिती आयोग) कडक कायदेशीर मसुदा</p>", unsafe_allow_html=True)
 
-    st.session_state.rti_type = st.selectbox(
-        "अर्जाचा प्रकार निवडा:",
-        [
-            "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')",
-            "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र 'ब')",
-            "द्वितीय अपील मसुदा (कलम १९(३) - नमुना जोडपत्र 'क')"
-        ],
-        index=0
+# रिसेट बटण
+if st.button("🔄 सर्व माहिती रिसेट करा"):
+    st.session_state.user_name = ""
+    st.session_state.user_address = ""
+    st.session_state.dept_name = ""
+    st.session_state.query = ""
+    st.session_state.result_text = ""
+    st.success("सर्व माहिती रिसेट झाली!")
+    st.rerun()
+
+st.markdown("---")
+
+# ६. मुख्य फॉर्म
+st.session_state.rti_type = st.selectbox(
+    "📌 अर्जाचा प्रकार निवडा (माहिती आपोआप पुढे कॅरी होईल):",
+    [
+        "माहिती अधिकार अर्ज (कलम ६(१) - नमुना जोडपत्र 'अ')",
+        "प्रथम अपील अर्ज (कलम १९(१) - नमुना जोडपत्र 'ब')",
+        "द्वितीय अपील अर्ज (कलम १९(३) - नमुना जोडपत्र 'क' / माहिती आयोग)"
+    ],
+    index=0
+)
+
+# जोडपत्र 'क' निवडल्यावर माहिती आयोगाचा पत्ता आपोआप निवडणे
+if "जोडपत्र 'क'" in st.session_state.rti_type:
+    st.info("🏛️ **द्वितीय अपीलासाठी माहिती आयोगाचे खंडपीठ निवडा (पत्ता आपोआप भरला जाईल):**")
+    st.session_state.selected_bench = st.selectbox(
+        "माहिती आयोग खंडपीठ निवडा:",
+        list(COMMISSION_ADDRESSES.keys())
     )
-    st.session_state.rti_name = st.text_input("अर्जदाराचे पूर्ण नाव:", value=st.session_state.rti_name)
-    st.session_state.rti_address = st.text_area("अर्जदाराचा संपूर्ण पत्ता व संपर्क:", value=st.session_state.rti_address)
-    st.session_state.rti_dept = st.text_input("सरकारी कार्यालय / विभागाचे नाव:", value=st.session_state.rti_dept)
-    st.session_state.rti_query = st.text_area("मागितलेली माहिती / अपीलाचे कारण:", value=st.session_state.rti_query)
+    commission_full_address = COMMISSION_ADDRESSES[st.session_state.selected_bench]
+    st.success(f"📍 **निवडलेला आयोग:** {commission_full_address}")
 
-    if st.button("🚀 कायदेशीर RTI अर्ज तयार करा"):
-        if not st.session_state.rti_name or not st.session_state.rti_query or not st.session_state.rti_dept:
-            st.warning("कृपया अर्जदाराचे नाव, विभाग आणि मागितलेली माहिती भरा.")
-        else:
-            with st.spinner("१ पानात बसणारा कायदेशीर RTI मसुदा तयार होत आहे..."):
-                if api_key:
-                    try:
-                        genai.configure(api_key=api_key)
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        prompt = f"""
-तुम्ही महाराष्ट्र माहिती अधिकार अधिनियम २००५ चे तज्ञ आहात. एकाच A4 पानात बसेल असा परिपूर्ण RTI मसुदा बनवा.
-प्रकार: {st.session_state.rti_type}
-अर्जदार: {st.session_state.rti_name}
-पत्ता: {st.session_state.rti_address}
-कार्यालय: {st.session_state.rti_dept}
-माहिती: {st.session_state.rti_query}
+# इनपुट फील्ड्स (माहिती आपोआप कायम राहते)
+st.session_state.user_name = st.text_input("अर्जदार / अपिलकर्त्याचे पूर्ण नाव:", value=st.session_state.user_name)
+st.session_state.user_address = st.text_area("संपूर्ण पत्ता व संपर्क क्रमांक:", value=st.session_state.user_address)
+st.session_state.dept_name = st.text_input("संबंधित मूळ सरकारी कार्यालय / विभागाचे नाव:", value=st.session_state.dept_name)
+st.session_state.query = st.text_area("मागितलेली माहिती / अपीलाचे कारण / मुद्दे:", value=st.session_state.query)
 
-नियम: कलम ६(१), ६(३) (५ दिवसांत वर्ग करणे), ७(१) (३० दिवसांची मुदत), १९(१), १९(३) व ₹१० कोर्ट फी स्टॅम्पचा उल्लेख करा. भाषा स्पष्ट व संक्षिप्त ठेवा.
-"""
-                        res = model.generate_content(prompt, generation_config={"temperature": 0.2})
-                        st.session_state.rti_result = res.text
-                    except Exception as e:
-                        st.error(f"AI त्रुटी: {e}")
-                else:
-                    st.session_state.rti_result = f"""{st.session_state.rti_type}
+# ७. मसुदा तयार करणे
+if st.button("🚀 अधिकृत कायदेशीर मसुदा तयार करा"):
+    if not st.session_state.user_name or not st.session_state.dept_name or not st.session_state.query:
+        st.warning("कृपया तुमचे नाव, विभाग आणि मागितलेली माहिती/कारण भरा.")
+    else:
+        date_str = datetime.now().strftime("%d/%m/%Y")
+        
+        # १. जोडपत्र 'अ' (मूळ अर्ज)
+        if "जोडपत्र 'अ'" in st.session_state.rti_type:
+            st.session_state.result_text = f"""जोडपत्र - 'अ' (नियम ३ पहा)
+माहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील माहिती मिळवण्यासाठीचा अर्ज.
 
 प्रति,
-जन माहिती अधिकारी / प्रथम अपीलीय अधिकारी,
-कार्यालय: {st.session_state.rti_dept}
+जन माहिती अधिकारी,
+कार्यालय: {st.session_state.dept_name}
 
-१. अर्जदाराचे नाव: {st.session_state.rti_name}
-२. पत्ता व संपर्क: {st.session_state.rti_address}
-३. मागितलेल्या माहितीचा तपशील / अपीलाचे कारण:
-{st.session_state.rti_query}
+१. अर्जदाराचे पूर्ण नाव : {st.session_state.user_name}
+२. अर्जदाराचा पत्ता : {st.session_state.user_address}
+३. मागितलेल्या माहितीचा तपशील :
+{st.session_state.query}
 
-४. माहितीचा कालावधी: चालू वर्ष व मागील अभिलेख
-५. माहितीचा प्रकार: प्रमाणित सत्यप्रतीसह व्यक्तिशः / टपालाने
+४. माहितीचा कालावधी : चालू वर्ष व मागील अभिलेख
+५. माहितीचा प्रकार : प्रमाणित सत्यप्रतीसह व्यक्तिशः / टपालाने
+६. अर्ज शुल्क : ₹१०/- (कोर्ट फी स्टॅम्प / चलनाद्वारे जोडले आहे).
 
-सदर माहिती विहित मुदतीत न मिळाल्यास वरिष्ठ स्तरावर अपील करण्यात येईल. माहिती आपल्या अखत्यारीतील नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी. अर्जासोबत ₹१० चा कोर्ट फी स्टॅम्प जोडला आहे.
+सदर माहिती ३० दिवसांत न मिळाल्यास कलम १९(१) अन्वये प्रथम अपील करण्यात येईल. माहिती आपल्या कार्यालयाशी संबंधित नसल्यास कलम ६(३) अन्वये ५ दिवसांत योग्य विभागाकडे वर्ग करावी. अर्जात काही गोपनीय भाग असल्यास कलम १० चा वापर करून उर्वरित सर्व माहिती विहित मुदतीत पुरवण्यात यावी.
 
-तारीख: ____________                                अर्जदाराची स्वाक्षरी: {st.session_state.rti_name}
-ठिकाण: ____________"""
+दिनांक: {date_str}                                     अर्जदाराची स्वाक्षरी: {st.session_state.user_name}
+ठिकाण: ________________"""
 
-                st.session_state.history_list.append({
-                    "type": "🟢 RTI अर्ज (ऑफलाइन)",
-                    "title": f"{st.session_state.rti_dept} - {st.session_state.rti_name}",
-                    "content": st.session_state.rti_result,
-                    "time": datetime.now().strftime("%d-%m-%Y %H:%M")
-                })
+        # २. जोडपत्र 'ब' (प्रथम अपील)
+        elif "जोडपत्र 'ब'" in st.session_state.rti_type:
+            st.session_state.result_text = f"""जोडपत्र - 'ब' (नियम ५ पहा)
+माहितीचा अधिकार अधिनियम, २००५ च्या कलम १९(१) खालील प्रथम अपिलाचा नमुना.
 
-    if st.session_state.rti_result:
-        st.success("✅ RTI मसुदा तयार झाला आहे!")
-        st.text_area("📄 तयार झालेला मसुदा (येथून वाचू शकता):", value=st.session_state.rti_result, height=220)
-        
-        st.markdown("---")
-        st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
-        render_printable_marathi_doc("माहितीचा अधिकार अधिनियम २००५ अर्ज", st.session_state.rti_result, "#059669")
-        render_voluntary_support_box()
+प्रति,
+प्रथम अपीलीय अधिकारी तथा वरिष्ठ अधिकारी,
+कार्यालय: {st.session_state.dept_name}
 
-# ==================== पान २: शासकीय तक्रार ====================
-elif st.session_state.page == "complaint":
-    st.markdown("""
-    <div style="background: #FEF2F2; border-left: 6px solid #DC2626; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #991B1B; margin: 0; font-weight: 800;">🔴 २. शासकीय तक्रार अर्ज विभाग</h3>
-        <p style="color: #B91C1C; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">प्रशासकीय दिरंगाई, अनागोंदी व समस्यांविरुद्ध कडक तक्रार अर्ज.</p>
-    </div>
-    """, unsafe_allow_html=True)
+१. अपिलकर्त्याचे पूर्ण नाव : {st.session_state.user_name}
+२. अपिलकर्त्याचा पत्ता : {st.session_state.user_address}
+३. जन माहिती अधिकाऱ्याचा तपशील : जन माहिती अधिकारी, {st.session_state.dept_name}
+४. मूळ अर्ज (जोडपत्र 'अ') सादर केल्याचा दिनांक : विहित मुदतीपूर्वी
+५. प्रथम अपीलाचे कारण :
+   - जन माहिती अधिकाऱ्याने ३० दिवसांत माहिती दिली नाही / दिलेली माहिती अपूर्ण, अस्पष्ट व दिशाभूल करणारी आहे.
+६. मागितलेली माहिती व अपीलाचा गोषवारा :
+{st.session_state.query}
 
-    st.session_state.comp_name = st.text_input("तक्रारदाराचे पूर्ण नाव:", value=st.session_state.comp_name)
-    st.session_state.comp_address = st.text_area("पत्ता व मोबाईल नंबर:", value=st.session_state.comp_address)
-    st.session_state.comp_dept = st.text_input("कार्यालय / अधिकारी (उदा. आयुक्त / जिल्हाधिकारी):", value=st.session_state.comp_dept)
-    st.session_state.comp_subject = st.text_input("तक्रारीचा मुख्य विषय:", value=st.session_state.comp_subject)
-    st.session_state.comp_query = st.text_area("तक्रारीचा सविस्तर तपशील:", value=st.session_state.comp_query)
+७. मागितलेले सहाय्य / दाद (Relief Sought) :
+   १) माहिती अधिकार अधिनियम, २००५ च्या कलम १० (विभक्तता तत्त्व) चा वापर करून तात्काळ संपूर्ण व प्रमाणित माहिती विनामूल्य पुरवण्याचे आदेश जन माहिती अधिकाऱ्यास देण्यात यावेत.
+   २) माहिती दडवून ठेवल्याबद्दल व कायद्याचे उल्लंघन केल्याबद्दल संबंधित दोषी अधिकाऱ्यावर कलम २० अन्वये दंडात्मक कारवाई प्रस्तावित करावी.
+   ३) कर्तव्यात कसूर केल्याबद्दल दोषी अधिकाऱ्याविरुद्ध शिस्तभंगाच्या कारवाईची शिफारस करण्यात येऊन त्याची नोंद त्यांच्या सेवापुस्तकात (Service Book) करण्याचे आदेश व्हावेत.
 
-    if st.button("🚀 कडक तक्रार अर्ज तयार करा"):
-        if not st.session_state.comp_name or not st.session_state.comp_dept or not st.session_state.comp_query:
-            st.warning("कृपया नाव, विभाग आणि तक्रारीचा तपशील भरा.")
-        else:
-            with st.spinner("१ पानात बसणारा कडक तक्रार मसुदा तयार होत आहे..."):
-                if api_key:
-                    try:
-                        genai.configure(api_key=api_key)
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        prompt = f"""
-तुम्ही प्रशासकीय कायदेतज्ञ आहात. एकाच A4 पानात बसेल असा कडक तक्रार अर्ज बनवा:
-तक्रारदार: {st.session_state.comp_name}
-पत्ता: {st.session_state.comp_address}
-प्रति: {st.session_state.comp_dept}
-विषय: {st.session_state.comp_subject}
-तपशील: {st.session_state.comp_query}
+सत्यप्रतीज्ञा : वरील सर्व तपशील माझ्या व्यक्तिगत माहिती व समजुतीनुसार खरा व अचूक आहे.
 
-मसुद्यात प्रति, विषय, मुद्द्यांनुसार तक्रार, ७ दिवसांत कारवाईचा इशारा आणि प्रतिलिपि असा सुटसुटीत फॉरमॅट ठेवा.
-"""
-                        res = model.generate_content(prompt, generation_config={"temperature": 0.2})
-                        st.session_state.comp_result = res.text
-                    except Exception as e:
-                        st.error(f"AI त्रुटी: {e}")
-                else:
-                    st.session_state.comp_result = f"""प्रति,
-मा. {st.session_state.comp_dept},
+दिनांक: {date_str}                                     अपिलकर्त्याची स्वाक्षरी: {st.session_state.user_name}
+ठिकाण: ________________"""
 
-विषय: {st.session_state.comp_subject} बाबत तातडीने कठोर कारवाई करणेबाबत.
-तक्रारदार: {st.session_state.comp_name}, रा. {st.session_state.comp_address}
+        # ३. जोडपत्र 'क' (द्वितीय अपील - माहिती आयोग)
+        elif "जोडपत्र 'क'" in st.session_state.rti_type:
+            comm_address = COMMISSION_ADDRESSES[st.session_state.selected_bench]
+            st.session_state.result_text = f"""जोडपत्र - 'क'
+माहितीचा अधिकार अधिनियम, २००५ च्या कलम १९(३) खालील द्वितीय अपिलाचा अधिकृत नमुना.
 
-महोदय,
-मी खालीलप्रमाणे तक्रार नोंदवत आहे:
-{st.session_state.comp_query}
+प्रति,
+{comm_address}
 
-सदर प्रकरणात संबंधित जबाबदार घटकांवर ७ दिवसांच्या आत प्रशासकीय नियमांनुसार कारवाई करण्यात यावी, अन्यथा वरिष्ठ पातळीवर व न्यायालयात दाद मागावी लागेल.
+१. अपिलकर्त्याचे पूर्ण नाव : {st.session_state.user_name}
+२. अपिलकर्त्याचा पत्ता व संपर्क : {st.session_state.user_address}
+३. जन माहिती अधिकाऱ्याचा तपशील : जन माहिती अधिकारी, {st.session_state.dept_name}
+४. प्रथम अपीलीय अधिकाऱ्याचा तपशील : प्रथम अपीलीय अधिकारी तथा वरिष्ठ अधिकारी, {st.session_state.dept_name}
+५. मूळ अर्ज (जोडपत्र 'अ') व प्रथम अपील (जोडपत्र 'ब') करूनही विहित मुदतीत समाधानकारक माहिती मिळाली नाही.
+६. द्वितीय अपीलाचा संक्षिप्त विषय व मागितलेली माहिती :
+{st.session_state.query}
 
-तारीख: ____________                                तक्रारदाराची स्वाक्षरी: {st.session_state.comp_name}
-ठिकाण: ____________
+७. मागितलेली दाद / प्रार्थना :
+   १) माहिती अधिकार अधिनियम, २००५ च्या कलम १० (Severability Clause) चा वापर करून संपूर्ण व प्रमाणित अभिलेख विनामूल्य उपलब्ध करून देण्याचे आदेश व्हावेत.
+   २) विहित मुदतीत माहिती न दिल्याबद्दल व जाणूनबुजून टाळाटाळ केल्याबद्दल जन माहिती अधिकाऱ्यावर कलम २०(१) अन्वये २५,०००/- रुपये कमाल दंडात्मक कारवाई करण्यात यावी.
+   ३) कलम २०(२) अन्वये दोषी अधिकाऱ्याविरुद्ध शिस्तभंगाच्या कारवाईची शिफारस करून सदर कारवाईची नोंद त्यांच्या सेवापुस्तकात (Service Book) घेण्याचे आदेश सक्षम प्राधिकरणास देण्यात यावेत.
 
-प्रत माहितीस्तव: मा. जिल्हाधिकारी महोदय."""
+सत्यप्रतीज्ञा : मी याद्वारे घोषित करतो/करते की, वरील सर्व तपशील माझ्या समजुतीनुसार आणि माहितीनुसार पूर्णतः सत्य व अचूक आहे.
 
-                st.session_state.history_list.append({
-                    "type": "🔴 तक्रार अर्ज",
-                    "title": f"{st.session_state.comp_dept} - {st.session_state.comp_subject}",
-                    "content": st.session_state.comp_result,
-                    "time": datetime.now().strftime("%d-%m-%Y %H:%M")
-                })
+दिनांक: {date_str}                                     अपिलकर्त्याची स्वाक्षरी: {st.session_state.user_name}
+ठिकाण: ________________"""
 
-    if st.session_state.comp_result:
-        st.success("✅ तक्रार अर्ज तयार झाला आहे!")
-        st.text_area("📄 तयार झालेली तक्रार (येथून वाचू शकता):", value=st.session_state.comp_result, height=220)
-        
-        st.markdown("---")
-        st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
-        render_printable_marathi_doc("शासकीय तक्रार अर्ज", st.session_state.comp_result, "#DC2626")
-        render_voluntary_support_box()
+        st.session_state.history_list.append({
+            "type": st.session_state.rti_type,
+            "title": f"{st.session_state.dept_name} - {st.session_state.user_name}",
+            "content": st.session_state.result_text,
+            "time": datetime.now().strftime("%d-%m-%Y %H:%M")
+        })
 
-# ==================== पान ३: ऑनलाइन RTI पोर्टल मसुदा ====================
-elif st.session_state.page == "online_portal":
-    st.markdown("""
-    <div style="background: #FFFBEB; border-left: 6px solid #D97706; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-        <h3 style="color: #92400E; margin: 0; font-weight: 800;">🟠 ३. ऑनलाइन RTI पोर्टल मसुदा (महा-RTI / RTI Online)</h3>
-        <p style="color: #B45309; margin: 5px 0 0 0; font-size: 13px; font-weight: bold;">शासकीय ऑनलाइन पोर्टलच्या 'Description Box' मध्ये थेट कॉपी-पेस्ट करण्यासाठी १५० शब्दांत अचूक मसुदा.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.session_state.online_dept = st.text_input(
-        "संबंधित अधिकारी / विभागाचे नाव:",
-        value=st.session_state.online_dept,
-        placeholder="उदा. जन माहिती अधिकारी, महसूल विभाग / ग्रामपंचायत / नगर परिषद कार्यालय"
-    )
-    st.session_state.online_subject = st.text_input(
-        "माहितीचा मुख्य विषय:",
-        value=st.session_state.online_subject,
-        placeholder="उदा. रस्ता बांधकाम निधी, विकासकामे किंवा सेवापुस्तिका तपशील"
-    )
-    st.session_state.online_query = st.text_area(
-        "कोणती माहिती हवी आहे? (मुद्दे साध्या भाषेत लिहा):",
-        value=st.session_state.online_query,
-        placeholder="उदा. कामाचे अंदाजपत्रक, खर्च, देयके, मोजमाप पुस्तिका व संबंधित आदेशाची प्रत"
-    )
-
-    if st.button("🚀 ऑनलाइन पोर्टल मसुदा तयार करा"):
-        if not st.session_state.online_dept or not st.session_state.online_query:
-            st.warning("कृपया विभाग/अधिकारी आणि मागितलेली माहिती भरा.")
-        else:
-            with st.spinner("ऑनलाइन पोर्टलच्या १५० शब्दांच्या मर्यादेत मसुदा तयार होत आहे..."):
-                if api_key:
-                    try:
-                        genai.configure(api_key=api_key)
-                        model = genai.GenerativeModel("gemini-1.5-flash")
-                        prompt = f"""
-तुम्ही RTI ऑनलाइन पोर्टल मसुदा तज्ञ आहात. 
-सरकारी ऑनलाइन पोर्टलवर (Online RTI Portal) टेक्स्ट बॉक्समध्ये थेट कॉपी-पेस्ट करण्यासाठी खालील माहितीवरून अत्यंत संक्षिप्त, मुद्देसूद आणि जास्तीत जास्त १५० शब्दांच्या मर्यादेत मसुदा बनवा.
-
-अधिकारी/विभाग: {st.session_state.online_dept}
-विषय: {st.session_state.online_subject}
-मागितलेली माहिती: {st.session_state.online_query}
-
-नियम:
-१. अर्जात कोणताही पत्ता, नमुना अ, किंवा कोर्ट फी चा लांबलचक मजकूर नको.
-२. थेट फॉरमॅट असा असावा:
-विषय: {st.session_state.online_subject} बाबत माहिती अधिकार अर्ज.
-महोदय,
-माहिती अधिकार अधिनियम २००५ अंतर्गत खालील माहिती प्रमाणित प्रतीसह मिळणेबाबत:
-१. ...
-२. ...
-३. ...
-विहित मुदतीत माहिती देण्यात यावी.
-"""
-                        res = model.generate_content(prompt, generation_config={"temperature": 0.2})
-                        st.session_state.online_result = res.text
-                    except Exception as e:
-                        st.error(f"AI त्रुटी: {e}")
-                else:
-                    st.session_state.online_result = f"""विषय: {st.session_state.online_dept} - {st.session_state.online_subject} बाबत माहिती अधिकार अर्ज.
-
-महोदय,
-माहिती अधिकार अधिनियम २००५ अंतर्गत खालील माहिती प्रमाणित प्रतीसह मिळणेबाबत:
-१. {st.session_state.online_query}
-२. संबंधित विषयाच्या सर्व मूळ नोंदी, आदेश व अद्ययावत कार्यभार तपशील.
-३. पडताळणी अहवाल व तक्रार निवारण कार्यवाही प्रत.
-
-विहित मुदतीत माहिती देण्यात यावी."""
-
-                st.session_state.history_list.append({
-                    "type": "🟠 ऑनलाइन RTI पोर्टल",
-                    "title": f"{st.session_state.online_dept}",
-                    "content": st.session_state.online_result,
-                    "time": datetime.now().strftime("%d-%m-%Y %H:%M")
-                })
-
-    if st.session_state.online_result:
-        st.success("✅ ऑनलाइन पोर्टल मसुदा तयार झाला आहे!")
-        
-        # थेट काळा बॉक्स आणि १-क्लिक कॉपी बटण
-        html_clean = st.session_state.online_result.replace('\n', '<br>').replace('"', '&quot;')
-        raw_text_js = st.session_state.online_result.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
-        
-        black_box_html = f"""
-        <div style="background-color: #111827; color: #F9FAFB; padding: 20px; border-radius: 12px; border: 2px solid #374151; font-family: sans-serif; line-height: 1.6; font-size: 15px; margin-bottom: 12px;">
-            {html_clean}
-        </div>
-        <div style="text-align: center;">
-            <button onclick="
-                navigator.clipboard.writeText(`{raw_text_js}`);
-                alert('✅ मसुदा कॉपी झाला आहे! आता खालील मार्गदर्शनानुसार ऑनलाइन पोर्टलवर पेस्ट करा.');
-            " style="
-                background: linear-gradient(135deg, #D97706, #F59E0B);
-                color: white;
-                padding: 14px 25px;
-                font-size: 17px;
-                font-weight: bold;
-                border: none;
-                border-radius: 10px;
-                cursor: pointer;
-                box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
-                width: 100%;
-            ">
-                📋 एका क्लिकमध्ये संपूर्ण मसुदा कॉपी करा (Copy Text)
-            </button>
-        </div>
-        """
-        st.components.v1.html(black_box_html, height=300, scrolling=True)
-
-        # ऑनलाइन पोर्टलचे पुढील सविस्तर मार्गदर्शन
-        st.markdown("---")
-        st.markdown("""
-        <div style="background-color: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 15px;">
-            <h4 style="color: #065F46; margin-top: 0;">🌐 ऑनलाइन RTI पोर्टलवर अर्ज भरण्याचे सविस्तर मार्गदर्शन:</h4>
-            <ol style="font-size: 15px; color: #1F2937; line-height: 1.8; padding-left: 20px;">
-                <li><b>पोर्टल उघडा:</b> महाराष्ट्र शासनाच्या <a href="https://rtionline.maharashtra.gov.in" target="_blank"><b>rtionline.maharashtra.gov.in</b></a> (किंवा केंद्र शासनाच्या <a href="https://rtionline.gov.in" target="_blank"><b>rtionline.gov.in</b></a>) वेबसाईटवर जा.</li>
-                <li><b>'Submit Request' वर क्लिक करा:</b> होम पेजवर असलेल्या 'नवीन अर्ज दाखल करा' (Submit Request) या पर्यायावर दाबा आणि नियम मान्य (Accept) करा.</li>
-                <li><b>विभाग निवडा:</b> तुमचा संबंधित विभाग (उदा. महसूल, ग्रामविकास, नगरविकास, पोलीस) ड्रॉपडाऊनमधून निवडा.</li>
-                <li><b>वैयक्तिक माहिती भरा:</b> तुमचे नाव, पत्ता, मोबाईल नंबर आणि ईमेल आयडी अचूक टाका.</li>
-                <li><b>मसुदा पेस्ट करा:</b> वर <b>'📋 कॉपी करा'</b> बटण दाबून घेतलेला मसुदा खालील <i>'Text for RTI Request application'</i> या बॉक्समध्ये थेट <b>Paste</b> करा.</li>
-                <li><b>शासकीय फी भरा:</b> ₹१०/- शासकीय फी भरण्यासाठी UPI / Net Banking पर्याय निवडून पेमेंट पूर्ण करा.</li>
-                <li><b>नोंदणी क्रमांक (Registration No.) सेव्ह करा:</b> स्क्रीनवर आलेला १५ अंकी RTI नंबर सेव्ह करा; याच नंबरवरून तुम्हाला ३० दिवसांत उत्तर किंवा माहिती मिळेल.</li>
-            </ol>
-        </div>
-        """, unsafe_allow_html=True)
-        render_voluntary_support_box()
-
-# ==================== पान ४: हिस्ट्री ====================
-elif st.session_state.page == "history":
-    st.markdown("<h3>📜 माझी सेव्ह केलेली हिस्ट्री</h3>", unsafe_allow_html=True)
-    if not st.session_state.history_list:
-        st.info("💡 तुम्ही अद्याप कोणताही अर्ज तयार केलेला नाही. नवीन अर्ज तयार केल्यावर तो येथे आपोआप सेव्ह होईल.")
-    else:
-        for idx, item in enumerate(reversed(st.session_state.history_list)):
-            with st.expander(f"{item['type']} | {item['title']} ({item['time']})"):
-                st.text_area(f"मसुदा {idx+1}:", value=item['content'], height=180, key=f"hist_{idx}")
-
-# ==================== पान ५: मुख्य माहिती ====================
-elif st.session_state.page == "home":
-    st.markdown("""
-    <div style="background-color: #EFF6FF; border: 2px solid #3B82F6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
-        <h3 style="color: #1E40AF; margin-top: 0; font-weight: 800;">🔵 मुख्य माहिती व नियम</h3>
-        <ul style="font-size: 15px; color: #1F2937; line-height: 1.8;">
-            <li><b>🟢 हिरवा बॉक्स (ऑफलाइन RTI):</b> टपालाने किंवा प्रत्यक्ष टेबलवर देण्यासाठी कायदेशीर १-पानाची PDF.</li>
-            <li><b>🔴 लाल बॉक्स (शासकीय तक्रार):</b> प्रशासकीय गैरव्यवहार व दिरंगाईविरोधात कडक तक्रार अर्ज.</li>
-            <li><b>🟠 केशरी बॉक्स (ऑनलाइन RTI):</b> महा-RTI पोर्टलवर १५० शब्दांच्या मर्यादेत थेट कॉपी-पेस्ट करण्यासाठी मसुदा.</li>
-            <li><b>📜 माझी हिस्ट्री:</b> तयार केलेले सर्व मसुदे आपोआप सेव्ह राहतात.</li>
-            <li><b>🔄 सर्व रिसेट करा:</b> सर्व माहिती एका क्लिकवर पुसून नव्याने सुरुवात करण्यासाठी.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("<p style='font-size: 13px; color: #6B7280; text-align: center;'><b>विकासक:</b> सतीश अशोक प्रधान | छत्रपती संभाजीनगर</p>", unsafe_allow_html=True)
+# ८. मसुदा दाखवणे व PDF डाऊनलोड / प्रिंट
+if st.session_state.result_text:
+    st.success("✅ कडक कायदेशीर मसुदा यशस्वीरीत्या तयार झाला आहे!")
+    st.text_area("📄 तयार झालेला मसुदा (वाचण्यासाठी किंवा कॉपी करण्यासाठी):", value=st.session_state.result_text, height=260)
+    
+    st.markdown("---")
+    st.markdown("### 📥 अधिकृत १-पान PDF डाऊनलोड / प्रिंट")
+    
+    # थेट १ पानात प्रिंट/PDF
+    render_printable_doc(st.session_state.rti_type, st.session_state.result_text, "#059669")
