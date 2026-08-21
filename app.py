@@ -3,10 +3,9 @@ import google.generativeai as genai
 import urllib.parse
 from datetime import datetime
 from PIL import Image
-import os
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि डिझाइन
+# १. पेज कॉन्फिगरेशन आणि मोबाइल डिझाइन
 # ==============================================================================
 st.set_page_config(page_title="RTI व कायदेशीर महा-सहाय्यक", page_icon="⚖️", layout="wide")
 
@@ -21,7 +20,7 @@ st.markdown("""
 
 h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 20px; margin-bottom: 2px; }
 
-/* शेअर मेनू स्टाईल */
+/* शेअर बॉक्स */
 .share-box {
     background: #F3F4F6;
     border: 1px solid #D1D5DB;
@@ -58,45 +57,75 @@ if 'original_query' not in st.session_state: st.session_state.original_query = "
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'show_share' not in st.session_state: st.session_state.show_share = False
 
-# चॅट मेमरी
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "नमस्कार! मी तुमचा AI महा-सहाय्यक आहे. मला कायदा, शासकीय कामे किंवा जगातील कोणताही प्रश्न विचारा किंवा फोटो अपलोड करून माहिती मिळवा."}
+        {"role": "assistant", "content": "नमस्कार! मी तुमचा AI महा-सहाय्यक आहे. मला कायदा, शासकीय कामे, जगातील कोणताही प्रश्न विचारा किंवा फोटो अपलोड करून माहिती मिळवा."}
     ]
 
 APP_URL = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
 
 # ==============================================================================
-# ३. मल्टी-मॉडल AI कॉल (टेक्स्ट + फोटो + जागतिक ज्ञान)
+# ३. सुरक्षित व ऑटो-मॉडेल AI फंक्शन (४०४ त्रुटी कायमची दूर)
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 def get_ai_multimodal_response(prompt_text, image_data=None):
-    if active_api_key:
+    if not active_api_key:
+        return "कृपया Streamlit Secrets मध्ये GEMINI_API_KEY जोडा."
+    
+    try:
+        genai.configure(api_key=active_api_key)
+        
+        # सपोर्टेड मॉडेल्सची क्रमवारी (Auto-Fallback)
+        models_to_check = ['gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        
+        # उपलब्ध मॉडेल शोधणे
         try:
-            genai.configure(api_key=active_api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            available_models = [m.name.replace('models/', '') for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        except Exception:
+            available_models = models_to_check
+
+        selected_model = None
+        for m in models_to_check:
+            if m in available_models:
+                selected_model = m
+                break
+        
+        if not selected_model:
+            selected_model = available_models[0] if available_models else 'gemini-1.5-flash'
+
+        model = genai.GenerativeModel(selected_model)
+
+        if image_data:
+            # फोटोसह प्रश्न
+            vision_models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro-vision']
+            for v_m in vision_models:
+                try:
+                    v_model = genai.GenerativeModel(v_m)
+                    res = v_model.generate_content([prompt_text, image_data])
+                    if res and res.text:
+                        return res.text
+                except Exception:
+                    continue
+        
+        res = model.generate_content(prompt_text)
+        if res and res.text:
+            return res.text
             
-            if image_data:
-                res = model.generate_content([prompt_text, image_data])
-            else:
-                res = model.generate_content(prompt_text)
-                
-            if res and res.text:
-                return res.text
-        except Exception as e:
-            return f"त्रुटी: {str(e)}"
-    return "कृपया API Key तपासा."
+    except Exception as e:
+        return f"AI त्रुटी: {str(e)}"
+    
+    return "माहिती तयार करण्यात अडचण येत आहे. कृपया पुन्हा प्रयत्न करा."
 
 # ==============================================================================
-# ४. होम पेज हेडर, बॅनर व शेअर मेनू
+# ४. हेडर व शेअर मेनू
 # ==============================================================================
 st.markdown("<h1>⚖️ RTI, तक्रार व कायदेशीर महा-सहाय्यक</h1>", unsafe_allow_html=True)
 
-head_col1, head_col2 = st.columns([5, 1])
-with head_col1:
+h_c1, h_c2 = st.columns([5, 1])
+with h_c1:
     st.caption("नागरिकांसाठी सर्व कायदेशीर, प्रशासकीय व AI माहिती केंद्र")
-with head_col2:
+with h_c2:
     if st.button("↗️ शेअर", key="main_share_btn", use_container_width=True):
         st.session_state.show_share = not st.session_state.show_share
 
@@ -112,13 +141,10 @@ if st.session_state.show_share:
     </div>
     """, unsafe_allow_html=True)
 
-if os.path.exists("banner.png"):
-    st.image("banner.png", use_container_width=True)
-
 st.markdown("---")
 
 # ==============================================================================
-# ५. मुख्य ६ नॅव्हिगेशन बटने
+# ५. मुख्य ६ नॅव्हिगेशन बटने (Single Clean Grid)
 # ==============================================================================
 b1, b2, b3, b4, b5, b6 = st.columns(6)
 with b1:
@@ -137,11 +163,11 @@ with b6:
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# ६. विभाग (Forms & Full AI Chatbot)
+# ६. विभाग व फॉर्म्स
 # ==============================================================================
 date_today = datetime.now().strftime("%d/%m/%Y")
 
-# १. मूळ RTI
+# १. जोडपत्र 'अ'
 if st.session_state.active_tab == "जोडपत्र 'अ'":
     st.subheader("🟢 जोडपत्र 'अ' - मूळ माहिती अधिकार अर्ज (कलम ६(१))")
     with st.form("form_a"):
@@ -152,10 +178,10 @@ if st.session_state.active_tab == "जोडपत्र 'अ'":
         if st.form_submit_button("🚀 अर्ज तयार करा"):
             prompt = f"महाराष्ट्र RTI कलम ६(१) जोडपत्र 'अ' अर्ज तयार करा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}."
             ai_out = get_ai_multimodal_response(prompt)
-            st.session_state.final_draft = ai_out if "त्रुटी" not in ai_out else f"""जोडपत्र - 'अ'\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील अर्ज.\n\nप्रति,\nजन माहिती अधिकारी,\nकार्यालय: {st.session_state.dept_name}\n\n१. अर्जदार: {st.session_state.user_name}\n२. पत्ता: {st.session_state.user_address}\n३. माहिती: {st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
+            st.session_state.final_draft = ai_out if "त्रुटी" not in ai_out else f"""जोडपत्र - 'अ'\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील अर्ज.\n\nप्रति,\nजन माहिती अधिकारी,\nकार्यालय: {st.session_state.dept_name}\n\n१. अर्जदार: {st.session_state.user_name}\n२. पत्ता: {st.session_state.user_address}\n३. माहिती: {st.session_state.original_query}\n\nशुल्क: ₹१०/- कोर्ट फी जोडली आहे.\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ अर्ज तयार झाला!")
 
-# २. प्रथम अपील
+# २. जोडपत्र 'ब'
 elif st.session_state.active_tab == "जोडपत्र 'ब'":
     st.subheader("🔵 जोडपत्र 'ब' - प्रथम अपील (कलम १९(१))")
     with st.form("form_b"):
@@ -167,7 +193,7 @@ elif st.session_state.active_tab == "जोडपत्र 'ब'":
             st.session_state.final_draft = f"""जोडपत्र - 'ब'\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम १९(१) खालील प्रथम अपील.\n\nप्रति,\nप्रथम अपीलीय अधिकारी,\nकार्यालय: {st.session_state.dept_name}\n\n१. अपिलकर्ता: {st.session_state.user_name}\n२. पत्ता: {st.session_state.user_address}\n३. कारण: {reason}\n४. मूळ माहिती: {st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ प्रथम अपील तयार झाले!")
 
-# ३. द्वितीय अपील
+# ३. जोडपत्र 'क'
 elif st.session_state.active_tab == "जोडपत्र 'क'":
     st.subheader("🟠 जोडपत्र 'क' - द्वितीय अपील (राज्य माहिती आयोग)")
     with st.form("form_c"):
@@ -178,39 +204,30 @@ elif st.session_state.active_tab == "जोडपत्र 'क'":
             st.session_state.final_draft = f"""जोडपत्र - 'क'\nमाहिती अधिकार अधिनियम, २००५ च्या कलम १९(३) खालील द्वितीय अपील.\n\nप्रति,\nमा. राज्य माहिती आयोग खंडपीठ,\n\n१. अपीलकर्ता: {st.session_state.user_name}\n२. पत्ता: {st.session_state.user_address}\n३. प्रतिवादी: जन माहिती अधिकारी, {st.session_state.dept_name}\n४. मूळ माहिती: {st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ द्वितीय अपील तयार झाले!")
 
-# ४. 🤖 संपूर्ण AI चॅटबॉट (ChatGPT / Gemini सारखा + फोटो अपलोड)
+# ४. 🤖 AI चॅटबॉट (वर्ल्ड नॉलेज + फोटो स्कॅनर)
 elif st.session_state.active_tab == "AI चॅटबॉट":
     st.subheader("🤖 ऑल-इन-वन AI चॅटबॉट (वर्ल्ड नॉलेज + डॉक्युमेंट स्कॅनर)")
-    st.caption("कायदेशीर सल्ला, सामान्य ज्ञान किंवा फोटो/कागदपत्र अपलोड करून प्रश्न विचारा:")
+    st.caption("कायदा, सामान्य ज्ञान किंवा फोटो/कागदपत्र अपलोड करून प्रश्न विचारा:")
 
-    # चॅट मेसेज डिस्प्ले
     for message in st.session_state.chat_messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # फोटो अपलोड पर्याय (+)
     uploaded_img = st.file_uploader("➕ फोटो / कागदपत्र जोडा (ऐच्छिक):", type=["png", "jpg", "jpeg"])
     
-    # चॅट इनपुट बॉक्स
-    if prompt := st.chat_input("येथे कोणताही प्रश्न विचारा (उदा. या कागदपत्रात काय लिहिले आहे? किंवा जगातील कोणताही प्रश्न)..."):
-        # युझर मेसेज दाखवणे
+    if prompt := st.chat_input("येथे कोणताही प्रश्न विचारा..."):
         st.session_state.chat_messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # AI कडून उत्तर मिळवणे
         with st.chat_message("assistant"):
-            with st.spinner("AI विचार करत आहे..."):
-                img = None
-                if uploaded_img:
-                    img = Image.open(uploaded_img)
-                
-                system_instruction = "तुम्ही एक शक्तिशाली आणि हुशार AI सहाय्यक आहात. युझरने विचारलेल्या कोणत्याही विषयावर (कायदा, विज्ञान, इतिहास, सामान्य ज्ञान किंवा कागदपत्र विश्लेषण) मराठीत सविस्तर, स्पष्ट आणि अचूक उत्तर द्या."
-                full_prompt = f"{system_instruction}\n\nवापरकर्त्याचा प्रश्न: {prompt}"
+            with st.spinner("AI उत्तर तयार करत आहे..."):
+                img = Image.open(uploaded_img) if uploaded_img else None
+                system_instruction = "तुम्ही एक शक्तिशाली AI सहाय्यक आहात. विचारलेल्या कोणत्याही विषयावर (कायदा, विज्ञान, इतिहास, सामान्य ज्ञान किंवा कागदपत्र विश्लेषण) मराठीत अचूक उत्तर द्या."
+                full_prompt = f"{system_instruction}\n\nप्रश्न: {prompt}"
                 
                 response_text = get_ai_multimodal_response(full_prompt, img)
                 st.markdown(response_text)
-                
                 st.session_state.chat_messages.append({"role": "assistant", "content": response_text})
 
 # ५. न्यायालयीन मसुदा
@@ -235,7 +252,7 @@ elif st.session_state.active_tab == "शासकीय तक्रार":
         c_sub = st.text_input("विषय:", value="दिव्यांगांना जागा उपलब्ध करून देणे व कारवाई करणेबाबत")
         c_body = st.text_area("तक्रारीचा तपशील:", value=st.session_state.original_query)
         if st.form_submit_button("🚀 तक्रार अर्ज तयार करा"):
-            st.session_state.final_draft = f"""प्रति,\nमा. {st.session_state.dept_name},\n\nविषय: {c_sub}\nतक्रारदार: {st.session_state.user_name}, रा. {st.session_state.user_address}\n\nमहोदय,\nमी खालीलप्रमाणे तक्रार नोंदवत आहे:\n{c_body}\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
+            st.session_state.final_draft = f"""प्रति,\nमा. {st.session_state.dept_name},\n\nविषय: {c_sub}\nतक्रारदार: {st.session_state.user_name}, रा. {st.session_state.user_address}\n\nमहोदय,\n{c_body}\n\nदिनांक: {date_today}\nस्वाक्षरी: {st.session_state.user_name}"""
             st.success("✅ तक्रार अर्ज तयार झाला!")
 
 # ==============================================================================
