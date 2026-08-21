@@ -2,9 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 import urllib.parse
 from datetime import datetime
+import os
 
 # ==============================================================================
-# १. वेगवान व हलके पेज कॉन्फिगरेशन
+# १. पेज कॉन्फिगरेशन आणि डिझाइन
 # ==============================================================================
 st.set_page_config(page_title="RTI व कायदेशीर महा-सहाय्यक", page_icon="⚖️", layout="wide")
 
@@ -17,7 +18,7 @@ st.markdown("""
     display: none !important;
 }
 
-h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 20px; margin-bottom: 2px; }
+h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 22px; margin-bottom: 2px; }
 
 /* शेअर मेनू स्टाईल */
 .share-box {
@@ -30,7 +31,7 @@ h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 20px; marg
 }
 .share-btn {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 6px 14px;
     margin: 4px;
     border-radius: 6px;
     color: white !important;
@@ -46,7 +47,7 @@ h1 { color: #1E3A8A; font-weight: 800; text-align: center; font-size: 20px; marg
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# २. सेशन्स मॅनेजमेंट (हलके व स्मूथ)
+# २. सेशन्स मॅनेजमेंट
 # ==============================================================================
 if 'active_tab' not in st.session_state: st.session_state.active_tab = "जोडपत्र 'अ'"
 if 'user_name' not in st.session_state: st.session_state.user_name = ""
@@ -56,7 +57,7 @@ if 'original_query' not in st.session_state: st.session_state.original_query = "
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'show_share' not in st.session_state: st.session_state.show_share = False
 
-APP_URL = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/"
+APP_URL = "https://rti-ai-app-eydmnrwsmhvwhmryv7nn4v.streamlit.app/?v=3"
 
 # ==============================================================================
 # ३. API कॉल
@@ -76,7 +77,7 @@ def get_ai_response(prompt_text):
     return None
 
 # ==============================================================================
-# ४. होम पेज हेडर व शेअर बाण (↗️ Share Menu)
+# ४. होम पेज हेडर, बॅनर फोटो व शेअर मेनू
 # ==============================================================================
 st.markdown("<h1>⚖️ RTI, तक्रार व कायदेशीर महा-सहाय्यक</h1>", unsafe_allow_html=True)
 
@@ -87,7 +88,7 @@ with head_col2:
     if st.button("↗️ शेअर", key="main_share_btn", use_container_width=True):
         st.session_state.show_share = not st.session_state.show_share
 
-# बाणावर क्लिक केल्यावर उघडणारा शेअर मेनू
+# बाणावर क्लिक केल्यावर उघडणारा शेअर बॉक्स
 if st.session_state.show_share:
     share_msg = urllib.parse.quote(f"⚖️ RTI, तक्रार व न्यायालयीन अर्ज तयार करण्यासाठी हे उपयुक्त AI ॲप वापरा:\n{APP_URL}")
     st.markdown(f"""
@@ -99,6 +100,10 @@ if st.session_state.show_share:
         <a class="share-btn btn-ms" href="fb-messenger://share/?link={APP_URL}" target="_blank">Messenger</a>
     </div>
     """, unsafe_allow_html=True)
+
+# बॅनर फोटो जोडणे (जर फाईल उपलब्ध असेल तर)
+if os.path.exists("banner.png"):
+    st.image("banner.png", use_container_width=True)
 
 st.markdown("---")
 
@@ -122,7 +127,7 @@ with b6:
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# ६. फॉर्म्स व विभाग (Clean Logic)
+# ६. फॉर्म्स व विभाग
 # ==============================================================================
 date_today = datetime.now().strftime("%d/%m/%Y")
 
@@ -133,7 +138,7 @@ if st.session_state.active_tab == "जोडपत्र 'अ'":
         st.session_state.user_name = st.text_input("अर्जदाराचे पूर्ण नाव:", value=st.session_state.user_name)
         st.session_state.user_address = st.text_area("पत्ता व मोबाईल क्र.:", value=st.session_state.user_address)
         st.session_state.dept_name = st.text_input("कार्यालय / विभागाचे नाव:", value=st.session_state.dept_name)
-        st.session_state.original_query = st.text_area("मागितलेली माहिती:", value=st.session_state.original_query)
+        st.session_state.original_query = st.text_area("मागितलेली माहिती (मुद्दे):", value=st.session_state.original_query)
         if st.form_submit_button("🚀 अर्ज तयार करा"):
             prompt = f"महाराष्ट्र RTI कलम ६(१) जोडपत्र 'अ' अर्ज तयार करा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}."
             ai_out = get_ai_response(prompt)
@@ -225,3 +230,7 @@ if st.session_state.final_draft and st.session_state.active_tab != "AI सल्
             unsafe_allow_html=True
         )
 
+# तळभागात जनजागृती फोटो (About Image)
+if os.path.exists("about_child.png"):
+    st.markdown("---")
+    st.image("about_child.png", caption="सशक्त नागरिक, पारदर्शक कारभार!", use_container_width=True)
