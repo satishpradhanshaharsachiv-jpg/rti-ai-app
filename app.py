@@ -6,7 +6,7 @@ from datetime import datetime
 # ==============================================================================
 # १. पेज कॉन्फिगरेशन आणि डिझाइन
 # ==============================================================================
-st.set_page_config(page_title="RTI व AI महा-सहाय्यक", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="RTI व कायदेशीर AI महा-सहाय्यक", page_icon="⚖️", layout="wide")
 
 custom_css = """
 <style>
@@ -21,11 +21,11 @@ button[title="View source"] { display: none; }
 
 h1 { color: #1E3A8A; font-weight: 900; text-align: center; font-size: 24px; margin-bottom: 4px; }
 
-/* मुख्य ५ रंगीत नेव्हिगेशन बटने */
+/* मुख्य ६ रंगीत नेव्हिगेशन बटने */
 div.st-key-btn_tab1 button { background: linear-gradient(135deg, #059669, #10B981) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; }
 div.st-key-btn_tab2 button { background: linear-gradient(135deg, #2563EB, #3B82F6) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; }
 div.st-key-btn_tab3 button { background: linear-gradient(135deg, #D97706, #F59E0B) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; }
-div.st-key-btn_tab4 button { background: linear-gradient(135deg, #10A37F, #0D8C6D) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; box-shadow: 0 0 10px rgba(16,163,127,0.4); }
+div.st-key-btn_tab4 button { background: linear-gradient(135deg, #0D9488, #14B8A6) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; box-shadow: 0 0 10px rgba(13,148,136,0.3); }
 div.st-key-btn_tab5 button { background: linear-gradient(135deg, #7C3AED, #8B5CF6) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; }
 div.st-key-btn_tab6 button { background: linear-gradient(135deg, #DC2626, #EF4444) !important; color: white !important; height: 55px !important; border-radius: 10px !important; font-weight: bold; }
 </style>
@@ -44,11 +44,11 @@ if 'appeal_reason' not in st.session_state: st.session_state.appeal_reason = "�
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state: 
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "नमस्कार! मी तुमचा AI कायदेशीर सहाय्यक आहे. RTI, न्यायालयीन कायदे किंवा तक्रार अर्जाबाबत कोणताही प्रश्न विचारा."}
+        {"role": "assistant", "content": "नमस्कार! मी तुमचा कायदेशीर व प्रशासकीय AI सहाय्यक आहे. माहिती अधिकार (RTI), शासकीय तक्रारी किंवा न्यायालयीन प्रक्रियेबाबत कोणताही प्रश्न विचारा."}
     ]
 
 # ==============================================================================
-# ३. पत्ते व अधिकृत संस्था डेटाबेस
+# ३. पत्ते व अधिकृत डेटाबेस
 # ==============================================================================
 COMMISSION_ADDRESSES = {
     "छत्रपती संभाजीनगर खंडपीठ (राज्य माहिती आयोग)": "मा. राज्य माहिती आयुक्त, राज्य माहिती आयोग खंडपीठ छत्रपती संभाजीनगर, शासकीय सुभेदारी विश्रामगृह समोर, बाबा पेट्रोल पंपाजवळ, छत्रपती संभाजीनगर - ४३१००१ (फोन: ०२४०-२३५२५४४)",
@@ -66,7 +66,7 @@ COURT_ADDRESSES = {
 }
 
 # ==============================================================================
-# ४. AI फंक्शन व १-पान A4 PDF प्रिंट
+# ४. AI फंक्शन (दुरुस्त केलेले मॉडेल नाव)
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key (ऐच्छिक):", type="password")
 active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
@@ -75,7 +75,8 @@ def generate_ai_draft(prompt_text):
     if active_api_key:
         try:
             genai.configure(api_key=active_api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+            # योग्य व स्थिर मॉडेल नाव वापरले आहे
+            model = genai.GenerativeModel("gemini-1.5-flash")
             res = model.generate_content(prompt_text, generation_config={"temperature": 0.2})
             return res.text
         except Exception as e:
@@ -116,7 +117,7 @@ def render_printable_doc(title, content, theme_color="#059669"):
 # ५. मुख्य शीर्ष व नेव्हिगेशन बटने
 # ==============================================================================
 st.markdown("<h1>⚖️ RTI, तक्रार व न्यायालयीन AI महा-सहाय्यक</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>जोडपत्र अ ➔ ब ➔ क ➔ ChatGPT AI सहाय्यक ➔ कोर्ट ड्राफ्ट ➔ तक्रार अर्ज</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 13px; font-weight: bold; color: #4B5563;'>जोडपत्र अ ➔ ब ➔ क ➔ AI सल्लागार ➔ कोर्ट याचिका ➔ शासकीय तक्रार</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
@@ -127,7 +128,7 @@ with c2:
 with c3:
     if st.button("🟠 ३. जोडपत्र 'क'\n(माहिती आयोग)", key="btn_tab3"): st.session_state.active_tab = "जोडपत्र 'क'"
 with c4:
-    if st.button("🤖 ४. ChatGPT AI\n(कायदेशीर बॉट)", key="btn_tab4"): st.session_state.active_tab = "ChatGPT AI"
+    if st.button("🤖 ४. AI सल्लागार\n(कायदेशीर बॉट)", key="btn_tab4"): st.session_state.active_tab = "AI सल्लागार"
 with c5:
     if st.button("🟣 ५. कोर्ट याचिका\n(Petition)", key="btn_tab5"): st.session_state.active_tab = "न्यायालयीन मसुदा"
 with c6:
@@ -146,7 +147,7 @@ if st.session_state.active_tab == "जोडपत्र 'अ'":
         st.session_state.dept_name = st.text_input("३. सरकारी कार्यालय / विभागाचे नाव:", value=st.session_state.dept_name)
         st.session_state.original_query = st.text_area("४. मागितलेल्या माहितीचा तपशील:", value=st.session_state.original_query)
         
-        if st.form_submit_button("🚀 जोडपत्र 'अ' तयार करा व डेटा सेव्ह करा"):
+        if st.form_submit_button("🚀 जोडपत्र 'अ' तयार करा"):
             date_str = datetime.now().strftime("%d/%m/%Y")
             ai_res = generate_ai_draft(f"महाराष्ट्र RTI कायदा २००५ कलम ६(१) जोडपत्र 'अ' तयार करा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, माहिती: {st.session_state.original_query}. कलम ६(३), ७(१), १० व ₹१० कोर्ट फी चा उल्लेख करा.")
             
@@ -257,13 +258,13 @@ elif st.session_state.active_tab == "जोडपत्र 'क'":
             st.success("✅ जोडपत्र 'क' तयार झाले!")
 
 # ==============================================================================
-# विभाग ४: ChatGPT सारखा AI चॅटबॉट (चौथे बटन)
+# विभाग ४: कायदेशीर AI सहाय्यक बॉट (चौथे बटन)
 # ==============================================================================
-elif st.session_state.active_tab == "ChatGPT AI":
-    st.markdown("### 🤖 ChatGPT कायदेशीर व प्रशासकीय AI सहाय्यक")
-    st.caption("कायदेशीर सल्ला, अर्जांचे मुद्दे, शासकीय नियम किंवा कोणत्याही प्रश्नाचे उत्तर येथे थेट विचारा.")
+elif st.session_state.active_tab == "AI सल्लागार":
+    st.markdown("### 🤖 कायदेशीर व प्रशासकीय AI सल्लागार")
+    st.caption("RTI, कायदे, सरकारी नियम, जीआर (GR) किंवा अर्जांच्या मसुद्याबाबत कोणताही प्रश्न थेट विचारा.")
 
-    # मागील संभाषण दर्शवणे
+    # मागील संभाषण दाखवणे
     for msg in st.session_state.chat_messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
@@ -274,14 +275,13 @@ elif st.session_state.active_tab == "ChatGPT AI":
         with st.chat_message("user"):
             st.markdown(user_prompt)
 
-        # AI द्वारे उत्तर निर्मिती
-        system_instruction = "तुम्ही एक तज्ज्ञ भारतीय कायदेतज्ञ व प्रशासकीय सल्लागार आहात. युझरला मराठीतून स्पष्ट, मुद्देसूद आणि कायदेशीर कलमांसह अचूक मार्गदर्शन करा."
+        system_instruction = "तुम्ही एक तज्ज्ञ भारतीय कायदेतज्ञ व प्रशासकीय सल्लागार आहात. युझरला मराठीतून स्पष्ट, मुद्देसूद आणि कायदेशीर कलमांसह सविस्तर मार्गदर्शन करा."
         full_query = f"{system_instruction}\n\nवापरकर्त्याचा प्रश्न: {user_prompt}"
         
         with st.chat_message("assistant"):
             bot_reply = generate_ai_draft(full_query)
             if not bot_reply:
-                bot_reply = "माफ करा, सध्या उत्तर तयार करण्यात अडचण येत आहे. कृपया API Key तपासा किंवा काही वेळाने प्रयत्न करा."
+                bot_reply = "माफ करा, उत्तर तयार करण्यात अडचण येत आहे. कृपया तुमची Gemini API Key तपासा."
             st.markdown(bot_reply)
             st.session_state.chat_messages.append({"role": "assistant", "content": bot_reply})
 
@@ -351,9 +351,9 @@ elif st.session_state.active_tab == "शासकीय तक्रार":
             st.success("✅ शासकीय तक्रार अर्ज तयार झाला!")
 
 # ==============================================================================
-# अंतिम निकाल व प्रिंट पर्याय (फक्त डॉक्युमेंट टॅब्ससाठी)
+# अंतिम निकाल व प्रिंट पर्याय
 # ==============================================================================
-if st.session_state.final_draft and st.session_state.active_tab != "ChatGPT AI":
+if st.session_state.final_draft and st.session_state.active_tab != "AI सल्लागार":
     st.markdown("---")
     st.markdown("### 📄 तयार झालेला अंतिम कायदेशीर मसुदा:")
     st.text_area("मसुदा वाचा किंवा कॉपी करा:", value=st.session_state.final_draft, height=260)
