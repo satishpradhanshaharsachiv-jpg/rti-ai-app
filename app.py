@@ -1,9 +1,14 @@
 import streamlit as st
+import google.generativeai as genai
+from docx import Document
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
-import base64
-import json
-import datetime
-import urllib.parse
+from datetime import datetime
 
 # DOCX व PDF जनरेशनसाठी आवश्यक लायब्ररीज
 try:
