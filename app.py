@@ -63,7 +63,15 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 .chat-user { background: #2563EB; color: #FFFFFF; padding: 10px 14px; border-radius: 18px 18px 2px 18px; margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto; }
 .chat-ai { background: #F1F5F9; color: #0F172A; padding: 10px 14px; border-radius: 18px 18px 18px 2px; margin-bottom: 8px; font-size: 14px; border-left: 4px solid #3B82F6; }
 
-div[data-testid="stFileUploader"] section { padding: 4px !important; }
+/* Popover बटण जेमिनी स्टाईल */
+div[data-testid="stPopover"] button {
+    background-color: #E2E8F0 !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0px !important;
+    border: none !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -90,7 +98,7 @@ def generate_ai_response(prompt_text, image_obj=None):
     
     genai.configure(api_key=active_api_key)
     
-    # ६ वेगवेगळ्या मॉडेल्सची लिस्ट (एकापाठोपाठ ऑटो-ट्राय करण्यासाठी)
+    # ६ वेगवेगळ्या मॉडेल्सची लिस्ट (ऑटो-बॅकअपसाठी)
     models_to_try = [
         'gemini-1.5-flash',
         'gemini-1.5-flash-8b',
@@ -109,7 +117,7 @@ def generate_ai_response(prompt_text, image_obj=None):
             if response and response.text:
                 return response.text
         except Exception:
-            continue  # एरर आल्यास पुढचे मॉडेल वापरले जाईल
+            continue
 
     return "माफ करा, सर्व AI मॉडेल्स सध्या व्यस्त आहेत. कृपया थोड्या वेळाने प्रयत्न करा."
 
@@ -154,12 +162,13 @@ if active == "AI चॅट":
     st.markdown("<br>", unsafe_allow_html=True)
     
     up_img = None
-    col1, col2 = st.columns([1, 6])
+    col1, col2 = st.columns([1, 8])
     with col1:
-        with st.popover("➕", help="फोटो जोडा"):
-            up_img = st.file_uploader("कागदपत्र फोटो जोडा:", type=["png", "jpg", "jpeg"])
+        # सुंदर + आयकॉन
+        with st.popover("➕"):
+            up_img = st.file_uploader("फोटो/नोटीस जोडा:", type=["png", "jpg", "jpeg"])
     with col2:
-        st.caption("फोटो जोडण्यासाठी ➕ वर क्लिक करा.")
+        st.write("👈 फोटो जोडण्यासाठी **`➕`** वर क्लिक करा.")
 
     if q_prompt := st.chat_input("Gemini ला विचारण्यासाठी इथे लिहा..."):
         img = Image.open(up_img) if up_img else None
