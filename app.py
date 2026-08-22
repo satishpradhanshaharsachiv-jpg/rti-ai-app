@@ -27,11 +27,11 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 # ==========================================
-# 2. EXACT STYLING (4x2 GRID + SHINY BUTTONS + NO SCROLL)
+# 2. CUSTOM CSS - DUAL LAYOUT SYSTEM
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. LOCK HORIZONTAL SCROLL (स्क्रीन सरकणे पूर्णपणे लॉक) */
+    /* 1. LOCK HORIZONTAL SCROLL (स्क्रीन सरकणे पूर्णपणे बंद) */
     * {
         box-sizing: border-box !important;
     }
@@ -42,31 +42,45 @@ st.markdown("""
         color: #0F172A;
     }
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.4rem !important;
         padding-bottom: 1rem !important;
-        padding-left: 0.2rem !important;
-        padding-right: 0.2rem !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
         max-width: 100% !important;
     }
 
-    /* 2. TOP BANNER DESIGN */
+    /* 2. SHINY GOLDEN TOP BANNER */
     .brand-top-banner {
         text-align: center;
         background: linear-gradient(135deg, #0F172A, #1E1B4B, #312E81);
         padding: 10px 4px;
         border-radius: 12px;
-        border: 2px solid #F59E0B;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        border: 2px solid #FFD700;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
         margin-bottom: 8px;
     }
     
-    .brand-title-1 {
-        font-size: 17px;
+    .free-dhamaka-tag {
+        display: inline-block;
+        background: linear-gradient(90deg, #FF0055, #FF5E00);
+        color: #FFFFFF;
+        font-size: 11px;
         font-weight: 900;
-        background: linear-gradient(90deg, #FFD700, #FFA500, #00E5FF, #FF007F, #FFD700);
+        padding: 2px 12px;
+        border-radius: 20px;
+        margin-bottom: 4px;
+        letter-spacing: 1px;
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.7);
+    }
+
+    .brand-title-1 {
+        font-size: 18px;
+        font-weight: 900;
+        background: linear-gradient(90deg, #FFD700, #FFF5A5, #FFA500, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
     }
 
     .brand-title-2 {
@@ -75,21 +89,21 @@ st.markdown("""
         background: linear-gradient(90deg, #00FFCC, #FFD700, #FF3366);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
     }
 
     .brand-title-3 {
-        color: #FACC15;
+        color: #FFD700;
         font-size: 12px;
         font-weight: 700;
-        border-top: 1px dashed rgba(250, 204, 21, 0.6);
-        padding-top: 3px;
+        border-top: 1px dashed rgba(255, 215, 0, 0.6);
+        padding-top: 4px;
         margin-top: 2px;
         text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
-    /* 3. STRICT 4 BUTTONS PER ROW (वरती ४, खाली ४ नक्की बसणार) */
-    div[data-testid="stHorizontalBlock"] {
+    /* 3. BUTTON ZONE (STRICT 4 COLUMNS x 2 ROWS) */
+    .button-zone div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
@@ -99,76 +113,67 @@ st.markdown("""
         width: 100% !important;
     }
     
-    div[data-testid="column"] {
+    .button-zone div[data-testid="column"] {
         width: 24.5% !important;
         flex: 1 1 24.5% !important;
         min-width: 0px !important;
         padding: 0px !important;
     }
 
-    /* BUTTON SHINY STYLING */
-    div.stButton > button {
+    .button-zone div.stButton > button {
         width: 100% !important;
-        height: 60px !important;
+        height: 62px !important;
         font-size: 11px !important;
         font-weight: 800 !important;
         padding: 1px !important;
         border-radius: 8px !important;
         margin: 0px !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
+        border: 1px solid rgba(255,255,255,0.4) !important;
         color: #FFFFFF !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
         line-height: 1.2 !important;
         white-space: pre-wrap !important;
     }
 
-    /* ROW 1 VIBRANT BUTTON COLORS */
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button {
-        background: linear-gradient(135deg, #00C853, #00E676) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button {
-        background: linear-gradient(135deg, #FF6D00, #FF9100) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button {
-        background: linear-gradient(135deg, #1A237E, #3F51B5) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(4) button {
-        background: linear-gradient(135deg, #6200EA, #7C4DFF) !important;
-    }
+    /* VIBRANT GRADIENT COLORS FOR BUTTONS */
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(4) button { background: linear-gradient(135deg, #6200EA, #7C4DFF) !important; }
 
-    /* ROW 2 VIBRANT BUTTON COLORS */
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(1) button {
-        background: linear-gradient(135deg, #4A148C, #8E24AA) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(2) button {
-        background: linear-gradient(135deg, #D50000, #FF1744) !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(3) button {
-        background: linear-gradient(135deg, #FFAB00, #FFD600) !important;
-        color: #000000 !important;
-    }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button {
-        background: linear-gradient(135deg, #00B8D4, #00E5FF) !important;
-        color: #000000 !important;
-    }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(1) button { background: linear-gradient(135deg, #4A148C, #8E24AA) !important; }
+    .button-zone div[data-testid="button-zone"]:nth-of-type(2) > div:nth-child(2) button,
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(2) button { background: linear-gradient(135deg, #D50000, #FF1744) !important; }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(3) button { background: linear-gradient(135deg, #FFAB00, #FFD600) !important; color: #000000 !important; }
+    .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button { background: linear-gradient(135deg, #00B8D4, #00E5FF) !important; color: #000000 !important; }
 
-    /* FORM INPUT FIX (स्क्रीन बाहेर जाऊ नये म्हणून) */
+    /* 4. FORM ZONE (STACKED VERTICALLY FOR ZERO HORIZONTAL SCROLL) */
     div[data-testid="stForm"] {
-        border: 1px solid #E2E8F0;
+        border: 1px solid #CBD5E1;
         padding: 8px;
         border-radius: 10px;
-    }
-    .stTextInput input, .stTextArea textarea {
-        width: 100% !important;
-        max-width: 100% !important;
+        background-color: #F8FAFC;
     }
 
-    .form-title {
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: column !important; /* सर्व रकाने एकाखाली एक येतील */
+        gap: 8px !important;
+    }
+
+    div[data-testid="stForm"] div[data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    .form-title-box {
+        background: #0F172A;
+        color: #FFD700;
+        padding: 8px 10px;
+        border-radius: 8px;
         font-size: 15px;
         font-weight: 800;
-        color: #0F172A;
-        border-bottom: 2px solid #E2E8F0;
-        padding-bottom: 4px;
+        border-left: 4px solid #FFD700;
         margin-top: 6px;
         margin-bottom: 8px;
     }
@@ -188,15 +193,18 @@ st.sidebar.info("🏢 आकांक्षा एंटरप्रायझे
 # ==========================================
 st.markdown("""
     <div class='brand-top-banner'>
+        <div><span class='free-dhamaka-tag'>🔥 फ्री धमाका 🔥</span></div>
         <div class='brand-title-1'>✨ आकांक्षा AI - RTI व कायदेशीर महा-सहाय्यक ✨</div>
         <div class='brand-title-2'>⚡ एका सेकंदात अर्ज A4 साईज मध्ये मिळवा ⚡</div>
-        <div class='brand-title-3'>👤 सतीश अशोक प्रधान | 📱 मो. ८६६८२३५३PX</div>
+        <div class='brand-title-3'>👤 सतीश अशोक प्रधान | 📱 मो. ८६६८२३५३९५</div>
     </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. 8 VIBRANT APP BUTTONS (2 ROW x 4 COLUMNS)
+# 5. BUTTON ZONE (4 COLUMNS x 2 ROWS)
 # ==========================================
+st.markdown("<div class='button-zone'>", unsafe_allow_html=True)
+
 r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
 with r1_c1:
     if st.button("📄\nजोडपत्र 'अ'", key="b1"): st.session_state.active_tab = "जोडपत्र 'अ'"
@@ -217,6 +225,7 @@ with r2_c3:
 with r2_c4:
     if st.button("🛒\nग्राहक मंच", key="b8"): st.session_state.active_tab = "ग्राहक मंच"
 
+st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # ==========================================
@@ -265,12 +274,12 @@ def create_a4_pdf(text):
     return buffer.getvalue()
 
 # ==========================================
-# 7. FORM & GENERATION ENGINE
+# 7. FORM ZONE (SELECTED TAB DISPLAY)
 # ==========================================
 curr = st.session_state.active_tab
 
 if curr == "AI चॅट":
-    st.markdown("<div class='form-title'>✨ आकांक्षा AI कायदेशीर चॅट महा-सहाय्यक</div>", unsafe_allow_html=True)
+    st.markdown("<div class='form-title-box'>✨ आकांक्षा AI कायदेशीर चॅट महा-सहाय्यक</div>", unsafe_allow_html=True)
     
     for msg in st.session_state.chat_messages:
         with st.chat_message(msg["role"]):
@@ -307,7 +316,7 @@ else:
         "ग्राहक मंच": "🛒 ग्राहक संरक्षण मंच तक्रार अर्ज"
     }
     
-    st.markdown(f"<div class='form-title'>{titles.get(curr, curr)}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='form-title-box'>{titles.get(curr, curr)}</div>", unsafe_allow_html=True)
 
     with st.form(key="app_main_form"):
         col1, col2 = st.columns(2)
