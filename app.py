@@ -116,6 +116,11 @@ html, body {
 [data-testid="stChatInput"] {
     border-radius: 35px !important;
 }
+
+/* अपलोडर सुटसुटीत करणे */
+div[data-testid="stFileUploader"] section {
+    padding: 0px 8px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -131,35 +136,34 @@ if 'chat_messages' not in st.session_state:
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. चालू असलेले अद्ययावत AI इंजिन (gemini-2.0-flash / fallback)
+# ३. थेट त्रुटी दाखवणारे अचूक AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 def ask_ai_dynamic(prompt_text, image_obj=None):
     if not active_api_key:
-        return "कृपया Streamlit Settings -> Secrets मध्ये GEMINI_API_KEY तपासा."
-    genai.configure(api_key=active_api_key)
+        return "❌ त्रुटी: Streamlit App Settings -> Secrets मध्ये GEMINI_API_KEY जोडलेली नाही."
     
-    # सध्या चालू असलेल्या ॲक्टिव्ह मॉडेल्सची सुरक्षित यादी
-    active_models_to_try = [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-exp",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-pro-latest"
-    ]
-    
-    payload = [prompt_text, image_obj] if image_obj else prompt_text
-    
-    for mod in active_models_to_try:
+    try:
+        genai.configure(api_key=active_api_key)
+        # थेट सध्याचे सर्वात सक्रिय मॉडेल
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        payload = [prompt_text, image_obj] if image_obj else prompt_text
+        res = model.generate_content(payload)
+        if res and res.text:
+            return res.text
+        return "AI कडून रिक्त उत्तर आले."
+    except Exception as e:
+        # जर फ्लॅश चालले नाही तर प्रो ट्राय करा
         try:
-            model = genai.GenerativeModel(mod)
-            res = model.generate_content(payload)
-            if res and res.text:
-                return res.text
+            model_pro = genai.GenerativeModel("gemini-pro")
+            payload = [prompt_text, image_obj] if image_obj else prompt_text
+            res_pro = model_pro.generate_content(payload)
+            if res_pro and res_pro.text:
+                return res_pro.text
         except Exception:
-            continue
-            
-    return "AI कडून उत्तर मिळू शकले नाही. कृपया API Key सक्रिय असल्याची खात्री करा."
+            pass
+        return f"❌ API त्रुटी: {str(e)}"
 
 # ==============================================================================
 # ४. मुख्य हेडर
