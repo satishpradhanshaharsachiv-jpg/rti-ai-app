@@ -63,14 +63,22 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 .chat-user { background: #2563EB; color: #FFFFFF; padding: 10px 14px; border-radius: 18px 18px 2px 18px; margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto; }
 .chat-ai { background: #F1F5F9; color: #0F172A; padding: 10px 14px; border-radius: 18px 18px 18px 2px; margin-bottom: 8px; font-size: 14px; border-left: 4px solid #3B82F6; }
 
-/* Popover बटण जेमिनी स्टाईल */
+/* Popover 'expand_more' एरर फिक्स आणि Gemini ➕ बटण */
 div[data-testid="stPopover"] button {
     background-color: #E2E8F0 !important;
     border-radius: 50% !important;
-    width: 40px !important;
-    height: 40px !important;
+    width: 42px !important;
+    height: 42px !important;
     padding: 0px !important;
     border: none !important;
+}
+div[data-testid="stPopover"] button p {
+    font-size: 22px !important;
+    display: block !important;
+    margin: 0 !important;
+}
+div[data-testid="stPopover"] button span:nth-child(2) {
+    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -87,7 +95,7 @@ if 'chat_messages' not in st.session_state:
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. मल्टी-मॉडेल (Multi-Model Multi-Try) AI इंजिन (६ मॉडेल्स)
+# ३. मल्टी-मॉडेल (Multi-Model Multi-Try) AI इंजिन
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
@@ -98,7 +106,6 @@ def generate_ai_response(prompt_text, image_obj=None):
     
     genai.configure(api_key=active_api_key)
     
-    # ६ वेगवेगळ्या मॉडेल्सची लिस्ट (ऑटो-बॅकअपसाठी)
     models_to_try = [
         'gemini-1.5-flash',
         'gemini-1.5-flash-8b',
@@ -145,7 +152,7 @@ st.markdown("""
 st.markdown("---")
 
 # ==============================================================================
-# ६. Gemini UI चॅट विभाग
+# ६. मुख्य फॉर्म व AI चॅट विभाग
 # ==============================================================================
 active = st.session_state.active_tab
 
@@ -162,13 +169,12 @@ if active == "AI चॅट":
     st.markdown("<br>", unsafe_allow_html=True)
     
     up_img = None
-    col1, col2 = st.columns([1, 8])
+    col1, col2 = st.columns([1.5, 8])
     with col1:
-        # सुंदर + आयकॉन
         with st.popover("➕"):
             up_img = st.file_uploader("फोटो/नोटीस जोडा:", type=["png", "jpg", "jpeg"])
     with col2:
-        st.write("👈 फोटो जोडण्यासाठी **`➕`** वर क्लिक करा.")
+        st.caption("👈 फोटो जोडण्यासाठी **➕** वर क्लिक करा.")
 
     if q_prompt := st.chat_input("Gemini ला विचारण्यासाठी इथे लिहा..."):
         img = Image.open(up_img) if up_img else None
@@ -182,19 +188,62 @@ elif active == "जोडपत्र 'अ'":
     st.subheader("📄 जोडपत्र 'अ' (माहिती अधिकार अर्ज कलम ६(१))")
     with st.form("form_a"):
         u_name = st.text_input("१. अर्जदाराचे पूर्ण नाव:")
-        u_addr = st.text_area("२. पूर्ण पत्ता व फोन:")
-        dept = st.text_input("३. सार्वजनिक प्राधिकरण / कार्यालयाचे नाव:")
-        q_info = st.text_area("४. मागितलेल्या माहितीचा तपशील (मुद्देसूद):")
-        if st.form_submit_button("🚀 जोडपत्र 'अ' तयार करा"):
-            st.session_state.final_draft = f"जोडपत्र - 'अ'\n(नियम ३ पहा)\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील अर्ज.\n\nप्रति,\nजन माहिती अधिकारी,\nकार्यालय: {dept}\n\n१. अर्जदाराचे नाव: {u_name}\n२. पत्ता व मोबाइल: {u_addr}\n३. मागितलेल्या माहितीचा तपशील:\n{q_info}\n४. अर्ज फी: ₹१०/- चा कोर्ट फी स्टॅम्प जोडला आहे.\n\nदिनांक: {date_today}\nस्वाक्षरी: ({u_name})"
-            st.success("✅ जोडपत्र 'अ' तयार झाला!")
+        u_addr = st.text_area("२. अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर:")
+        dept = st.text_input("३. जन माहिती अधिकारी / कार्यालयाचे नाव व पत्ता:")
+        
+        st.markdown("---")
+        st.markdown("**४. हव्या असलेल्या माहितीचा तपशील:**")
+        q_subject = st.text_input("(एक) माहितीचा विषय:")
+        q_period = st.text_input("(दोन) ज्या कालावधीसंबंधात माहिती हवी असेल तो कालावधी:")
+        q_desc = st.text_area("(तीन) हव्या असलेल्या माहितीचे वर्णन (मुद्देसूद):")
+        
+        q_delivery = st.radio("(चार) माहिती टपालाद्वारे हवी आहे की व्यक्तिशः हवी आहे?", 
+                              ["व्यक्तिशः (Self)", "टपालाद्वारे (साधे टपाल / नोंदणीकृत / स्पीड पोस्ट)"])
+        
+        is_bpl = st.radio("५. अर्जदार दारिद्र्यरेषेखालील आहे किंवा कसे?", 
+                          ["नाही", "होय (दारिद्र्यरेषेखालील पुराव्याची प्रत जोडली आहे)"])
+        
+        if st.form_submit_button("🚀 परिपूर्ण जोडपत्र 'अ' अर्ज तयार करा"):
+            st.session_state.final_draft = f"""महाराष्ट्र शासन राजपत्र, असा., नोव्हेंबर १८, २००५
+जोडपत्र अ
+(नियम ३ पहा)
+माहितीचा अधिकार अधिनियम, २००५ अन्वये माहिती मिळविण्यासाठीच्या अर्जाचा नमुना
+
+प्रति,
+राज्य जन माहिती अधिकारी,
+{dept}
+
+१. अर्जदाराचे संपूर्ण नाव : {u_name}
+
+२. पत्ता : {u_addr}
+
+३. हव्या असलेल्या माहितीचा तपशील :
+   (एक) माहितीचा विषय : {q_subject}
+   (दोन) ज्या कालावधी संबंधात माहिती हवी असेल तो कालावधी : {q_period}
+   (तीन) हव्या असलेल्या माहितीचे वर्णन :
+   {q_desc}
+   (चार) माहिती टपालाद्वारे हवी आहे की व्यक्तिशः हवी आहे : {q_delivery}
+        (टपालाद्वारे हवी असल्यास: नोंदणीकृत / शीघ्र पोस्ट)
+
+४. अर्जदार दारिद्र्यरेषेखालील आहे किंवा कसे : {is_bpl}
+   (असल्यास, त्याबाबतच्या पुराव्याची छायांकित प्रत जोडली आहे)
+
+ठिकाण : 
+दिनांक : {date_today}
+
+                                                अर्जदाराची सही / अंगठा
+                                                ({u_name})
+
+----------------------------------------------------------------------
+[टीप: अर्जदाराने येथे १० रुपयाचा न्यायालय फी मुद्रांक (Court Fee Stamp) चिकटवावा]"""
+            st.success("✅ अधिकृत राजपत्राच्या नमुन्यानुसार जोडपत्र 'अ' तयार झाला आहे!")
 
 # ==============================================================================
 # ७. डाऊनलोड व शेअर
 # ==============================================================================
 if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
-    st.text_area("तयार झालेला अधिकृत मसुदा:", value=st.session_state.final_draft, height=200)
+    st.text_area("तयार झालेला अधिकृत मसुदा:", value=st.session_state.final_draft, height=300)
     
     encoded_text = urllib.parse.quote(st.session_state.final_draft)
     whatsapp_url = f"https://api.whatsapp.com/send?text={encoded_text}"
