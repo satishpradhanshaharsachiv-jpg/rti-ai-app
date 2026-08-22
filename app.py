@@ -9,7 +9,6 @@ from PIL import Image
 # ==============================================================================
 st.set_page_config(page_title="RTI AI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
-# बटण क्लिक URL वरून वाचणे
 params = st.query_params
 if "tab" in params:
     st.session_state.active_tab = params["tab"]
@@ -40,7 +39,7 @@ html, body {
 
 #MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
 
-/* चमकदार मल्टिकलर एका ओळीतील शीर्षक */
+/* चमकदार मल्टिकलर शीर्षक */
 .glowing-title {
     font-size: 19px !important;
     font-weight: 900 !important;
@@ -104,7 +103,7 @@ html, body {
 .btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 
-/* चॅट बॉक्स UI */
+/* चॅट UI */
 .chat-user {
     background: #2563EB; color: #FFFFFF; padding: 8px 12px; border-radius: 14px 14px 2px 14px;
     margin-bottom: 8px; font-size: 13.5px; max-width: 88%; margin-left: auto; word-break: break-word;
@@ -114,15 +113,9 @@ html, body {
     margin-bottom: 8px; font-size: 13.5px; border-left: 4px solid #3B82F6; word-break: break-word;
 }
 
-/* इन-बिल्ट stChatInput ला कॅप्सूल / पिल आकार */
 [data-testid="stChatInput"] {
-    border-radius: 40px !important;
-    border: 1px solid #CBD5E1 !important;
-    padding: 2px 8px !important;
-    background: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    border-radius: 35px !important;
 }
-[data-testid="stChatInput"] > div { border-radius: 40px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -132,36 +125,41 @@ html, body {
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला विचारा किंवा ➕ बटणाने फोटो जोडा.", "image": None}
+        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला विचारा किंवा खालील फोटो पर्यायातून कागदपत्र जोडा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. 404 त्रुटीमुक्त ऑटो-कन्फिगर AI इंजिन
+# ३. चालू असलेले अद्ययावत AI इंजिन (gemini-2.0-flash / fallback)
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 def ask_ai_dynamic(prompt_text, image_obj=None):
     if not active_api_key:
         return "कृपया Streamlit Settings -> Secrets मध्ये GEMINI_API_KEY तपासा."
-    try:
-        genai.configure(api_key=active_api_key)
-        valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        
-        target = "models/gemini-1.5-flash"
-        if target not in valid_models:
-            if "models/gemini-1.5-pro" in valid_models: target = "models/gemini-1.5-pro"
-            elif "models/gemini-pro" in valid_models: target = "models/gemini-pro"
-            elif valid_models: target = valid_models[0]
-            else: target = "gemini-1.5-flash"
+    genai.configure(api_key=active_api_key)
+    
+    # सध्या चालू असलेल्या ॲक्टिव्ह मॉडेल्सची सुरक्षित यादी
+    active_models_to_try = [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-exp",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest"
+    ]
+    
+    payload = [prompt_text, image_obj] if image_obj else prompt_text
+    
+    for mod in active_models_to_try:
+        try:
+            model = genai.GenerativeModel(mod)
+            res = model.generate_content(payload)
+            if res and res.text:
+                return res.text
+        except Exception:
+            continue
             
-        model = genai.GenerativeModel(target)
-        payload = [prompt_text, image_obj] if image_obj else prompt_text
-        res = model.generate_content(payload)
-        return res.text if res and res.text else "उत्तर तयार होऊ शकले नाही."
-    except Exception as e:
-        return f"AI त्रुटी: {str(e)}"
+    return "AI कडून उत्तर मिळू शकले नाही. कृपया API Key सक्रिय असल्याची खात्री करा."
 
 # ==============================================================================
 # ४. मुख्य हेडर
@@ -172,7 +170,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. अखंड कार्यरत ४x२ ग्रिड (८ बटणे)
+# ५. ४x२ ग्रिड (८ बटणे)
 # ==============================================================================
 grid_html = """
 <div class="app-grid">
@@ -255,10 +253,9 @@ elif active == "AI चॅट":
         else:
             st.markdown(f'<div class="chat-ai">✨ <b>AI:</b> {msg["content"]}</div>', unsafe_allow_html=True)
 
-    with st.expander("➕ फोटो / नोटीस जोडा"):
-        up_img = st.file_uploader("फाइल निवडा:", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+    up_img = st.file_uploader("📷 कागदपत्र / नोटीस फोटो जोडा (पर्यायी):", type=["png", "jpg", "jpeg"])
 
-    if q_prompt := st.chat_input("AI ला कायदेशीर प्रश्न विचारा..."):
+    if q_prompt := st.chat_input("येथे कायदेशीर प्रश्न विचारा..."):
         img = Image.open(up_img) if up_img else None
         st.session_state.chat_messages.append({"role": "user", "content": q_prompt, "image": img})
         with st.spinner("AI विचार करत आहे..."):
@@ -317,7 +314,7 @@ elif active == "ग्राहक मंच":
             st.success("✅ ग्राहक तक्रार अर्ज तयार झाला!")
 
 # ==============================================================================
-# ७. निकाल डाऊनलोड व WhatsApp शेअरिंग
+# ७. मसुदा निकाल, डाऊनलोड व WhatsApp शेअरिंग
 # ==============================================================================
 if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
