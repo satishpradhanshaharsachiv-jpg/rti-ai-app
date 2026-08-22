@@ -42,8 +42,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     background: #E0F2FE; border: 1px solid #38BDF8; padding: 4px 8px; border-radius: 8px; margin-bottom: 8px;
 }
 
-.sub-tagline { text-align: center; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 10px; }
-
 .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; width: 100%; }
 .app-card {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -75,31 +73,45 @@ div[data-testid="stFileUploader"] section { padding: 4px !important; }
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला किंवा मदत विचारा.", "image": None}
+        {"role": "assistant", "content": "✨ नमस्कार सतीश जी! कायदेशीर किंवा प्रशासकीय सल्ला विचारा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. अचूक Gemini AI इंजिन (100% वर्किंग)
+# ३. मल्टी-मॉडेल (Multi-Model Multi-Try) AI इंजिन (६ मॉडेल्स)
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
 
-def ask_ai_dynamic(prompt_text, image_obj=None):
+def generate_ai_response(prompt_text, image_obj=None):
     if not active_api_key:
-        return "❌ API Key टाकलेली नाही. डाव्या बाजूला Sidebar मध्ये API Key टाका."
-    try:
-        genai.configure(api_key=active_api_key)
-        # अचूक मॉडेल नाव
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        payload = [prompt_text, image_obj] if image_obj else prompt_text
-        res = model.generate_content(payload)
-        if res and res.text:
-            return res.text
-        return "AI कडून प्रतिसाद मिळाला नाही."
-    except Exception as e:
-        return f"❌ AI त्रुटी: {str(e)}"
+        return "❌ API Key टाकलेली नाही. Sidebar मध्ये Gemini API Key भरा किंवा Secrets चेक करा."
+    
+    genai.configure(api_key=active_api_key)
+    
+    # ६ वेगवेगळ्या मॉडेल्सची लिस्ट (एकापाठोपाठ ऑटो-ट्राय करण्यासाठी)
+    models_to_try = [
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-pro',
+        'gemini-1.0-pro',
+        'gemini-2.0-flash-exp',
+        'gemini-2.0-flash'
+    ]
+    
+    payload = [prompt_text, image_obj] if image_obj else prompt_text
+    
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(payload)
+            if response and response.text:
+                return response.text
+        except Exception:
+            continue  # एरर आल्यास पुढचे मॉडेल वापरले जाईल
+
+    return "माफ करा, सर्व AI मॉडेल्स सध्या व्यस्त आहेत. कृपया थोड्या वेळाने प्रयत्न करा."
 
 # ==============================================================================
 # ४. मुख्य हेडर
@@ -125,7 +137,7 @@ st.markdown("""
 st.markdown("---")
 
 # ==============================================================================
-# ६. AI चॅट विभाग (Gemini UI)
+# ६. Gemini UI चॅट विभाग
 # ==============================================================================
 active = st.session_state.active_tab
 
@@ -141,7 +153,6 @@ if active == "AI चॅट":
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # + आयकॉन पॉपओव्हर
     up_img = None
     col1, col2 = st.columns([1, 6])
     with col1:
@@ -150,11 +161,11 @@ if active == "AI चॅट":
     with col2:
         st.caption("फोटो जोडण्यासाठी ➕ वर क्लिक करा.")
 
-    if q_prompt := st.chat_input("Gemini ला विचारा..."):
+    if q_prompt := st.chat_input("Gemini ला विचारण्यासाठी इथे लिहा..."):
         img = Image.open(up_img) if up_img else None
         st.session_state.chat_messages.append({"role": "user", "content": q_prompt, "image": img})
-        with st.spinner("विचार करत आहे..."):
-            ans = ask_ai_dynamic(q_prompt, img)
+        with st.spinner("उत्तर शोधत आहे..."):
+            ans = generate_ai_response(q_prompt, img)
             st.session_state.chat_messages.append({"role": "assistant", "content": ans, "image": None})
         st.rerun()
 
