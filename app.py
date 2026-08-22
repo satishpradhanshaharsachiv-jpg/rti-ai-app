@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि जेमिनी पिल-बार CSS
+# १. मोबाईल स्क्रीन-फिट CSS आणि जेमिनी पिल-बार (Zero Overflow)
 # ==============================================================================
 st.set_page_config(page_title="RTI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
@@ -18,19 +18,29 @@ elif "active_tab" not in st.session_state:
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
-* { font-family: 'Mukta', sans-serif !important; }
+* { 
+    font-family: 'Mukta', sans-serif !important; 
+    box-sizing: border-box !important;
+}
+
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+}
 
 .block-container {
-    padding-top: 0.6rem !important;
-    padding-bottom: 5rem !important;
-    padding-left: 0.4rem !important;
-    padding-right: 0.4rem !important;
-    max-width: 500px !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 4rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    max-width: 480px !important;
     margin: 0 auto !important;
+    overflow-x: hidden !important;
 }
 
 #MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
 
+/* मल्टिकलर एका ओळीतील शीर्षक */
 .glowing-title {
     font-size: 19px !important;
     font-weight: 900 !important;
@@ -50,7 +60,7 @@ st.markdown("""
     font-size: 12px;
     font-weight: 700;
     color: #475569;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 .sub-tagline span {
     background: #FEF3C7;
@@ -60,10 +70,11 @@ st.markdown("""
     border: 1px dashed #F59E0B;
 }
 
+/* कायमस्वरूपी सेव्ह केलेली ४x२ ग्रिड रचना */
 .app-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 5px;
     margin-bottom: 12px;
     width: 100%;
 }
@@ -72,16 +83,16 @@ st.markdown("""
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 70px;
-    border-radius: 14px;
+    height: 68px;
+    border-radius: 12px;
     color: #FFFFFF !important;
     text-decoration: none !important;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
     text-align: center;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
-.app-icon { font-size: 20px; margin-bottom: 1px; }
+.app-icon { font-size: 18px; margin-bottom: 1px; }
 
 .btn-1 { background: linear-gradient(135deg, #10B981, #059669); }
 .btn-2 { background: linear-gradient(135deg, #EC4899, #F59E0B); }
@@ -93,69 +104,96 @@ st.markdown("""
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 
 .chat-user {
-    background: #2563EB; color: #FFFFFF; padding: 8px 14px; border-radius: 16px 16px 2px 16px;
-    margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto;
+    background: #2563EB; color: #FFFFFF; padding: 8px 12px; border-radius: 14px 14px 2px 14px;
+    margin-bottom: 8px; font-size: 13.5px; max-width: 88%; margin-left: auto; word-break: break-word;
 }
 .chat-ai {
-    background: #F1F5F9; color: #0F172A; padding: 10px 14px; border-radius: 16px 16px 16px 2px;
-    margin-bottom: 8px; font-size: 14px; border-left: 4px solid #3B82F6;
+    background: #F1F5F9; color: #0F172A; padding: 10px 12px; border-radius: 14px 14px 14px 2px;
+    margin-bottom: 8px; font-size: 13.5px; border-left: 4px solid #3B82F6; word-break: break-word;
 }
 
 /* ========================================================================== */
-/* Gemini सारखा सिंगल-रो पिल इनपुट बार (Flexbox Lock) */
+/* सिंगल-रो पिल इनपुट बार (१००% मोबाईल फिट - कट होणार नाही) */
 /* ========================================================================== */
 div[data-testid="stForm"] {
-    border: 1px solid #E2E8F0 !important;
+    border: 1px solid #CBD5E1 !important;
     background: #FFFFFF !important;
-    border-radius: 40px !important;
-    padding: 4px 8px !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.07) !important;
-    margin-top: 15px !important;
+    border-radius: 35px !important;
+    padding: 3px 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    margin-top: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-/* फॉर्ममधील कॉलम एकाच आडव्या रांगेत लॉक करणे */
 div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
+    justify-content: space-between !important;
     gap: 4px !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
-/* टेक्स्ट इनपुट बॉक्स */
+/* १. डावे प्लस बटण (Fixed 36px) */
+div[data-testid="stForm"] div[data-testid="column"]:nth-of-type(1) {
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    padding: 0 !important;
+}
+div[data-testid="stForm"] div[data-testid="column"]:nth-of-type(1) button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    background: #F1F5F9 !important;
+    color: #475569 !important;
+    font-size: 18px !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* २. मधला टेक्स्ट इनपुट (उरलेली सर्व जागा घेईल) */
+div[data-testid="stForm"] div[data-testid="column"]:nth-of-type(2) {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+}
 div[data-testid="stForm"] div[data-testid="stTextInput"] {
     margin-bottom: 0px !important;
+    width: 100% !important;
 }
 div[data-testid="stForm"] input {
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
-    font-size: 14px !important;
-    padding: 6px 4px !important;
+    font-size: 13.5px !important;
+    padding: 4px 6px !important;
+    width: 100% !important;
 }
 
-/* प्लस आणि माईक बटण स्टाईल */
-div[data-testid="stForm"] div[data-testid="stColumn"]:nth-of-type(1) button {
-    background: #F1F5F9 !important;
-    color: #475569 !important;
-    border-radius: 50% !important;
-    height: 40px !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    border: none !important;
-    font-size: 18px !important;
+/* ३. उजवे माईक बटण (Fixed 36px) */
+div[data-testid="stForm"] div[data-testid="column"]:nth-of-type(3) {
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
     padding: 0 !important;
-    margin: 0 !important;
 }
-div[data-testid="stForm"] div[data-testid="stColumn"]:nth-of-type(3) button {
+div[data-testid="stForm"] div[data-testid="column"]:nth-of-type(3) button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
     background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
     color: #FFFFFF !important;
-    border-radius: 50% !important;
-    height: 40px !important;
-    width: 40px !important;
-    min-width: 40px !important;
+    font-size: 15px !important;
     border: none !important;
-    font-size: 16px !important;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -170,13 +208,13 @@ if 'show_file_uploader' not in st.session_state: st.session_state.show_file_uplo
 if 'uploaded_image' not in st.session_state: st.session_state.uploaded_image = None
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला विचारा किंवा ➕ चिन्हाने फोटो/कागदपत्र जोडा.", "image": None}
+        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर प्रश्न विचारा किंवा ➕ चिन्हाने कागदपत्र जोडा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. AI इंजिन
+# ३. हाय-स्पीड AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -249,19 +287,19 @@ if active == "AI चॅट":
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-user">👤 <b>तुम्ही:</b> {msg["content"]}</div>', unsafe_allow_html=True)
-            if msg.get("image"): st.image(msg["image"], width=180)
+            if msg.get("image"): st.image(msg["image"], width=170)
         else:
             st.markdown(f'<div class="chat-ai">✨ <b>AI:</b> {msg["content"]}</div>', unsafe_allow_html=True)
 
     if st.session_state.show_file_uploader:
-        uploaded_file = st.file_uploader("कागदपत्र / नोटीस फोटो निवडा:", type=["png", "jpg", "jpeg"])
+        uploaded_file = st.file_uploader("कागदपत्र / नोटीस निवडा:", type=["png", "jpg", "jpeg"])
         if uploaded_file:
             st.session_state.uploaded_image = Image.open(uploaded_file)
             st.success("✅ फोटो जोडला गेला!")
 
-    # एकाच आडव्या ओळीत (Single Row) पिल-बार
+    # सिंगल-रो पिल इनपुट बार
     with st.form("gemini_pill_form", clear_on_submit=True):
-        col_p, col_t, col_m = st.columns([1, 6.5, 1])
+        col_p, col_t, col_m = st.columns([1, 6, 1])
         with col_p:
             plus_btn = st.form_submit_button("➕")
         with col_t:
