@@ -5,70 +5,134 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. मोबाईल स्क्रीनवर ४-४ बटणे आडवी (Lock) ठेवण्यासाठी CSS
+# १. पेज कॉन्फिगरेशन आणि आकर्षक चमकदार हेडर + ग्रिड डिझाइन (CSS)
 # ==============================================================================
-st.set_page_config(page_title="RTI महा-सहाय्यक", layout="centered")
+st.set_page_config(page_title="RTI महा-सहाय्यक", page_icon="⚖️", layout="centered")
+
+params = st.query_params
+if "tab" in params:
+    st.session_state.active_tab = params["tab"]
+elif "active_tab" not in st.session_state:
+    st.session_state.active_tab = "जोडपत्र 'अ'"
 
 st.markdown("""
 <style>
-/* मोबाईलवर ४ बटणे एका ओळीत आडवीच राहतील */
-[data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: space-between !important;
-    gap: 4px !important;
+@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
+* { font-family: 'Mukta', sans-serif !important; }
+
+/* स्क्रीनवरील जागा व्यवस्थित करणे */
+.block-container {
+    padding-top: 0.8rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+    max-width: 500px !important;
+    margin: 0 auto !important;
 }
 
-div[data-testid="column"] {
-    flex: 1 1 0px !important;
-    width: 24% !important;
-    min-width: 0px !important;
-    padding: 0px !important;
+#MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
+
+/* चमकदार मल्टिकलर एका ओळीतील शीर्षक */
+.glowing-title {
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    text-align: center;
+    white-space: nowrap !important;
+    background: linear-gradient(90deg, #FF1361, #FFF800, #00E676, #00B0FF, #D500F9);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
 }
 
-div[data-testid="stButton"] > button {
-    height: 65px !important; 
-    width: 100% !important;
-    border-radius: 12px !important;
-    font-size: 10px !important; 
-    font-weight: 700 !important;
+@keyframes shine {
+    to {
+        background-position: 300% center;
+    }
+}
+
+/* आकर्षक टॅगलाइन */
+.sub-tagline {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 12px;
+    letter-spacing: 0.2px;
+}
+.sub-tagline span {
+    background: #FEF3C7;
+    color: #D97706;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px dashed #F59E0B;
+}
+
+/* मोबाईल ॲप ग्रिड (४ एका ओळीत - शेजारी शेजारी) */
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.app-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    border-radius: 14px;
     color: #FFFFFF !important;
-    border: none !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
-    padding: 2px !important;
-    white-space: pre-wrap !important;
-    line-height: 1.15 !important;
+    text-decoration: none !important;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+    transition: transform 0.15s ease-in-out;
 }
 
-/* ओळ १ मधील ४ बटणांचे स्वतंत्र रंग */
-[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(135deg, #10B981, #059669) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(135deg, #EC4899, #F59E0B) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(135deg, #1E293B, #0F172A) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(4) button { background: linear-gradient(135deg, #3B82F6, #6366F1) !important; }
+.app-card:active {
+    transform: scale(0.92);
+}
 
-/* ओळ २ मधील ४ बटणांचे स्वतंत्र रंग */
-[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(135deg, #7C3AED, #4C1D95) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(135deg, #F97316, #C2410C) !important; }
-[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(4) button { background: linear-gradient(135deg, #0284C7, #0369A1) !important; }
+.app-icon {
+    font-size: 20px;
+    margin-bottom: 1px;
+}
+
+/* ८ बटणांचे चमकदार रंग */
+.btn-1 { background: linear-gradient(135deg, #10B981, #059669); }
+.btn-2 { background: linear-gradient(135deg, #EC4899, #F59E0B); }
+.btn-3 { background: linear-gradient(135deg, #1E293B, #0F172A); }
+.btn-4 { background: linear-gradient(135deg, #3B82F6, #6366F1); }
+.btn-5 { background: linear-gradient(135deg, #7C3AED, #4C1D95); }
+.btn-6 { background: linear-gradient(135deg, #EF4444, #B91C1C); }
+.btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
+.btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# २. सेशन्स स्टेट व्यवस्थापन
+# २. सेशन्स स्टेट व व्हेरिएबल्स
 # ==============================================================================
-if 'active_tab' not in st.session_state: st.session_state.active_tab = "जोडपत्र 'अ'"
 if 'user_name' not in st.session_state: st.session_state.user_name = ""
 if 'user_address' not in st.session_state: st.session_state.user_address = ""
 if 'dept_name' not in st.session_state: st.session_state.dept_name = ""
 if 'original_query' not in st.session_state: st.session_state.original_query = ""
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
+if 'chat_messages' not in st.session_state:
+    st.session_state.chat_messages = [
+        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर प्रश्न विचारा किंवा कागदपत्राचा फोटो जोडा.", "image": None}
+    ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. सुरक्षित AI इंजिन
+# ३. AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -87,69 +151,89 @@ def ask_ai(prompt_text, image_obj=None):
     return "AI कडून उत्तर मिळू शकले नाही."
 
 # ==============================================================================
-# ४. मुख्य हेडर
+# ४. आकर्षक मुख्य हेडर (एका ओळीत फिट)
 # ==============================================================================
-st.markdown("<h3 style='text-align:center; margin-top:-15px;'>⚖️ RTI महा-सहाय्यक</h3>", unsafe_allow_html=True)
+st.markdown("""
+<div class="glowing-title">⚖️ RTI AI महा-सहाय्यक</div>
+<div class="sub-tagline"><span>⚡ घरबसल्या एका मिनिटात अर्ज तयार करा</span></div>
+""", unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. मोबाईल ॲप ग्रिड (ओळ १: ४ बटणे | ओळ २: ४ बटणे)
+# ५. मोबाईल ॲप ग्रिड (४x२ = ८ रंगीत चौकोनी ॲप आयकॉन्स)
 # ==============================================================================
-r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
-with r1_c1:
-    if st.button("📄\nअर्ज", key="b1"): st.session_state.active_tab = "जोडपत्र 'अ'"
-with r1_c2:
-    if st.button("⚖️\nप्रथम", key="b2"): st.session_state.active_tab = "जोडपत्र 'ब'"
-with r1_c3:
-    if st.button("🏛️\nआयोग", key="b3"): st.session_state.active_tab = "जोडपत्र 'क'"
-with r1_c4:
-    if st.button("✨\nAI", key="b4"): st.session_state.active_tab = "AI चॅट"
-
-r2_c1, r2_c2, r2_c3, r2_c4 = st.columns(4)
-with r2_c1:
-    if st.button("📜\nकोर्ट", key="b5"): st.session_state.active_tab = "न्यायालयीन मसुदा"
-with r2_c2:
-    if st.button("📢\nतक्रार", key="b6"): st.session_state.active_tab = "शासकीय तक्रार"
-with r2_c3:
-    if st.button("📝\nशपथ", key="b7"): st.session_state.active_tab = "प्रतिज्ञापत्र"
-with r2_c4:
-    if st.button("🛒\nग्राहक", key="b8"): st.session_state.active_tab = "ग्राहक मंच"
-
+grid_html = """
+<div class="app-grid">
+    <a href="?tab=जोडपत्र 'अ'" target="_self" class="app-card btn-1">
+        <span class="app-icon">📄</span><span>जोडपत्र 'अ'</span>
+    </a>
+    <a href="?tab=जोडपत्र 'ब'" target="_self" class="app-card btn-2">
+        <span class="app-icon">⚖️</span><span>प्रथम अपील</span>
+    </a>
+    <a href="?tab=जोडपत्र 'क'" target="_self" class="app-card btn-3">
+        <span class="app-icon">🏛️</span><span>माहिती आयोग</span>
+    </a>
+    <a href="?tab=AI चॅट" target="_self" class="app-card btn-4">
+        <span class="app-icon">✨</span><span>AI चॅट</span>
+    </a>
+    <a href="?tab=न्यायालयीन मसुदा" target="_self" class="app-card btn-5">
+        <span class="app-icon">📜</span><span>कोर्ट याचिका</span>
+    </a>
+    <a href="?tab=शासकीय तक्रार" target="_self" class="app-card btn-6">
+        <span class="app-icon">📢</span><span>शासकीय तक्रार</span>
+    </a>
+    <a href="?tab=प्रतिज्ञापत्र" target="_self" class="app-card btn-7">
+        <span class="app-icon">📝</span><span>प्रतिज्ञापत्र</span>
+    </a>
+    <a href="?tab=ग्राहक मंच" target="_self" class="app-card btn-8">
+        <span class="app-icon">🛒</span><span>ग्राहक मंच</span>
+    </a>
+</div>
+"""
+st.markdown(grid_html, unsafe_allow_html=True)
 st.markdown("---")
 
 # ==============================================================================
-# ६. विभागानुसार फॉर्म्स व AI चॅट
+# ६. विभागानुसार फॉर्म्स आणि लॉजिक
 # ==============================================================================
-if st.session_state.active_tab == "AI चॅट":
+active = st.session_state.active_tab
+
+if active == "AI चॅट":
     st.subheader("✨ AI कायदेशीर सल्लागार")
-    uploaded_photo = st.file_uploader("कागदपत्र / नोटीस फोटो जोडा:", type=["png", "jpg", "jpeg"])
-    user_prompt = st.chat_input("प्रश्न येथे विचारा...")
-    if user_prompt:
-        img_data = Image.open(uploaded_photo) if uploaded_photo else None
+    for msg in st.session_state.chat_messages:
+        if msg["role"] == "user":
+            st.markdown(f"👤 **तुम्ही:** {msg['content']}")
+            if msg.get("image"): st.image(msg["image"], width=200)
+        else:
+            st.markdown(f"✨ **AI:** {msg['content']}")
+
+    uploaded_doc = st.file_uploader("कागदपत्र / नोटीस फोटो जोडा:", type=["png", "jpg", "jpeg"])
+    if query := st.chat_input("प्रश्न विचारा..."):
+        img = Image.open(uploaded_doc) if uploaded_doc else None
+        st.session_state.chat_messages.append({"role": "user", "content": query, "image": img})
         with st.spinner("माहिती तपासत आहे..."):
-            ans = ask_ai(user_prompt, img_data)
-            st.write(ans)
+            ans = ask_ai(query, img)
+            st.session_state.chat_messages.append({"role": "assistant", "content": ans, "image": None})
+        st.rerun()
 
 else:
-    st.subheader(f"📝 {st.session_state.active_tab}")
-    with st.form("dynamic_form"):
+    st.subheader(f"📝 {active}")
+    with st.form("main_form"):
         st.session_state.user_name = st.text_input("नाव:", value=st.session_state.user_name)
         st.session_state.user_address = st.text_area("पत्ता:", value=st.session_state.user_address)
-        st.session_state.dept_name = st.text_input("कार्यालय / विभाग:", value=st.session_state.dept_name)
+        st.session_state.dept_name = st.text_input("कार्यालय / विभाग / प्रतिवादी:", value=st.session_state.dept_name)
         st.session_state.original_query = st.text_area("तपशील / मागितलेली माहिती:", value=st.session_state.original_query)
         
         if st.form_submit_button("🚀 मसुदा तयार करा"):
-            st.session_state.final_draft = f"प्रति,\nमा. {st.session_state.dept_name}\n\nविषय: {st.session_state.active_tab}\n\nअर्जदार: {st.session_state.user_name}\nपत्ता: {st.session_state.user_address}\n\nतपशील:\n{st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({st.session_state.user_name})"
+            st.session_state.final_draft = f"प्रति,\nमा. {st.session_state.dept_name}\n\nविषय: {active}\n\nअर्जदार: {st.session_state.user_name}\nपत्ता: {st.session_state.user_address}\n\nतपशील:\n{st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({st.session_state.user_name})"
             st.success("✅ मसुदा तयार झाला!")
 
-# ==============================================================================
-# ७. डाऊनलोड व WhatsApp शेअरिंग
-# ==============================================================================
-if st.session_state.final_draft and st.session_state.active_tab != "AI चॅट":
+# निकाल व WhatsApp शेअरिंग
+if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
     st.text_area("तयार झालेला मसुदा:", value=st.session_state.final_draft, height=180)
-    col_d1, col_d2 = st.columns(2)
-    with col_d1:
+    c1, c2 = st.columns(2)
+    with c1:
         st.download_button("📥 डाऊनलोड (.txt)", st.session_state.final_draft, "Draft.txt", use_container_width=True)
-    with col_d2:
+    with c2:
         msg_enc = urllib.parse.quote(st.session_state.final_draft)
         st.markdown(f'<a href="https://api.whatsapp.com/send?text={msg_enc}" target="_blank"><button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px;">📲 WhatsApp</button></a>', unsafe_allow_html=True)
