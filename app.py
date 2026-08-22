@@ -1,13 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-from docx import Document
-from docx.shared import Inches, Pt
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-import io
-from datetime import datetime
 
 # ==========================================
 # 1. PAGE CONFIGURATION
@@ -19,6 +11,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ==========================================
+# 2. SECRETS API KEY & MODEL SETUP (404 एरर जाणार)
+# ==========================================
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+    # नवीन आणि सुरक्षित मॉडेल नाव
+    model = genai.GenerativeModel("gemini-3.6-flash")
+except Exception as e:
+    st.error("⚠️ कृपया Streamlit Secrets मध्ये 'GEMINI_API_KEY' अचूक सेट करा!")
+
 # Session State Initialization
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "जोडपत्र 'अ'"
@@ -27,48 +30,12 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 # ==========================================
-# 2. MULTI-KEY FALLBACK CONFIGURATION (तुमच्या सर्व की येथे टाका)
-# ==========================================
-# तुमच्याकडे असलेल्या सर्व AQ. वाली की येथे खाली एकाखाली एक ' ' मध्ये टाका:
-API_KEYS_POOL = [
-    "AQ.तुमची_पहिली_की_येथे_टाका",
-    "AQ.तुमची_दुसरी_की_येथे_टाका",
-    "AQ.तुमची_तिसरी_की_येथे_टाका",
-    # अजून की असतील तर इथे कॉमा देऊन पुढे टाकू शकता
-]
-
-def generate_with_multi_key_fallback(prompt_text):
-    models_list = ["gemini-3.7-flash", "gemini-3.6-flash"]
-    
-    # जर युजरने कोडमध्ये की टाकल्या नसतील तर सिस्टीम तपासेल
-    if not API_KEYS_POOL or API_KEYS_POOL[0] == "AQ.तुमची_पहिली_की_येथे_टाका":
-        return "⚠️ कृपया कोडमधील API_KEYS_POOL मध्ये तुमच्या खऱ्या 'AQ.' ने सुरू होणाऱ्या की (Keys) प्रविष्ट करा!"
-
-    for key in API_KEYS_POOL:
-        try:
-            genai.configure(api_key=key)
-            for model_name in models_list:
-                try:
-                    model = genai.GenerativeModel(model_name)
-                    response = model.generate_content(prompt_text)
-                    if response and response.text:
-                        return response.text
-                except Exception:
-                    continue
-        except Exception:
-            continue
-            
-    return "❌ त्रुटी: सध्या सर्व API Keys किंवा सर्व्हर व्यस्त आहेत. कृपया थोड्या वेळाने प्रयत्न करा."
-
-# ==========================================
-# 3. CUSTOM CSS - DUAL LAYOUT & SHINY DESIGN
+# 3. CUSTOM CSS - 4x2 MOBILE GRID & SHINY BUTTONS
 # ==========================================
 st.markdown("""
     <style>
     * { box-sizing: border-box !important; }
     html, body, [data-testid="stAppViewContainer"], .main, .stApp {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
         background-color: #FFFFFF;
         color: #0F172A;
     }
@@ -131,7 +98,7 @@ st.markdown("""
         margin-top: 2px;
     }
 
-    /* 4 BUTTONS PER ROW GRID */
+    /* 4 BUTTONS PER ROW GRID (MOBILE OPTIMIZED) */
     .button-zone div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -163,7 +130,7 @@ st.markdown("""
         white-space: pre-wrap !important;
     }
 
-    /* VIBRANT GRADIENTS */
+    /* VIBRANT COLORFUL GRADIENTS FOR 8 BUTTONS */
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
@@ -181,16 +148,7 @@ st.markdown("""
         border-radius: 10px;
         background-color: #F8FAFC;
     }
-    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-    }
-    div[data-testid="stForm"] div[data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-    }
-
+    
     .form-title-box {
         background: #0F172A;
         color: #FFD700;
@@ -218,7 +176,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. BUTTON ZONE (4 x 2 GRID)
+# 5. BUTTON ZONE (4 x 2 GRID - 8 BUTTONS)
 # ==========================================
 st.markdown("<div class='button-zone'>", unsafe_allow_html=True)
 
@@ -246,51 +204,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # ==========================================
-# 6. A4 EXPORT FUNCTIONS
-# ==========================================
-def create_a4_docx(text):
-    doc = Document()
-    for section in doc.sections:
-        section.page_width = Inches(8.27)
-        section.page_height = Inches(11.69)
-        section.top_margin = Inches(0.75)
-        section.bottom_margin = Inches(0.75)
-        section.left_margin = Inches(0.75)
-        section.right_margin = Inches(0.75)
-
-    for line in text.split('\n'):
-        clean = line.strip()
-        if clean:
-            p = doc.add_paragraph()
-            p.paragraph_format.space_after = Pt(4)
-            p.paragraph_format.line_spacing = 1.15
-            run = p.add_run(clean)
-            run.font.size = Pt(11)
-            run.font.name = 'Calibri'
-            
-    bio = io.BytesIO()
-    doc.save(bio)
-    return bio.getvalue()
-
-def create_a4_pdf(text):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
-    body_style = ParagraphStyle('A4Body', fontName='Helvetica', fontSize=10, leading=14, textColor=colors.black, spaceAfter=5)
-    
-    story = []
-    for line in text.split('\n'):
-        clean = line.strip()
-        if clean:
-            clean_escaped = clean.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            story.append(Paragraph(clean_escaped, body_style))
-            story.append(Spacer(1, 2))
-            
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
-
-# ==========================================
-# 7. FORM & GENERATION ENGINE
+# 6. FORM & GENERATION ENGINE
 # ==========================================
 curr = st.session_state.active_tab
 
@@ -309,7 +223,12 @@ if curr == "AI चॅट":
             
         with st.chat_message("assistant"):
             with st.spinner("उत्तर तयार होत आहे..."):
-                response_text = generate_with_multi_key_fallback(f"तुम्ही उच्च कायदेशीर सहाय्यक आहात. मराठीत उत्तर द्या: {user_query}")
+                try:
+                    response = model.generate_content(f"तुम्ही कायदेशीर सहाय्यक आहात. मराठीत उत्तर द्या: {user_query}")
+                    response_text = response.text
+                except Exception as e:
+                    response_text = f"त्रुटी आली: {e}"
+                
                 st.write(response_text)
                 st.session_state.chat_messages.append({"role": "assistant", "content": response_text})
 
@@ -331,39 +250,21 @@ else:
         
         with col1:
             app_name = st.text_input("१. अर्जदाराचे नाव:", placeholder="अर्जदाराचे नाव प्रविष्ट करा...")
-            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर प्रविष्ट करा...", height=100)
+            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर...", height=90)
         
         with col2:
-            auth_name = st.text_input("३. जन माहिती अधिकारी / विरोधी पक्ष / कार्यालय नाव:", placeholder="उदा. जन माहिती अधिकारी, मुख्य कार्यालय...")
-            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता प्रविष्ट करा...", height=100)
+            auth_name = st.text_input("३. जन माहिती अधिकारी / विरोधी पक्ष / कार्यालय नाव:", placeholder="उदा. जन माहिती अधिकारी...")
+            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता प्रविष्ट करा...", height=90)
 
-        if curr == "जोडपत्र 'अ'":
-            subject = st.text_input("५. माहितीचा विषय:", value="माहितीचा अधिकार अधिनियम २००५ च्या कलम ६(१) अन्वये माहिती मिळणेबाबत.")
-            info_details = st.text_area("६. मागितलेल्या माहितीचा सुटसुटीत तपशील (१, २, ३ मुद्दे लिहा):", height=120)
-            period = st.text_input("७. माहितीचा कालावधी (उदा. २०२४ ते आजपर्यंत):")
-            bpl = st.checkbox("अर्जदार दारिद्र्यरेषेखालील (BPL) आहे का?")
-
-        elif curr == "प्रथम अपील":
-            subject = st.text_input("५. प्रथम अपील प्राधिकरणाचे पदनाव:")
-            info_details = st.text_area("६. अपीलाची मुख्य कारणे (मुद्देनिहाय):", height=120)
-            period = st.text_input("७. मूळ जोडपत्र 'अ' सादर केल्याची तारीख:")
-
-        elif curr == "माहिती आयोग":
-            subject = st.text_input("५. माहिती आयोग खंडपीठ:", value="राज्य माहिती आयोग, महाराष्ट्र राज्य")
-            info_details = st.text_area("६. प्रथम अपीलाचा निर्णय व द्वितीय अपीलाची कारणे:", height=120)
-            period = st.text_input("७. प्रथम अपील सादर केल्याची तारीख:")
-
-        else:
-            subject = st.text_input("५. अर्ज / प्रकरणाचा विषय:")
-            info_details = st.text_area("६. सविस्तर तपशील व मागण्या:", height=120)
-            period = "लागू नाही"
+        subject = st.text_input("५. विषय / माहितीचा तपशील:", value="माहिती अधिकार अधिनियम २००५ अन्वये माहिती मिळणेबाबत.")
+        info_details = st.text_area("६. मागितलेल्या माहितीचा सुटसुटीत तपशील (१, २, ३ मुद्दे लिहा):", height=110)
 
         submit = st.form_submit_button(label="🚀 परिपूर्ण मसुदा तयार करा (Generate Draft)")
 
     if submit:
         master_prompt = f"""
-        तुम्ही महाराष्ट्रातील वरिष्ठ वकील व शासकीय कायदेशीर मसुदा तज्ज्ञ आहात.
-        खालील माहितीचा वापर करून महाराष्ट्र शासन नियमांनुसार सुटसुटीत आणि पूर्ण १ पानावर (A4 Size Page Layout) बसणारा कायदेशीर मराठी मसुदा तयार करा:
+        तुम्ही वरिष्ठ वकील व शासकीय कायदेशीर मसुदा तज्ज्ञ आहात.
+        खालील माहितीचा वापर करून महाराष्ट्र शासन नियमांनुसार सुटसुटीत आणि पूर्ण पानावर बसणारा कायदेशीर मराठी मसुदा तयार करा:
 
         सेवा: {curr}
         अर्जदार: {app_name}
@@ -372,31 +273,13 @@ else:
         कार्यालय पत्ता: {auth_address}
         विषय: {subject}
         तपशील: {info_details}
-        कालावधी/तारीख: {period}
-
-        नियम:
-        १. जर जोडपत्र 'अ', 'ब' किंवा 'क' असेल तर महाराष्ट्र RTI नियम २००५ च्या अधिकृत सरकारी नमुन्याप्रमाणे सर्व रकाने व मुद्दे हुबेहूब समाविष्ट करा.
-        २. मसुदा सुटसुटीत आणि A4 साईज पानावर १ पानावर व्यवस्थित प्रिंट होईल असा तयार करा.
         """
         
         with st.spinner("⚡ AI द्वारे परिपूर्ण मसुदा तयार होत आहे..."):
-            draft_text = generate_with_multi_key_fallback(master_prompt)
-            
-            if "त्रुटी" in draft_text or "⚠️" in draft_text:
-                st.error(draft_text)
-            else:
+            try:
+                response = model.generate_content(master_prompt)
+                draft_text = response.text
                 st.success("✅ मसुदा यशस्वीरीत्या तयार झाला आहे!")
-                edited_draft = st.text_area("✏️ तयार झालेला मसुदा (संपादित करा):", value=draft_text, height=400)
-                
-                # Downloads
-                st.markdown("---")
-                st.subheader("📥 A4 Size डाऊनलोड पर्याय")
-                d1, d2 = st.columns(2)
-                
-                docx_bytes = create_a4_docx(edited_draft)
-                pdf_bytes = create_a4_pdf(edited_draft)
-                
-                with d1:
-                    st.download_button("📄 Word (.docx) डाऊनलोड", data=docx_bytes, file_name=f"Draft_{curr}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                with d2:
-                    st.download_button("📕 PDF (.pdf) डाऊनलोड", data=pdf_bytes, file_name=f"Draft_{curr}.pdf", mime="application/pdf")
+                edited_draft = st.text_area("✏️ तयार झालेला मसुदा (संपादित करा):", value=draft_text, height=350)
+            except Exception as e:
+                st.error(f"त्रुटी आली: {e}")
