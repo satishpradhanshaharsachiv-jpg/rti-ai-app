@@ -27,14 +27,45 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 # ==========================================
-# 2. CUSTOM CSS - DUAL LAYOUT SYSTEM
+# 2. MULTI-KEY FALLBACK CONFIGURATION (तुमच्या सर्व की येथे टाका)
+# ==========================================
+# तुमच्याकडे असलेल्या सर्व AQ. वाली की येथे खाली एकाखाली एक ' ' मध्ये टाका:
+API_KEYS_POOL = [
+    "AQ.तुमची_पहिली_की_येथे_टाका",
+    "AQ.तुमची_दुसरी_की_येथे_टाका",
+    "AQ.तुमची_तिसरी_की_येथे_टाका",
+    # अजून की असतील तर इथे कॉमा देऊन पुढे टाकू शकता
+]
+
+def generate_with_multi_key_fallback(prompt_text):
+    models_list = ["gemini-3.7-flash", "gemini-3.6-flash"]
+    
+    # जर युजरने कोडमध्ये की टाकल्या नसतील तर सिस्टीम तपासेल
+    if not API_KEYS_POOL or API_KEYS_POOL[0] == "AQ.तुमची_पहिली_की_येथे_टाका":
+        return "⚠️ कृपया कोडमधील API_KEYS_POOL मध्ये तुमच्या खऱ्या 'AQ.' ने सुरू होणाऱ्या की (Keys) प्रविष्ट करा!"
+
+    for key in API_KEYS_POOL:
+        try:
+            genai.configure(api_key=key)
+            for model_name in models_list:
+                try:
+                    model = genai.GenerativeModel(model_name)
+                    response = model.generate_content(prompt_text)
+                    if response and response.text:
+                        return response.text
+                except Exception:
+                    continue
+        except Exception:
+            continue
+            
+    return "❌ त्रुटी: सध्या सर्व API Keys किंवा सर्व्हर व्यस्त आहेत. कृपया थोड्या वेळाने प्रयत्न करा."
+
+# ==========================================
+# 3. CUSTOM CSS - DUAL LAYOUT & SHINY DESIGN
 # ==========================================
 st.markdown("""
     <style>
-    /* 1. LOCK HORIZONTAL SCROLL (स्क्रीन सरकणे पूर्णपणे बंद) */
-    * {
-        box-sizing: border-box !important;
-    }
+    * { box-sizing: border-box !important; }
     html, body, [data-testid="stAppViewContainer"], .main, .stApp {
         overflow-x: hidden !important;
         max-width: 100vw !important;
@@ -49,7 +80,7 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* 2. SHINY GOLDEN TOP BANNER */
+    /* TOP SHINY BANNER */
     .brand-top-banner {
         text-align: center;
         background: linear-gradient(135deg, #0F172A, #1E1B4B, #312E81);
@@ -80,7 +111,6 @@ st.markdown("""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 3px;
-        text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
     }
 
     .brand-title-2 {
@@ -99,10 +129,9 @@ st.markdown("""
         border-top: 1px dashed rgba(255, 215, 0, 0.6);
         padding-top: 4px;
         margin-top: 2px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
-    /* 3. BUTTON ZONE (STRICT 4 COLUMNS x 2 ROWS) */
+    /* 4 BUTTONS PER ROW GRID */
     .button-zone div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -127,7 +156,6 @@ st.markdown("""
         font-weight: 800 !important;
         padding: 1px !important;
         border-radius: 8px !important;
-        margin: 0px !important;
         border: 1px solid rgba(255,255,255,0.4) !important;
         color: #FFFFFF !important;
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
@@ -135,32 +163,29 @@ st.markdown("""
         white-space: pre-wrap !important;
     }
 
-    /* VIBRANT GRADIENT COLORS FOR BUTTONS */
+    /* VIBRANT GRADIENTS */
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(4) button { background: linear-gradient(135deg, #6200EA, #7C4DFF) !important; }
 
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(1) button { background: linear-gradient(135deg, #4A148C, #8E24AA) !important; }
-    .button-zone div[data-testid="button-zone"]:nth-of-type(2) > div:nth-child(2) button,
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(2) button { background: linear-gradient(135deg, #D50000, #FF1744) !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(3) button { background: linear-gradient(135deg, #FFAB00, #FFD600) !important; color: #000000 !important; }
     .button-zone div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button { background: linear-gradient(135deg, #00B8D4, #00E5FF) !important; color: #000000 !important; }
 
-    /* 4. FORM ZONE (STACKED VERTICALLY FOR ZERO HORIZONTAL SCROLL) */
+    /* FORM STACKED VERTICALLY */
     div[data-testid="stForm"] {
         border: 1px solid #CBD5E1;
         padding: 8px;
         border-radius: 10px;
         background-color: #F8FAFC;
     }
-
     div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
         display: flex !important;
-        flex-direction: column !important; /* सर्व रकाने एकाखाली एक येतील */
+        flex-direction: column !important;
         gap: 8px !important;
     }
-
     div[data-testid="stForm"] div[data-testid="column"] {
         width: 100% !important;
         flex: 1 1 100% !important;
@@ -181,14 +206,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. SIDEBAR CONFIGURATION
-# ==========================================
-st.sidebar.title("⚙️ आकांक्षा AI सेटिंग्ज")
-api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password", help="Google AI Studio मधील API Key टाका.")
-st.sidebar.markdown("---")
-st.sidebar.info("🏢 आकांक्षा एंटरप्रायझेस | RTI व कायदेशीर महा-सहाय्यक")
-
-# ==========================================
 # 4. TOP SHINY BRANDING BANNER
 # ==========================================
 st.markdown("""
@@ -201,7 +218,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. BUTTON ZONE (4 COLUMNS x 2 ROWS)
+# 5. BUTTON ZONE (4 x 2 GRID)
 # ==========================================
 st.markdown("<div class='button-zone'>", unsafe_allow_html=True)
 
@@ -229,7 +246,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # ==========================================
-# 6. A4 EXPORT ENGINES
+# 6. A4 EXPORT FUNCTIONS
 # ==========================================
 def create_a4_docx(text):
     doc = Document()
@@ -258,7 +275,6 @@ def create_a4_docx(text):
 def create_a4_pdf(text):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
-    styles = getSampleStyleSheet()
     body_style = ParagraphStyle('A4Body', fontName='Helvetica', fontSize=10, leading=14, textColor=colors.black, spaceAfter=5)
     
     story = []
@@ -274,7 +290,7 @@ def create_a4_pdf(text):
     return buffer.getvalue()
 
 # ==========================================
-# 7. FORM ZONE (SELECTED TAB DISPLAY)
+# 7. FORM & GENERATION ENGINE
 # ==========================================
 curr = st.session_state.active_tab
 
@@ -291,19 +307,11 @@ if curr == "AI चॅट":
         with st.chat_message("user"):
             st.write(user_query)
             
-        if not api_key:
-            st.error("⚠️ कृपया डाव्या Sidebar मध्ये Gemini API Key टाका!")
-        else:
-            try:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                with st.chat_message("assistant"):
-                    with st.spinner("उत्तर तयार होत आहे..."):
-                        response = model.generate_content(f"तुम्ही उच्च कायदेशीर सहाय्यक आहात. मराठीत उत्तर द्या: {user_query}")
-                        st.write(response.text)
-                        st.session_state.chat_messages.append({"role": "assistant", "content": response.text})
-            except Exception as e:
-                st.error(f"❌ त्रुटी: {str(e)}")
+        with st.chat_message("assistant"):
+            with st.spinner("उत्तर तयार होत आहे..."):
+                response_text = generate_with_multi_key_fallback(f"तुम्ही उच्च कायदेशीर सहाय्यक आहात. मराठीत उत्तर द्या: {user_query}")
+                st.write(response_text)
+                st.session_state.chat_messages.append({"role": "assistant", "content": response_text})
 
 else:
     titles = {
@@ -353,50 +361,42 @@ else:
         submit = st.form_submit_button(label="🚀 परिपूर्ण मसुदा तयार करा (Generate Draft)")
 
     if submit:
-        if not api_key:
-            st.error("⚠️ कृपया डाव्या Sidebar मध्ये Gemini API Key टाका!")
-        else:
-            try:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
+        master_prompt = f"""
+        तुम्ही महाराष्ट्रातील वरिष्ठ वकील व शासकीय कायदेशीर मसुदा तज्ज्ञ आहात.
+        खालील माहितीचा वापर करून महाराष्ट्र शासन नियमांनुसार सुटसुटीत आणि पूर्ण १ पानावर (A4 Size Page Layout) बसणारा कायदेशीर मराठी मसुदा तयार करा:
+
+        सेवा: {curr}
+        अर्जदार: {app_name}
+        पत्ता: {app_address}
+        कार्यालय/विरोधक: {auth_name}
+        कार्यालय पत्ता: {auth_address}
+        विषय: {subject}
+        तपशील: {info_details}
+        कालावधी/तारीख: {period}
+
+        नियम:
+        १. जर जोडपत्र 'अ', 'ब' किंवा 'क' असेल तर महाराष्ट्र RTI नियम २००५ च्या अधिकृत सरकारी नमुन्याप्रमाणे सर्व रकाने व मुद्दे हुबेहूब समाविष्ट करा.
+        २. मसुदा सुटसुटीत आणि A4 साईज पानावर १ पानावर व्यवस्थित प्रिंट होईल असा तयार करा.
+        """
+        
+        with st.spinner("⚡ AI द्वारे परिपूर्ण मसुदा तयार होत आहे..."):
+            draft_text = generate_with_multi_key_fallback(master_prompt)
+            
+            if "त्रुटी" in draft_text or "⚠️" in draft_text:
+                st.error(draft_text)
+            else:
+                st.success("✅ मसुदा यशस्वीरीत्या तयार झाला आहे!")
+                edited_draft = st.text_area("✏️ तयार झालेला मसुदा (संपादित करा):", value=draft_text, height=400)
                 
-                master_prompt = f"""
-                तुम्ही महाराष्ट्रातील वरिष्ठ वकील व शासकीय कायदेशीर मसुदा तज्ज्ञ आहात.
-                खालील माहितीचा वापर करून महाराष्ट्र शासन नियमांनुसार सुटसुटीत आणि पूर्ण १ पानावर (A4 Size Page Layout) बसणारा कायदेशीर मराठी मसुदा तयार करा:
-
-                सेवा: {curr}
-                अर्जदार: {app_name}
-                पत्ता: {app_address}
-                कार्यालय/विरोधक: {auth_name}
-                कार्यालय पत्ता: {auth_address}
-                विषय: {subject}
-                तपशील: {info_details}
-                कालावधी/तारीख: {period}
-
-                नियम:
-                १. जर जोडपत्र 'अ', 'ब' किंवा 'क' असेल तर महाराष्ट्र RTI नियम २००५ च्या अधिकृत सरकारी नमुन्याप्रमाणे सर्व रकाने व मुद्दे हुबेहूब समाविष्ट करा.
-                २. मसुदा सुटसुटीत आणि A4 साईज पानावर १ पानावर व्यवस्थित प्रिंट होईल असा तयार करा.
-                """
+                # Downloads
+                st.markdown("---")
+                st.subheader("📥 A4 Size डाऊनलोड पर्याय")
+                d1, d2 = st.columns(2)
                 
-                with st.spinner("⚡ AI द्वारे परिपूर्ण मसुदा तयार होत आहे..."):
-                    res = model.generate_content(master_prompt)
-                    draft_text = res.text
-                    
-                    st.success("✅ मसुदा यशस्वीरीत्या तयार झाला आहे!")
-                    edited_draft = st.text_area("✏️ तयार झालेला मसुदा (संपादित करा):", value=draft_text, height=400)
-                    
-                    # Downloads
-                    st.markdown("---")
-                    st.subheader("📥 A4 Size डाऊनलोड पर्याय")
-                    d1, d2 = st.columns(2)
-                    
-                    docx_bytes = create_a4_docx(edited_draft)
-                    pdf_bytes = create_a4_pdf(edited_draft)
-                    
-                    with d1:
-                        st.download_button("📄 Word (.docx) डाऊनलोड", data=docx_bytes, file_name=f"Draft_{curr}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                    with d2:
-                        st.download_button("📕 PDF (.pdf) डाऊनलोड", data=pdf_bytes, file_name=f"Draft_{curr}.pdf", mime="application/pdf")
-
-            except Exception as e:
-                st.error(f"❌ त्रुटी: {str(e)}")
+                docx_bytes = create_a4_docx(edited_draft)
+                pdf_bytes = create_a4_pdf(edited_draft)
+                
+                with d1:
+                    st.download_button("📄 Word (.docx) डाऊनलोड", data=docx_bytes, file_name=f"Draft_{curr}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                with d2:
+                    st.download_button("📕 PDF (.pdf) डाऊनलोड", data=pdf_bytes, file_name=f"Draft_{curr}.pdf", mime="application/pdf")
