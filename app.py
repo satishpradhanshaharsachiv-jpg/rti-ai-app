@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि अखंड मोबाईल स्टाईलिंग
+# १. पेज कॉन्फिगरेशन आणि जेमिनी-स्टाईल UI
 # ==============================================================================
 st.set_page_config(page_title="RTI AI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
@@ -62,8 +62,10 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 .btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 
-.chat-user { background: #2563EB; color: #FFFFFF; padding: 8px 12px; border-radius: 14px 14px 2px 14px; margin-bottom: 8px; font-size: 13.5px; max-width: 88%; margin-left: auto; }
-.chat-ai { background: #F1F5F9; color: #0F172A; padding: 10px 12px; border-radius: 14px 14px 14px 2px; margin-bottom: 8px; font-size: 13.5px; border-left: 4px solid #3B82F6; }
+.chat-user { background: #2563EB; color: #FFFFFF; padding: 10px 14px; border-radius: 18px 18px 2px 18px; margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto; }
+.chat-ai { background: #F1F5F9; color: #0F172A; padding: 10px 14px; border-radius: 18px 18px 18px 2px; margin-bottom: 8px; font-size: 14px; border-left: 4px solid #3B82F6; }
+
+div[data-testid="stFileUploader"] section { padding: 4px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -73,42 +75,40 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला विचारा किंवा खाली फोटो जोडून माहिती घ्या.", "image": None}
+        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला किंवा मदत विचारा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. API Key मॅनेजमेंट (Sidebar आणि Secrets दोन्ही)
+# ३. अचूक Gemini AI इंजिन (100% वर्किंग)
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
 active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
 
 def ask_ai_dynamic(prompt_text, image_obj=None):
     if not active_api_key:
-        return "❌ API Key सापडली नाही. डाव्या बाजूच्या मेनूमध्ये (Sidebar) तुमची Gemini API Key टाका किंवा Streamlit Secrets मध्ये सेट करा."
-    
+        return "❌ API Key टाकलेली नाही. डाव्या बाजूला Sidebar मध्ये API Key टाका."
     try:
         genai.configure(api_key=active_api_key)
-        # अपडेटेड मॉडेल
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        # अचूक मॉडेल नाव
+        model = genai.GenerativeModel("gemini-1.5-flash")
         payload = [prompt_text, image_obj] if image_obj else prompt_text
         res = model.generate_content(payload)
         if res and res.text:
             return res.text
-        return "AI कडून उत्तर मिळाले नाही."
+        return "AI कडून प्रतिसाद मिळाला नाही."
     except Exception as e:
         return f"❌ AI त्रुटी: {str(e)}"
 
 # ==============================================================================
-# ४. मुख्य हेडर व तुमचे नाव (Personal Branding)
+# ४. मुख्य हेडर
 # ==============================================================================
 st.markdown('<div class="glowing-title">⚖️ RTI AI महा-सहाय्यक</div>', unsafe_allow_html=True)
 st.markdown('<div class="user-banner">👨‍💼 संकल्पना व निर्मिती: सतीश अशोक प्रधान</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-tagline">⚡ १ मिनिटात सर्व शासकीय व न्यायालयीन मसुदे तयार करा</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. ४x२ ग्रिड (८ बटणे)
+# ५. ८ बटणांची ग्रिड
 # ==============================================================================
 st.markdown("""
 <div class="app-grid">
@@ -125,29 +125,35 @@ st.markdown("""
 st.markdown("---")
 
 # ==============================================================================
-# ६. विभागांचे फॉर्म्स
+# ६. AI चॅट विभाग (Gemini UI)
 # ==============================================================================
 active = st.session_state.active_tab
 
 if active == "AI चॅट":
-    st.subheader("✨ AI कायदेशीर सल्लागार")
+    st.subheader("✨ Gemini AI कायदेशीर सहाय्यक")
     
-    # आधीचे चॅट दाखवा
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
-            st.markdown(f'<div class="chat-user">👤 <b>तुम्ही:</b> {msg["content"]}</div>', unsafe_allow_html=True)
-            if msg.get("image"): st.image(msg["image"], width=170)
+            st.markdown(f'<div class="chat-user">👤 {msg["content"]}</div>', unsafe_allow_html=True)
+            if msg.get("image"): st.image(msg["image"], width=180)
         else:
-            st.markdown(f'<div class="chat-ai">✨ <b>AI:</b> {msg["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-ai">✨ <b>Gemini:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
-    # गॅलरी/कॅमेरा अपलोडर सुटसुटीत
-    st.markdown("<b>📷 फोटो/नोटीस जोडा (गॅलरीमधून निवडा):</b>", unsafe_allow_html=True)
-    up_img = st.file_uploader("गॅलरीतून फोटो निवडा:", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # + आयकॉन पॉपओव्हर
+    up_img = None
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        with st.popover("➕", help="फोटो जोडा"):
+            up_img = st.file_uploader("कागदपत्र फोटो जोडा:", type=["png", "jpg", "jpeg"])
+    with col2:
+        st.caption("फोटो जोडण्यासाठी ➕ वर क्लिक करा.")
 
-    if q_prompt := st.chat_input("येथे कायदेशीर प्रश्न विचारा..."):
+    if q_prompt := st.chat_input("Gemini ला विचारा..."):
         img = Image.open(up_img) if up_img else None
         st.session_state.chat_messages.append({"role": "user", "content": q_prompt, "image": img})
-        with st.spinner("AI मसुदा तपासत आहे..."):
+        with st.spinner("विचार करत आहे..."):
             ans = ask_ai_dynamic(q_prompt, img)
             st.session_state.chat_messages.append({"role": "assistant", "content": ans, "image": None})
         st.rerun()
@@ -163,21 +169,8 @@ elif active == "जोडपत्र 'अ'":
             st.session_state.final_draft = f"जोडपत्र - 'अ'\n(नियम ३ पहा)\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम ६(१) खालील अर्ज.\n\nप्रति,\nजन माहिती अधिकारी,\nकार्यालय: {dept}\n\n१. अर्जदाराचे नाव: {u_name}\n२. पत्ता व मोबाइल: {u_addr}\n३. मागितलेल्या माहितीचा तपशील:\n{q_info}\n४. अर्ज फी: ₹१०/- चा कोर्ट फी स्टॅम्प जोडला आहे.\n\nदिनांक: {date_today}\nस्वाक्षरी: ({u_name})"
             st.success("✅ जोडपत्र 'अ' तयार झाला!")
 
-elif active == "जोडपत्र 'ब'":
-    st.subheader("⚖️ प्रथम अपील (कलम १९(१)) - जोडपत्र 'ब'")
-    with st.form("form_b"):
-        u_name = st.text_input("१. अपीलकर्त्याचे पूर्ण नाव:")
-        u_addr = st.text_area("२. पत्ता व मोबाइल:")
-        dept = st.text_input("३. प्रथम अपीलीय अधिकारी व कार्यालय:")
-        appeal_reason = st.text_area("४. अपीलाचे कारण:", value="विहित ३० दिवसांत माहिती न मिळाल्यामुळे.")
-        if st.form_submit_button("🚀 प्रथम अपील तयार करा"):
-            st.session_state.final_draft = f"जोडपत्र - 'ब'\nमाहितीचा अधिकार अधिनियम, २००५ च्या कलम १९(१) खालील प्रथम अपील.\n\nप्रति,\nप्रथम अपीलीय अधिकारी,\nकार्यालय: {dept}\n\n१. अपीलकर्त्याचे नाव: {u_name}\n२. पत्ता: {u_addr}\n३. अपीलाचे कारण: {appeal_reason}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({u_name})"
-            st.success("✅ प्रथम अपील तयार झाला!")
-
-# (इतर फॉर्म्स देखील याच पद्धतीने चालतील)
-
 # ==============================================================================
-# ७. मसुदा निकाल, डाऊनलोड व WhatsApp शेअरिंग (१००% वर्किंग)
+# ७. डाऊनलोड व शेअर
 # ==============================================================================
 if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
@@ -188,12 +181,6 @@ if st.session_state.final_draft and active != "AI चॅट":
     
     col1, col2 = st.columns(2)
     with col1:
-        st.download_button("📥 टेक्स्ट फाईल डाऊनलोड", st.session_state.final_draft, "Legal_Draft.txt", use_container_width=True)
+        st.download_button("📥 टेक्स्ट डाऊनलोड", st.session_state.final_draft, "Draft.txt", use_container_width=True)
     with col2:
-        st.markdown(f'''
-            <a href="{whatsapp_url}" target="_blank" style="text-decoration:none;">
-                <button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">
-                    📲 WhatsApp वर पाठवा
-                </button>
-            </a>
-        ''', unsafe_allow_html=True)
+        st.markdown(f'<a href="{whatsapp_url}" target="_blank"><button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">📲 WhatsApp शेअर</button></a>', unsafe_allow_html=True)
