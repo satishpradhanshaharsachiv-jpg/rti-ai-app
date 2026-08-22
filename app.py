@@ -13,7 +13,7 @@ from datetime import datetime
 # 1. PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(
-    page_title="सतीश अशोक प्रधान - आकांक्षा AI महा-सहाय्यक",
+    page_title="सतीश अशोक प्रधान - आकांक्षा AI",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -27,76 +27,104 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 # ==========================================
-# 2. RESPONSIVE CSS (MOBILE 2x4 GRID & DESKTOP)
+# 2. RESPONSIVE CSS (PREVENT HORIZONTAL SCROLL)
 # ==========================================
 st.markdown("""
     <style>
-    /* Global Page Styling */
-    .stApp {
+    /* Strict Screen Overflow Lock - Removes Horizontal Scroll */
+    html, body, .stApp {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background-color: #FFFFFF;
         color: #0F172A;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Shiny Header Banner with Satish Pradhan Branding */
-    .brand-top-banner {
+    /* Main Outer Header Banner */
+    .brand-banner {
         text-align: center;
-        background: linear-gradient(135deg, #1E1B4B, #312E81, #4338CA);
-        padding: 16px;
+        background: linear-gradient(135deg, #0B0F19, #1E1B4B, #312E81);
+        padding: 16px 10px;
         border-radius: 16px;
-        color: #FFFFFF;
-        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-        margin-bottom: 18px;
-    }
-    .brand-user-name {
-        font-size: 24px;
-        font-weight: 900;
-        color: #FACC15;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        margin-bottom: 4px;
-        letter-spacing: 0.5px;
-    }
-    .brand-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #38BDF8;
-    }
-    .brand-sub {
-        background-color: #FEF3C7;
-        color: #D97706;
-        border: 2px dashed #F59E0B;
-        padding: 4px 12px;
-        border-radius: 15px;
-        font-weight: 800;
-        font-size: 12px;
-        display: inline-block;
-        margin-top: 8px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        margin-bottom: 15px;
+        border: 2px solid #FFD700;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* MOBILE RESPONSIVE CSS - PERFECT 2x4 GRID WITHOUT ROTATING SCREEN */
+    /* 1. Multi-color Animated Golden Title */
+    .banner-main-title {
+        font-size: 21px;
+        font-weight: 900;
+        background: linear-gradient(45deg, #FFD700, #FFA500, #FF3366, #00E5FF, #FFD700);
+        background-size: 300% 300%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shinyGradient 4s ease infinite;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+
+    @keyframes shinyGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* 2. Colorful Tagline */
+    .banner-sub-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #00FFCC;
+        text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+        margin-bottom: 8px;
+    }
+
+    /* 3. Shiny Golden Contact Strip */
+    .banner-contact-strip {
+        background: linear-gradient(90deg, #B8860B, #FFD700, #FFF8DC, #FFD700, #B8860B);
+        color: #000000;
+        font-weight: 800;
+        font-size: 12.5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: inline-block;
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
+        letter-spacing: 0.3px;
+    }
+
+    /* Mobile View CSS (Perfect 2x4 Grid without Horizontal Overflow) */
     @media only screen and (max-width: 768px) {
+        .banner-main-title { font-size: 17px; }
+        .banner-sub-title { font-size: 13px; }
+        .banner-contact-strip { font-size: 11px; padding: 3px 8px; }
+
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            gap: 4px !important;
-            justify-content: space-between !important;
+            gap: 3px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
         div[data-testid="column"] {
             width: 24% !important;
             flex: 1 1 24% !important;
             min-width: 0px !important;
+            padding: 0px !important;
         }
         div.stButton > button {
-            height: 70px !important;
-            font-size: 10.5px !important;
+            height: 65px !important;
+            font-size: 10px !important;
             padding: 2px !important;
-            border-radius: 10px !important;
+            border-radius: 8px !important;
             line-height: 1.1 !important;
         }
     }
 
-    /* DESKTOP RESPONSIVE CSS */
+    /* Desktop View CSS */
     @media only screen and (min-width: 769px) {
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
@@ -104,28 +132,23 @@ st.markdown("""
             gap: 10px !important;
         }
         div.stButton > button {
-            height: 85px !important;
+            height: 80px !important;
             font-size: 14px !important;
             border-radius: 12px !important;
         }
     }
 
-    /* Shiny Vibrant Buttons */
+    /* Vibrant Buttons Styling */
     div.stButton > button {
         width: 100% !important;
         font-weight: 800 !important;
         border: none !important;
         color: #FFFFFF !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-        transition: all 0.2s ease-in-out !important;
         white-space: pre-wrap !important;
     }
-    div.stButton > button:hover {
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 6px 14px rgba(0,0,0,0.25) !important;
-    }
 
-    /* Vibrant Gradients for Buttons */
+    /* Button Gradients */
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
     div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
@@ -137,13 +160,13 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button { background: linear-gradient(135deg, #00B8D4, #00E5FF) !important; }
 
     .form-title {
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 800;
         color: #0F172A;
         border-bottom: 2px solid #E2E8F0;
         padding-bottom: 6px;
         margin-top: 10px;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -157,18 +180,18 @@ st.sidebar.markdown("---")
 st.sidebar.info("🏢 आकांक्षा एंटरप्रायझेस | RTI व कायदेशीर महा-सहाय्यक")
 
 # ==========================================
-# 4. TOP SHINY BRANDING BANNER
+# 4. TOP BRANDING BANNER
 # ==========================================
 st.markdown("""
-    <div class='brand-top-banner'>
-        <div class='brand-user-name'>✨ सतीश अशोक प्रधान ✨</div>
-        <div class='brand-title'>⚖️ आकांक्षा AI - RTI व कायदेशीर महा-सहाय्यक</div>
-        <div class='brand-sub'>⚡ एका क्लिकवर A4 साईज मसुदा तयार करा</div>
+    <div class='brand-banner'>
+        <div class='banner-main-title'>✨ आकांक्षा AI - RTI व कायदेशीर महा-सहाय्यक ✨</div>
+        <div class='banner-sub-title'>⚡ एका सेकंदात अर्ज A4 साईज मध्ये मिळवा ⚡</div>
+        <div class='banner-contact-strip'>सतीश अशोक प्रधान | मो. ८६६८२३५३९५</div>
     </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. 8 VIBRANT APP BUTTONS (2x4 MOBILE GRID)
+# 5. 8 VIBRANT BUTTONS (2x4 GRID)
 # ==========================================
 r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
 with r1_c1:
@@ -193,7 +216,7 @@ with r2_c4:
 st.markdown("---")
 
 # ==========================================
-# 6. A4 EXPORT ENGINES
+# 6. A4 EXPORT ENGINES (DOCX & PDF)
 # ==========================================
 def create_a4_docx(text):
     doc = Document()
@@ -286,12 +309,12 @@ else:
         col1, col2 = st.columns(2)
         
         with col1:
-            app_name = st.text_input("१. अर्जदाराचे नाव:", placeholder="अर्जदाराचे नाव प्रविष्ट करा...")
-            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर प्रविष्ट करा...", height=100)
+            app_name = st.text_input("१. अर्जदाराचे नाव:", placeholder="अर्जदाराचे नाव टाका...")
+            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पत्ता व संपर्क टाका...", height=100)
         
         with col2:
             auth_name = st.text_input("३. जन माहिती अधिकारी / विरोधी पक्ष / कार्यालय नाव:", placeholder="उदा. जन माहिती अधिकारी, मुख्य कार्यालय...")
-            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता प्रविष्ट करा...", height=100)
+            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता टाका...", height=100)
 
         if curr == "जोडपत्र 'अ'":
             subject = st.text_input("५. माहितीचा विषय:", value="माहितीचा अधिकार अधिनियम २००५ च्या कलम ६(१) अन्वये माहिती मिळणेबाबत.")
