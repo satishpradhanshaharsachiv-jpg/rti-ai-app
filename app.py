@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि आकर्षक चमकदार हेडर + ग्रिड डिझाइन (CSS)
+# १. पेज कॉन्फिगरेशन आणि कायमस्वरूपी सेव्ह केलेली परिपूर्ण ग्रिड डिझाइन (CSS)
 # ==============================================================================
 st.set_page_config(page_title="RTI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
@@ -20,10 +20,9 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800;900&display=swap');
 * { font-family: 'Mukta', sans-serif !important; }
 
-/* स्क्रीनवरील जागा व्यवस्थित करणे */
 .block-container {
-    padding-top: 0.8rem !important;
-    padding-bottom: 1rem !important;
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.8rem !important;
     padding-left: 0.4rem !important;
     padding-right: 0.4rem !important;
     max-width: 500px !important;
@@ -44,23 +43,18 @@ st.markdown("""
     -webkit-text-fill-color: transparent;
     animation: shine 4s linear infinite;
     margin-bottom: 2px;
-    letter-spacing: -0.2px;
 }
 
 @keyframes shine {
-    to {
-        background-position: 300% center;
-    }
+    to { background-position: 300% center; }
 }
 
-/* आकर्षक टॅगलाइन */
 .sub-tagline {
     text-align: center;
     font-size: 12px;
     font-weight: 700;
     color: #475569;
     margin-bottom: 12px;
-    letter-spacing: 0.2px;
 }
 .sub-tagline span {
     background: #FEF3C7;
@@ -70,7 +64,7 @@ st.markdown("""
     border: 1px dashed #F59E0B;
 }
 
-/* मोबाईल ॲप ग्रिड (४ एका ओळीत - शेजारी शेजारी) */
+/* कायमस्वरूपी सेव्ह केलेली ४x२ ग्रिड रचना */
 .app-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -95,14 +89,8 @@ st.markdown("""
     transition: transform 0.15s ease-in-out;
 }
 
-.app-card:active {
-    transform: scale(0.92);
-}
-
-.app-icon {
-    font-size: 20px;
-    margin-bottom: 1px;
-}
+.app-card:active { transform: scale(0.92); }
+.app-icon { font-size: 20px; margin-bottom: 1px; }
 
 /* ८ बटणांचे चमकदार रंग */
 .btn-1 { background: linear-gradient(135deg, #10B981, #059669); }
@@ -113,11 +101,21 @@ st.markdown("""
 .btn-6 { background: linear-gradient(135deg, #EF4444, #B91C1C); }
 .btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
+
+/* चॅट UI सुधारणा */
+.chat-user {
+    background: #2563EB; color: #FFFFFF; padding: 8px 12px; border-radius: 14px 14px 2px 14px;
+    margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto;
+}
+.chat-ai {
+    background: #F1F5F9; color: #0F172A; padding: 10px 14px; border-radius: 14px 14px 14px 2px;
+    margin-bottom: 8px; font-size: 14px; border-left: 4px solid #3B82F6;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# २. सेशन्स स्टेट व व्हेरिएबल्स
+# २. सेशन्स स्टेट व्यवस्थापन
 # ==============================================================================
 if 'user_name' not in st.session_state: st.session_state.user_name = ""
 if 'user_address' not in st.session_state: st.session_state.user_address = ""
@@ -126,32 +124,36 @@ if 'original_query' not in st.session_state: st.session_state.original_query = "
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर प्रश्न विचारा किंवा कागदपत्राचा फोटो जोडा.", "image": None}
+        {"role": "assistant", "content": "✨ नमस्कार! कायदेशीर सल्ला विचारा किंवा ➕ बटणाने फोटो जोडा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. AI इंजिन
+# ३. हाय-स्पीड १-सेकंद AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
-def ask_ai(prompt_text, image_obj=None):
+def ask_ai_fast(prompt_text, image_obj=None):
     if not active_api_key:
-        return "कृपया Secrets मध्ये GEMINI_API_KEY तपासा."
-    genai.configure(api_key=active_api_key)
-    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
+        return "कृपया Settings मध्ये Secrets -> GEMINI_API_KEY ऍड करा."
+    try:
+        genai.configure(api_key=active_api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        content_payload = [prompt_text, image_obj] if image_obj else prompt_text
+        res = model.generate_content(content_payload)
+        return res.text if res and res.text else "उत्तर तयार होऊ शकले नाही."
+    except Exception as e:
+        # बॅकअप फॉलबॅक
         try:
-            model = genai.GenerativeModel(model_name)
-            res = model.generate_content([prompt_text, image_obj] if image_obj else prompt_text)
-            if res and res.text:
-                return res.text
+            model_fallback = genai.GenerativeModel("gemini-pro")
+            res_fb = model_fallback.generate_content(prompt_text)
+            return res_fb.text
         except Exception:
-            continue
-    return "AI कडून उत्तर मिळू शकले नाही."
+            return f"त्रुटी आली: {str(e)}"
 
 # ==============================================================================
-# ४. आकर्षक मुख्य हेडर (एका ओळीत फिट)
+# ४. मुख्य हेडर
 # ==============================================================================
 st.markdown("""
 <div class="glowing-title">⚖️ RTI AI महा-सहाय्यक</div>
@@ -159,7 +161,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. मोबाईल ॲप ग्रिड (४x२ = ८ रंगीत चौकोनी ॲप आयकॉन्स)
+# ५. कायमस्वरूपी सेव्ह केलेली ४x२ ग्रिड (८ ॲप आयकॉन्स)
 # ==============================================================================
 grid_html = """
 <div class="app-grid">
@@ -193,7 +195,7 @@ st.markdown(grid_html, unsafe_allow_html=True)
 st.markdown("---")
 
 # ==============================================================================
-# ६. विभागानुसार फॉर्म्स आणि लॉजिक
+# ६. विभागानुसार फॉर्म्स आणि सुपर-फास्ट AI चॅट
 # ==============================================================================
 active = st.session_state.active_tab
 
@@ -201,17 +203,20 @@ if active == "AI चॅट":
     st.subheader("✨ AI कायदेशीर सल्लागार")
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
-            st.markdown(f"👤 **तुम्ही:** {msg['content']}")
-            if msg.get("image"): st.image(msg["image"], width=200)
+            st.markdown(f'<div class="chat-user">👤 <b>तुम्ही:</b> {msg["content"]}</div>', unsafe_allow_html=True)
+            if msg.get("image"): st.image(msg["image"], width=180)
         else:
-            st.markdown(f"✨ **AI:** {msg['content']}")
+            st.markdown(f'<div class="chat-ai">✨ <b>AI:</b> {msg["content"]}</div>', unsafe_allow_html=True)
 
-    uploaded_doc = st.file_uploader("कागदपत्र / नोटीस फोटो जोडा:", type=["png", "jpg", "jpeg"])
+    with st.expander("➕ फोटो / नोटीस जोडा", expanded=False):
+        uploaded_doc = st.file_uploader("फाइल निवडा:", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+
     if query := st.chat_input("प्रश्न विचारा..."):
         img = Image.open(uploaded_doc) if uploaded_doc else None
         st.session_state.chat_messages.append({"role": "user", "content": query, "image": img})
-        with st.spinner("माहिती तपासत आहे..."):
-            ans = ask_ai(query, img)
+        
+        with st.spinner("AI विचार करत आहे..."):
+            ans = ask_ai_fast(query, img)
             st.session_state.chat_messages.append({"role": "assistant", "content": ans, "image": None})
         st.rerun()
 
@@ -224,8 +229,11 @@ else:
         st.session_state.original_query = st.text_area("तपशील / मागितलेली माहिती:", value=st.session_state.original_query)
         
         if st.form_submit_button("🚀 मसुदा तयार करा"):
-            st.session_state.final_draft = f"प्रति,\nमा. {st.session_state.dept_name}\n\nविषय: {active}\n\nअर्जदार: {st.session_state.user_name}\nपत्ता: {st.session_state.user_address}\n\nतपशील:\n{st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({st.session_state.user_name})"
-            st.success("✅ मसुदा तयार झाला!")
+            with st.spinner("१ सेकंदात मसुदा तयार होत आहे..."):
+                prompt = f"{active} तयार करा. अर्जदार: {st.session_state.user_name}, पत्ता: {st.session_state.user_address}, कार्यालय: {st.session_state.dept_name}, तपशील: {st.session_state.original_query}, दिनांक: {date_today}."
+                res = ask_ai_fast(prompt)
+                st.session_state.final_draft = res if "त्रुटी" not in res else f"प्रति,\nमा. {st.session_state.dept_name}\n\nविषय: {active}\n\nअर्जदार: {st.session_state.user_name}\nपत्ता: {st.session_state.user_address}\n\nतपशील:\n{st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({st.session_state.user_name})"
+                st.success("✅ मसुदा तयार झाला!")
 
 # निकाल व WhatsApp शेअरिंग
 if st.session_state.final_draft and active != "AI चॅट":
@@ -236,4 +244,4 @@ if st.session_state.final_draft and active != "AI चॅट":
         st.download_button("📥 डाऊनलोड (.txt)", st.session_state.final_draft, "Draft.txt", use_container_width=True)
     with c2:
         msg_enc = urllib.parse.quote(st.session_state.final_draft)
-        st.markdown(f'<a href="https://api.whatsapp.com/send?text={msg_enc}" target="_blank"><button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px;">📲 WhatsApp</button></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="https://api.whatsapp.com/send?text={msg_enc}" target="_blank"><button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">📲 WhatsApp</button></a>', unsafe_allow_html=True)
