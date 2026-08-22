@@ -13,7 +13,7 @@ from datetime import datetime
 # 1. PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(
-    page_title="सतीश अशोक प्रधान - आकांक्षा AI",
+    page_title="आकांक्षा AI - सतीश अशोक प्रधान",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -27,146 +27,132 @@ if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
 # ==========================================
-# 2. RESPONSIVE CSS (PREVENT HORIZONTAL SCROLL)
+# 2. RESPONSIVE & PERFECT MOBILE LAYOUT CSS
 # ==========================================
 st.markdown("""
     <style>
-    /* Strict Screen Overflow Lock - Removes Horizontal Scroll */
-    html, body, .stApp {
+    /* 1. LOCK HORIZONTAL SCROLL (स्क्रीन सरकणे पूर्णपणे बंद) */
+    html, body, [data-testid="stAppViewContainer"], .main, .stApp {
         overflow-x: hidden !important;
         max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
         background-color: #FFFFFF;
         color: #0F172A;
     }
-
-    /* Main Outer Header Banner */
-    .brand-banner {
-        text-align: center;
-        background: linear-gradient(135deg, #0B0F19, #1E1B4B, #312E81);
-        padding: 16px 10px;
-        border-radius: 16px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        margin-bottom: 15px;
-        border: 2px solid #FFD700;
-        width: 100% !important;
-        box-sizing: border-box !important;
+    .block-container {
+        padding-top: 0.6rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
+        max-width: 100% !important;
     }
 
-    /* 1. Multi-color Animated Golden Title */
-    .banner-main-title {
-        font-size: 21px;
+    /* 2. SHINY & GOLDEN BANNER DESIGN */
+    .brand-top-banner {
+        text-align: center;
+        background: linear-gradient(135deg, #0F172A, #1E1B4B, #312E81);
+        padding: 10px 4px;
+        border-radius: 12px;
+        border: 2px solid #F59E0B;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        margin-bottom: 10px;
+    }
+    
+    /* Title 1: चमचमीत बहु-रंगी शीर्षक */
+    .brand-title-1 {
+        font-size: 18px;
         font-weight: 900;
-        background: linear-gradient(45deg, #FFD700, #FFA500, #FF3366, #00E5FF, #FFD700);
-        background-size: 300% 300%;
+        background: linear-gradient(90deg, #FFD700, #FFA500, #00E5FF, #FF007F, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: shinyGradient 4s ease infinite;
-        margin-bottom: 4px;
-        line-height: 1.3;
-    }
-
-    @keyframes shinyGradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    /* 2. Colorful Tagline */
-    .banner-sub-title {
-        font-size: 15px;
-        font-weight: 800;
-        color: #00FFCC;
-        text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
-        margin-bottom: 8px;
-    }
-
-    /* 3. Shiny Golden Contact Strip */
-    .banner-contact-strip {
-        background: linear-gradient(90deg, #B8860B, #FFD700, #FFF8DC, #FFD700, #B8860B);
-        color: #000000;
-        font-weight: 800;
-        font-size: 12.5px;
-        padding: 4px 12px;
-        border-radius: 20px;
-        display: inline-block;
-        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.6);
+        margin-bottom: 3px;
         letter-spacing: 0.3px;
     }
 
-    /* Mobile View CSS (Perfect 2x4 Grid without Horizontal Overflow) */
-    @media only screen and (max-width: 768px) {
-        .banner-main-title { font-size: 17px; }
-        .banner-sub-title { font-size: 13px; }
-        .banner-contact-strip { font-size: 11px; padding: 3px 8px; }
-
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            gap: 3px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        div[data-testid="column"] {
-            width: 24% !important;
-            flex: 1 1 24% !important;
-            min-width: 0px !important;
-            padding: 0px !important;
-        }
-        div.stButton > button {
-            height: 65px !important;
-            font-size: 10px !important;
-            padding: 2px !important;
-            border-radius: 8px !important;
-            line-height: 1.1 !important;
-        }
+    /* Title 2: एका सेकंदात अर्ज A4 साईज मध्ये मिळवा */
+    .brand-title-2 {
+        font-size: 13px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #00FFCC, #FFD700, #FF3366);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px;
     }
 
-    /* Desktop View CSS */
-    @media only screen and (min-width: 769px) {
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 10px !important;
-        }
-        div.stButton > button {
-            height: 80px !important;
-            font-size: 14px !important;
-            border-radius: 12px !important;
-        }
+    /* Title 3: नाव व मोबाईल नंबर ची आडवी गोल्डन लाईन */
+    .brand-title-3 {
+        color: #FACC15;
+        font-size: 12px;
+        font-weight: 700;
+        border-top: 1px dashed rgba(250, 204, 21, 0.6);
+        padding-top: 4px;
+        margin-top: 3px;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
-    /* Vibrant Buttons Styling */
+    /* 3. BUTTONS GRID & HAIR-LINE SPACING (केसभर अंतर - २px gap) */
+    .btn-container div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 2px !important;
+        justify-content: space-between !important;
+        margin-bottom: 2px !important;
+        width: 100% !important;
+    }
+    .btn-container div[data-testid="column"] {
+        width: 24.5% !important;
+        flex: 1 1 24.5% !important;
+        min-width: 0px !important;
+        padding: 0px !important;
+    }
     div.stButton > button {
         width: 100% !important;
+        height: 62px !important;
+        font-size: 11px !important;
         font-weight: 800 !important;
+        padding: 2px !important;
+        border-radius: 8px !important;
+        margin: 0px !important;
         border: none !important;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        line-height: 1.15 !important;
         white-space: pre-wrap !important;
     }
 
-    /* Button Gradients */
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(4) button { background: linear-gradient(135deg, #6200EA, #7C4DFF) !important; }
+    /* Vibrant Gradient Colors for Buttons */
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(1) button { background: linear-gradient(135deg, #00C853, #00E676) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(2) button { background: linear-gradient(135deg, #FF6D00, #FF9100) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(3) button { background: linear-gradient(135deg, #1A237E, #3F51B5) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(1) > div:nth-child(4) button { background: linear-gradient(135deg, #6200EA, #7C4DFF) !important; }
 
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(1) button { background: linear-gradient(135deg, #4A148C, #8E24AA) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(2) button { background: linear-gradient(135deg, #D50000, #FF1744) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(3) button { background: linear-gradient(135deg, #FFAB00, #FFD600) !important; }
-    div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button { background: linear-gradient(135deg, #00B8D4, #00E5FF) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(1) button { background: linear-gradient(135deg, #4A148C, #8E24AA) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(2) button { background: linear-gradient(135deg, #D50000, #FF1744) !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(3) button { background: linear-gradient(135deg, #FFAB00, #FFD600) !important; color: #000000 !important; }
+    .btn-container div[data-testid="stHorizontalBlock"]:nth-of-type(2) > div:nth-child(4) button { background: linear-gradient(135deg, #00B8D4, #00E5FF) !important; color: #000000 !important; }
+
+    /* 4. FORM FIELD FIX FOR MOBILE (मोबाईलवर फॉर्म रकाने एकाखाली एक आणणे) */
+    @media only screen and (max-width: 768px) {
+        div[data-testid="stForm"] div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+        div[data-testid="stForm"] div[data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+        }
+    }
 
     .form-title {
-        font-size: 17px;
+        font-size: 16px;
         font-weight: 800;
         color: #0F172A;
         border-bottom: 2px solid #E2E8F0;
-        padding-bottom: 6px;
-        margin-top: 10px;
-        margin-bottom: 12px;
+        padding-bottom: 4px;
+        margin-top: 6px;
+        margin-bottom: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -180,19 +166,21 @@ st.sidebar.markdown("---")
 st.sidebar.info("🏢 आकांक्षा एंटरप्रायझेस | RTI व कायदेशीर महा-सहाय्यक")
 
 # ==========================================
-# 4. TOP BRANDING BANNER
+# 4. TOP SHINY BRANDING BANNER
 # ==========================================
 st.markdown("""
-    <div class='brand-banner'>
-        <div class='banner-main-title'>✨ आकांक्षा AI - RTI व कायदेशीर महा-सहाय्यक ✨</div>
-        <div class='banner-sub-title'>⚡ एका सेकंदात अर्ज A4 साईज मध्ये मिळवा ⚡</div>
-        <div class='banner-contact-strip'>सतीश अशोक प्रधान | मो. ८६६८२३५३९५</div>
+    <div class='brand-top-banner'>
+        <div class='brand-title-1'>✨ आकांक्षा AI - RTI व कायदेशीर महा-सहाय्यक ✨</div>
+        <div class='brand-title-2'>⚡ एका सेकंदात अर्ज A4 साईज मध्ये मिळवा ⚡</div>
+        <div class='brand-title-3'>👤 सतीश अशोक प्रधान | 📱 मो. ८६६८२३५३९५</div>
     </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 5. 8 VIBRANT BUTTONS (2x4 GRID)
+# 5. 8 VIBRANT APP BUTTONS (2x4 GRID WITH MICRO SPACING)
 # ==========================================
+st.markdown("<div class='btn-container'>", unsafe_allow_html=True)
+
 r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
 with r1_c1:
     if st.button("📄\nजोडपत्र 'अ'", key="b1"): st.session_state.active_tab = "जोडपत्र 'अ'"
@@ -213,10 +201,11 @@ with r2_c3:
 with r2_c4:
     if st.button("🛒\nग्राहक मंच", key="b8"): st.session_state.active_tab = "ग्राहक मंच"
 
+st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("---")
 
 # ==========================================
-# 6. A4 EXPORT ENGINES (DOCX & PDF)
+# 6. A4 EXPORT ENGINES
 # ==========================================
 def create_a4_docx(text):
     doc = Document()
@@ -309,12 +298,12 @@ else:
         col1, col2 = st.columns(2)
         
         with col1:
-            app_name = st.text_input("१. अर्जदाराचे नाव:", placeholder="अर्जदाराचे नाव टाका...")
-            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पत्ता व संपर्क टाका...", height=100)
+            app_name = st.text_input("१. अर्जदाराचे नाव:", placeholder="अर्जदाराचे नाव प्रविष्ट करा...")
+            app_address = st.text_area("२. पूर्ण पत्ता व मोबाईल नंबर:", placeholder="अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर प्रविष्ट करा...", height=100)
         
         with col2:
             auth_name = st.text_input("३. जन माहिती अधिकारी / विरोधी पक्ष / कार्यालय नाव:", placeholder="उदा. जन माहिती अधिकारी, मुख्य कार्यालय...")
-            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता टाका...", height=100)
+            auth_address = st.text_area("४. कार्यालयाचा पूर्ण पत्ता:", placeholder="कार्यालयीन पत्ता प्रविष्ट करा...", height=100)
 
         if curr == "जोडपत्र 'अ'":
             subject = st.text_input("५. माहितीचा विषय:", value="माहितीचा अधिकार अधिनियम २००५ च्या कलम ६(१) अन्वये माहिती मिळणेबाबत.")
