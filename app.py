@@ -5,7 +5,7 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि जेमिनी-स्टाईल पिल इनपुट बार CSS
+# १. पेज कॉन्फिगरेशन आणि जेमिनी पिल-बार CSS
 # ==============================================================================
 st.set_page_config(page_title="RTI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
@@ -31,7 +31,6 @@ st.markdown("""
 
 #MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
 
-/* चमकदार मल्टिकलर एका ओळीतील शीर्षक */
 .glowing-title {
     font-size: 19px !important;
     font-weight: 900 !important;
@@ -44,10 +43,7 @@ st.markdown("""
     animation: shine 4s linear infinite;
     margin-bottom: 2px;
 }
-
-@keyframes shine {
-    to { background-position: 300% center; }
-}
+@keyframes shine { to { background-position: 300% center; } }
 
 .sub-tagline {
     text-align: center;
@@ -64,7 +60,6 @@ st.markdown("""
     border: 1px dashed #F59E0B;
 }
 
-/* कायमस्वरूपी सेव्ह केलेली ४x२ ग्रिड रचना */
 .app-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -72,7 +67,6 @@ st.markdown("""
     margin-bottom: 12px;
     width: 100%;
 }
-
 .app-card {
     display: flex;
     flex-direction: column;
@@ -86,13 +80,9 @@ st.markdown("""
     font-weight: 800;
     text-align: center;
     box-shadow: 0 3px 6px rgba(0,0,0,0.18);
-    transition: transform 0.15s ease-in-out;
 }
-
-.app-card:active { transform: scale(0.92); }
 .app-icon { font-size: 20px; margin-bottom: 1px; }
 
-/* ८ बटणांचे चमकदार रंग */
 .btn-1 { background: linear-gradient(135deg, #10B981, #059669); }
 .btn-2 { background: linear-gradient(135deg, #EC4899, #F59E0B); }
 .btn-3 { background: linear-gradient(135deg, #1E293B, #0F172A); }
@@ -102,7 +92,6 @@ st.markdown("""
 .btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 
-/* चॅट UI */
 .chat-user {
     background: #2563EB; color: #FFFFFF; padding: 8px 14px; border-radius: 16px 16px 2px 16px;
     margin-bottom: 8px; font-size: 14px; max-width: 85%; margin-left: auto;
@@ -113,64 +102,62 @@ st.markdown("""
 }
 
 /* ========================================================================== */
-/* Gemini सारखा पिल-शेप्ड (गोल) इनपुट बार डिझाइन */
+/* Gemini सारखा सिंगल-रो पिल इनपुट बार (Flexbox Lock) */
 /* ========================================================================== */
-.gemini-pill-container {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 35px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    padding: 4px 8px;
-    margin-top: 15px;
+div[data-testid="stForm"] {
+    border: 1px solid #E2E8F0 !important;
+    background: #FFFFFF !important;
+    border-radius: 40px !important;
+    padding: 4px 8px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.07) !important;
+    margin-top: 15px !important;
 }
 
-/* इनपुट बारमधील बटणे */
-div[data-testid="column"] button[kind="secondary"] {
-    background: #F1F5F9 !important;
-    color: #475569 !important;
-    border-radius: 50% !important;
-    height: 42px !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    border: none !important;
-    font-size: 18px !important;
+/* फॉर्ममधील कॉलम एकाच आडव्या रांगेत लॉक करणे */
+div[data-testid="stForm"] [data-testid="stHorizontalBlock"] {
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
-    justify-content: center !important;
-    box-shadow: none !important;
-    margin: 0 auto !important;
+    gap: 4px !important;
 }
 
-/* उजवीकडील निळे गोल ॲक्शन बटन (Mic/Audio Wave) */
-div[data-testid="column"] button[kind="primary"] {
-    background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
-    color: #FFFFFF !important;
-    border-radius: 50% !important;
-    height: 42px !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    border: none !important;
-    font-size: 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35) !important;
-    margin: 0 auto !important;
+/* टेक्स्ट इनपुट बॉक्स */
+div[data-testid="stForm"] div[data-testid="stTextInput"] {
+    margin-bottom: 0px !important;
 }
-
-/* मध्यभागातील टेक्स्ट इनपुट */
-.gemini-pill-container input {
+div[data-testid="stForm"] input {
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
     font-size: 14px !important;
-    padding-left: 5px !important;
-    color: #1E293B !important;
+    padding: 6px 4px !important;
 }
-.gemini-pill-container input:focus {
-    outline: none !important;
+
+/* प्लस आणि माईक बटण स्टाईल */
+div[data-testid="stForm"] div[data-testid="stColumn"]:nth-of-type(1) button {
+    background: #F1F5F9 !important;
+    color: #475569 !important;
+    border-radius: 50% !important;
+    height: 40px !important;
+    width: 40px !important;
+    min-width: 40px !important;
     border: none !important;
-    box-shadow: none !important;
+    font-size: 18px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+div[data-testid="stForm"] div[data-testid="stColumn"]:nth-of-type(3) button {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
+    color: #FFFFFF !important;
+    border-radius: 50% !important;
+    height: 40px !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    border: none !important;
+    font-size: 16px !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -189,7 +176,7 @@ if 'chat_messages' not in st.session_state:
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. हाय-स्पीड AI इंजिन
+# ३. AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -199,7 +186,6 @@ def ask_ai_dynamic(prompt_text, image_obj=None):
     try:
         genai.configure(api_key=active_api_key)
         valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        
         target = "models/gemini-1.5-flash"
         if target not in valid_models:
             if "models/gemini-pro" in valid_models: target = "models/gemini-pro"
@@ -214,16 +200,13 @@ def ask_ai_dynamic(prompt_text, image_obj=None):
         return f"AI त्रुटी: {str(e)}"
 
 # ==============================================================================
-# ४. मुख्य हेडर
+# ४. मुख्य हेडर व ८ आयकॉन ग्रिड
 # ==============================================================================
 st.markdown("""
 <div class="glowing-title">⚖️ RTI AI महा-सहाय्यक</div>
 <div class="sub-tagline"><span>⚡ घरबसल्या एका मिनिटात अर्ज तयार करा</span></div>
 """, unsafe_allow_html=True)
 
-# ==============================================================================
-# ५. कायमस्वरूपी सेव्ह केलेली ४x२ ग्रिड
-# ==============================================================================
 grid_html = """
 <div class="app-grid">
     <a href="?tab=जोडपत्र 'अ'" target="_self" class="app-card btn-1">
@@ -256,14 +239,13 @@ st.markdown(grid_html, unsafe_allow_html=True)
 st.markdown("---")
 
 # ==============================================================================
-# ६. विभागानुसार फॉर्म्स आणि पिल-शेप्ड AI चॅट
+# ५. विभागानुसार फॉर्म्स आणि पिल-बार AI चॅट
 # ==============================================================================
 active = st.session_state.active_tab
 
 if active == "AI चॅट":
     st.subheader("✨ AI कायदेशीर सल्लागार")
     
-    # आधीचे मेसेज दाखवणे
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-user">👤 <b>तुम्ही:</b> {msg["content"]}</div>', unsafe_allow_html=True)
@@ -271,47 +253,36 @@ if active == "AI चॅट":
         else:
             st.markdown(f'<div class="chat-ai">✨ <b>AI:</b> {msg["content"]}</div>', unsafe_allow_html=True)
 
-    # ➕ दाबली असल्यास फाइल पिकर दाखवणे
     if st.session_state.show_file_uploader:
-        uploaded_file = st.file_uploader("कागदपत्र / नोटीस फोटो निवडा:", type=["png", "jpg", "jpeg"], key="doc_uploader")
+        uploaded_file = st.file_uploader("कागदपत्र / नोटीस फोटो निवडा:", type=["png", "jpg", "jpeg"])
         if uploaded_file:
             st.session_state.uploaded_image = Image.open(uploaded_file)
-            st.success("✅ फोटो जोडला गेला आहे!")
+            st.success("✅ फोटो जोडला गेला!")
 
-    # ==========================================================================
-    # जेमिनी पिल इनपुट बार (+ | टेक्स्ट बॉक्स | 🎙️)
-    # ==========================================================================
-    st.markdown('<div class="gemini-pill-container">', unsafe_allow_html=True)
-    c_plus, c_input, c_action = st.columns([1.2, 7.6, 1.2])
-    
-    with c_plus:
-        if st.button("➕", key="btn_plus_toggle", help="फोटो किंवा डॉक्युमेंट जोडा"):
-            st.session_state.show_file_uploader = not st.session_state.show_file_uploader
-            st.rerun()
+    # एकाच आडव्या ओळीत (Single Row) पिल-बार
+    with st.form("gemini_pill_form", clear_on_submit=True):
+        col_p, col_t, col_m = st.columns([1, 6.5, 1])
+        with col_p:
+            plus_btn = st.form_submit_button("➕")
+        with col_t:
+            query_text = st.text_input("msg", placeholder="AI ला विचारा...", label_visibility="collapsed")
+        with col_m:
+            send_btn = st.form_submit_button("🎙️")
 
-    with c_input:
-        user_query = st.text_input("input_box", placeholder="AI ला विचारा...", label_visibility="collapsed", key="gemini_text_input")
+    if plus_btn:
+        st.session_state.show_file_uploader = not st.session_state.show_file_uploader
+        st.rerun()
 
-    with c_action:
-        submit_btn = st.button("🎙️", key="btn_mic_send", type="primary", help="पाठवा / व्हॉइस")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # प्रश्न पाठवल्यावर उत्तर जनरेट करणे
-    if submit_btn and user_query:
-        img_to_send = st.session_state.uploaded_image
-        st.session_state.chat_messages.append({"role": "user", "content": user_query, "image": img_to_send})
-        
+    if send_btn and query_text:
+        img_payload = st.session_state.uploaded_image
+        st.session_state.chat_messages.append({"role": "user", "content": query_text, "image": img_payload})
         with st.spinner("AI विचार करत आहे..."):
-            ans = ask_ai_dynamic(user_query, img_to_send)
-            st.session_state.chat_messages.append({"role": "assistant", "content": ans, "image": None})
-        
-        # रिसेट
+            reply = ask_ai_dynamic(query_text, img_payload)
+            st.session_state.chat_messages.append({"role": "assistant", "content": reply, "image": None})
         st.session_state.uploaded_image = None
         st.session_state.show_file_uploader = False
         st.rerun()
 
-# --- इतर सर्व ७ कायदेशीर फॉर्म्स ---
 elif active == "जोडपत्र 'अ'":
     st.subheader("📄 जोडपत्र 'अ' (माहिती अधिकार अर्ज कलम ६(१))")
     with st.form("form_a"):
@@ -399,7 +370,7 @@ elif active == "ग्राहक मंच":
             st.success("✅ ग्राहक तक्रार अर्ज तयार झाला!")
 
 # ==============================================================================
-# ७. मसुदा निकाल, डाऊनलोड व WhatsApp शेअरिंग
+# ६. निकाल डाऊनलोड व WhatsApp शेअरिंग
 # ==============================================================================
 if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
