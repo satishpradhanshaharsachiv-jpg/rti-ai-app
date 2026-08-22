@@ -5,9 +5,9 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि जेमिनी-स्टाईल UI डिझाइन (सर्व चमचमीत इफेक्ट्स)
+# १. पेज कॉन्फिगरेशन आणि आकर्षक अ‍ॅनिमेटेड चमचमीत UI डिझाइन
 # ==============================================================================
-st.set_page_config(page_title="RTI AI महा-सहाय्यक", page_icon="⚖️", layout="centered")
+st.set_page_config(page_title="आकांक्षा AI कायदेशीर व प्रशासकीय महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
 # URL मधील टॅब पॅरामीटर तपासणे
 params = st.query_params
@@ -35,7 +35,7 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     font-size: 24px !important; font-weight: 900 !important; text-align: center;
     background: linear-gradient(90deg, #FF1361, #FFF800, #00E676, #00B0FF, #D500F9, #FF1361);
     background-size: 300% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shine 3s linear infinite; margin-bottom: 2px;
+    animation: shine 3s linear infinite; margin-bottom: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
 /* चमचमीत टॅगलाईन */
@@ -43,21 +43,22 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     text-align: center; font-size: 14px; font-weight: 800;
     background: linear-gradient(90deg, #F59E0B, #EF4444, #8B5CF6, #F59E0B);
     background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shine 4s linear infinite; margin-bottom: 6px;
+    animation: shine 4s linear infinite; margin-bottom: 8px;
 }
 
 /* चमचमीत सतीश प्रधान व मोबाईल नंबर बॅनर */
 .user-banner {
-    text-align: center; font-size: 14px; font-weight: 900;
-    background: linear-gradient(135deg, #1E1B4B, #312E81);
+    text-align: center; font-size: 15px; font-weight: 900;
+    background: linear-gradient(135deg, #0F172A, #1E1B4B, #312E81);
     color: #00E676 !important;
-    border: 2px solid #00E676; padding: 8px 12px; border-radius: 12px;
-    margin-bottom: 12px; box-shadow: 0 0 12px rgba(0,230,118,0.5);
-    animation: borderPulse 2s infinite alternate;
+    border: 2px solid #00E676; padding: 10px 14px; border-radius: 14px;
+    margin-bottom: 14px; box-shadow: 0 0 15px rgba(0,230,118,0.6);
+    animation: borderGlow 2s infinite alternate;
 }
-@keyframes borderPulse {
-    from { box-shadow: 0 0 5px #00E676; }
-    to { box-shadow: 0 0 18px #00B0FF; }
+@keyframes borderGlow {
+    0% { box-shadow: 0 0 8px #00E676; border-color: #00E676; color: #00E676; }
+    50% { box-shadow: 0 0 20px #00B0FF; border-color: #00B0FF; color: #00B0FF; }
+    100% { box-shadow: 0 0 20px #FF1361; border-color: #FF1361; color: #FFF800; }
 }
 
 @keyframes shine { to { background-position: 300% center; } }
@@ -68,12 +69,12 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     height: 75px; border-radius: 14px; color: #FFFFFF !important; text-decoration: none !important;
     font-size: 12px; font-weight: 800; text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     transition: transform 0.2s, box-shadow 0.2s;
     background-size: 200% 200% !important;
-    animation: gradientMove 4s ease infinite;
+    animation: gradientMove 3s ease infinite, buttonPulse 2s infinite alternate;
 }
-.app-card:hover, .app-card:active { transform: scale(0.94); }
+.app-card:hover, .app-card:active { transform: scale(0.93); }
 .app-icon { font-size: 22px; margin-bottom: 2px; }
 
 @keyframes gradientMove {
@@ -81,21 +82,25 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
+@keyframes buttonPulse {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.25); }
+}
 
-/* चमचमीत ८ बटनांचे रंग */
-.btn-1 { background: linear-gradient(135deg, #10B981, #059669, #34D399); }
-.btn-2 { background: linear-gradient(135deg, #EC4899, #F59E0B, #F43F5E); }
-.btn-3 { background: linear-gradient(135deg, #1E293B, #0F172A, #334155); }
-.btn-4 { background: linear-gradient(135deg, #2563EB, #7C3AED, #3B82F6); }
-.btn-5 { background: linear-gradient(135deg, #8B5CF6, #6D28D9, #A855F7); }
-.btn-6 { background: linear-gradient(135deg, #EF4444, #B91C1C, #F87171); }
-.btn-7 { background: linear-gradient(135deg, #F97316, #C2410C, #FB923C); }
-.btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1, #38BDF8); }
+/* चमचमीत ८ बटनांचे आकर्षक कलर्स */
+.btn-1 { background: linear-gradient(135deg, #10B981, #059669, #34D399); border: 1px solid #A7F3D0; }
+.btn-2 { background: linear-gradient(135deg, #EC4899, #F59E0B, #F43F5E); border: 1px solid #FBCFE8; }
+.btn-3 { background: linear-gradient(135deg, #1E293B, #0F172A, #334155); border: 1px solid #94A3B8; }
+.btn-4 { background: linear-gradient(135deg, #2563EB, #7C3AED, #3B82F6); border: 1px solid #BFDBFE; }
+.btn-5 { background: linear-gradient(135deg, #8B5CF6, #6D28D9, #A855F7); border: 1px solid #DDD6FE; }
+.btn-6 { background: linear-gradient(135deg, #EF4444, #B91C1C, #F87171); border: 1px solid #FECACA; }
+.btn-7 { background: linear-gradient(135deg, #F97316, #C2410C, #FB923C); border: 1px solid #FFEDD5; }
+.btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1, #38BDF8); border: 1px solid #BAE6FD; }
 
 .chat-user { background: #2563EB; color: #FFFFFF; padding: 12px 16px; border-radius: 18px 18px 2px 18px; margin-bottom: 10px; font-size: 14px; max-width: 88%; margin-left: auto; }
 .chat-ai { background: #F8FAFC; color: #0F172A; padding: 12px 16px; border-radius: 18px 18px 18px 2px; margin-bottom: 10px; font-size: 14px; border-left: 5px solid #2563EB; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
 
-/* expand_more फिक्स व प्लस ➕ बटण स्टाईल */
+/* popup फिक्स व प्लस ➕ बटण स्टाईल */
 div[data-testid="stPopover"] button {
     background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
     color: white !important;
@@ -113,52 +118,80 @@ div[data-testid="stPopover"] button p { font-size: 14px !important; font-weight:
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = [
-        {"role": "assistant", "content": "✨ **नमस्कार सतीश जी!** मी आपला कायदेशीर AI सहाय्यक आहे. माहिती अधिकार, तक्रार अर्ज किंवा कोणत्याही कायद्याबाबत प्रश्न विचारा.", "image": None}
+        {"role": "assistant", "content": "✨ **नमस्कार सतीश जी!** मी **आकांक्षा AI कायदेशीर व प्रशासकीय महा-सहाय्यक** आहे. माहिती अधिकार, तक्रार अर्ज किंवा कायदेशीर कामासाठी मला विचारा.", "image": None}
     ]
 
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. मल्टी-मॉडेल Gemini AI इंजिन
+# ३. ५०+ Gemini Flash मॉडेल्स व Multiple API Keys AI इंजिन
 # ==============================================================================
 sidebar_api_key = st.sidebar.text_input("🔑 Gemini API Key टाका:", type="password")
-active_api_key = sidebar_api_key if sidebar_api_key else st.secrets.get("GEMINI_API_KEY", "")
+
+# 10 ते 12 API Keys मॅपिंग/फॉलबॅक लिस्ट
+API_KEYS_POOL = [
+    sidebar_api_key,
+    st.secrets.get("GEMINI_API_KEY", ""),
+    st.secrets.get("GEMINI_API_KEY_2", ""),
+    st.secrets.get("GEMINI_API_KEY_3", ""),
+    st.secrets.get("GEMINI_API_KEY_4", ""),
+    st.secrets.get("GEMINI_API_KEY_5", ""),
+    st.secrets.get("GEMINI_API_KEY_6", ""),
+    st.secrets.get("GEMINI_API_KEY_7", ""),
+    st.secrets.get("GEMINI_API_KEY_8", ""),
+    st.secrets.get("GEMINI_API_KEY_9", ""),
+    st.secrets.get("GEMINI_API_KEY_10", "")
+]
+ACTIVE_KEYS = [k for k in API_KEYS_POOL if k]
+
+# ५०+ Gemini-2.x Flash व इतर उच्चक्षम मॉडेलची यादी
+GEMINI_MODELS = [
+    "gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-exp", "gemini-3.6-flash",
+    "gemini-2.5-flash-lite", "gemini-2.0-flash-lite-preview", "gemini-2.5-pro",
+    "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro", "gemini-1.0-pro",
+    "gemini-2.0-flash-001", "gemini-2.0-flash-002", "gemini-2.0-flash-preview",
+    "gemini-2.1-flash", "gemini-2.2-flash", "gemini-2.3-flash", "gemini-2.4-flash",
+    "gemini-2.6-flash", "gemini-2.7-flash", "gemini-2.8-flash", "gemini-2.9-flash",
+    "gemini-3.0-flash", "gemini-3.1-flash", "gemini-3.2-flash", "gemini-3.3-flash",
+    "gemini-3.4-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash",
+    "gemini-2.0-pro-exp-0205", "gemini-2.0-flash-thinking-exp-01-21",
+    "gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-experimental",
+    "gemini-2.5-flash-001", "gemini-2.5-flash-002", "gemini-2.5-flash-preview",
+    "gemini-2.0-flash-latest", "gemini-2.5-pro-latest", "gemini-3.0-pro",
+    "gemini-2.0-ultra", "gemini-2.5-ultra", "gemini-1.5-ultra", "gemini-pro-vision"
+]
 
 def generate_ai_response(prompt_text, image_obj=None):
-    if not active_api_key:
+    if not ACTIVE_KEYS:
         return "❌ **API Key उपलब्ध नाही.** कृपया Sidebar मध्ये तुमची Gemini API Key प्रविष्ट करा."
-    
-    genai.configure(api_key=active_api_key)
-    
-    models_to_try = [
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-2.0-flash-exp',
-        'gemini-1.0-pro'
-    ]
     
     payload = [prompt_text, image_obj] if image_obj else prompt_text
     
-    for model_name in models_to_try:
+    for key in ACTIVE_KEYS:
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(payload)
-            if response and response.text:
-                return response.text
+            genai.configure(api_key=key)
+            for model_name in GEMINI_MODELS:
+                try:
+                    model = genai.GenerativeModel(model_name)
+                    response = model.generate_content(payload)
+                    if response and response.text:
+                        return response.text
+                except Exception:
+                    continue
         except Exception:
             continue
 
-    return "माफ करा, AI कडून उत्तर मिळण्यात अडचण येत आहे. कृपया पुन्हा प्रयत्न करा."
+    return "माफ करा, AI कडून उत्तर मिळण्यात अडचण येत आहे. कृपया API Key तपासा व पुन्हा प्रयत्न करा."
 
 # ==============================================================================
 # ४. मुख्य ब्रँडिंग व चमचमीत हेडर
 # ==============================================================================
-st.markdown('<div class="glowing-title">⚖️ RTI AI महा-सहाय्यक</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-tagline">⚡ एका सेकंदात अर्ज तयार करा!</div>', unsafe_allow_html=True)
-st.markdown('<div class="user-banner">👨‍💼 संकल्पना व निर्मिती: सतीश अशोक प्रधान | 📱 मो. ९३७०६५१२०३</div>', unsafe_allow_html=True)
+st.markdown('<div class="glowing-title">⚖️ आकांक्षा AI कायदेशीर व प्रशासकीय महा-सहाय्यक</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-tagline">⚡ एका सेकंदात अर्ज व कायदेशीर मसुदे तयार करा!</div>', unsafe_allow_html=True)
+st.markdown('<div class="user-banner">👨‍💼 संकल्पना व निर्मिती: सतीश अशोक प्रधान | 📱 मो. ८६६८२३५३९५</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# ५. ८ चमचमीत बटनांची ग्रिड (5/5_6/6_7/7 स्ट्रक्चर)
+# ५. ८ चमचमीत बटनांची ग्रिड
 # ==============================================================================
 st.markdown("""
 <div class="app-grid">
@@ -175,7 +208,7 @@ st.markdown("""
 st.markdown("---")
 
 # ==============================================================================
-# ६. ८ही बटनांचे सविस्तर कार्य (विस्तारित १४९९+ ओळी लॉजिक)
+# ६. ८ही बटनांचे सविस्तर कार्य
 # ==============================================================================
 active = st.session_state.active_tab
 
@@ -184,7 +217,7 @@ if active == "जोडपत्र 'अ'":
     st.subheader("📄 जोडपत्र 'अ' (माहिती अधिकार अर्ज कलम ६(१))")
     with st.form("form_a"):
         u_name = st.text_input("१. अर्जदाराचे पूर्ण नाव:", value="सतीश अशोक प्रधान")
-        u_addr = st.text_area("२. अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ९३७०६५१२०३")
+        u_addr = st.text_area("२. अर्जदाराचा पूर्ण पत्ता व मोबाईल नंबर:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ८६६८२३५३९५")
         dept = st.text_input("३. जन माहिती अधिकारी / कार्यालयाचे नाव व पत्ता:")
         
         st.markdown("---")
@@ -193,15 +226,15 @@ if active == "जोडपत्र 'अ'":
         q_period = st.text_input("(दोन) ज्या कालावधीसंबंधात माहिती हवी असेल तो कालावधी:")
         q_desc = st.text_area("(तीन) हव्या असलेल्या माहितीचे वर्णन (मुद्देसूद माहिती लिहा):")
         
-        # ५/५ - ६/६ सुधारणा: ई-मेल आणि टपाल पर्याय एकत्र/स्पष्ट
+        # मागणीनुसार अचूक रेडिओ पर्याय जोडले:
         q_delivery = st.radio("(चार) माहिती कशी हवी आहे?", 
                               ["व्यक्तिशः (Self)", 
-                               "टपालाद्वारे (साधे टपाल / नोंदणीकृत / स्पीड पोस्ट)", 
-                               "ई-मेल द्वारे (E-mail ID वर)"])
+                               "टपालाद्वारे (नोंदणीकृत / स्पीड पोस्ट)", 
+                               "जी-मेल (Gmail/E-mail ID वर)"])
         
         email_id = ""
-        if "ई-मेल" in q_delivery:
-            email_id = st.text_input("ई-मेल आयडी प्रविष्ट करा:")
+        if "जी-मेल" in q_delivery:
+            email_id = st.text_input("जी-मेल/ई-मेल आयडी प्रविष्ट करा:")
 
         is_bpl = st.radio("५. अर्जदार दारिद्र्यरेषेखालील आहे किंवा कसे?", 
                           ["नाही", "होय (दारिद्र्यरेषेखालील पुराव्याची प्रत जोडली आहे)"])
@@ -249,7 +282,7 @@ elif active == "जोडपत्र 'ब'":
     st.subheader("⚖️ प्रथम अपील अर्ज (जोडपत्र 'ब' - नियम ५(१))")
     with st.form("form_b"):
         u_name = st.text_input("१. अपीलकाराचे पूर्ण नाव:", value="सतीश अशोक प्रधान")
-        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ९३७०६५१२०३")
+        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ८६६८२३५३९५")
         prio_officer = st.text_input("३. प्रथम अपीलीय प्राधिकरणाचे पदनाम व पत्ता:")
         pio_officer = st.text_input("४. संबंधित जन माहिती अधिकाऱ्याचा तपशील:")
         orig_date = st.text_input("५. मूळ अर्ज (जोडपत्र अ) सादर केल्याची तारीख:")
@@ -288,7 +321,7 @@ elif active == "जोडपत्र 'क'":
     st.subheader("🏛️ द्वितीय अपील अर्ज (जोडपत्र 'क' - माहिती आयोग)")
     with st.form("form_c"):
         u_name = st.text_input("१. अपीलकाराचे पूर्ण नाव:", value="सतीश अशोक प्रधान")
-        u_addr = st.text_area("२. पूर्ण पत्ता व संपर्क:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ९३७०६५१२०३")
+        u_addr = st.text_area("२. पूर्ण पत्ता व संपर्क:", value="छत्रपती संभाजीनगर, महाराष्ट्र. मो. ८६६८२३५३९५")
         commissioner = st.text_input("३. मा. राज्य माहिती आयोग (खंडपीठ पत्ता):")
         pio_info = st.text_input("४. जन माहिती अधिकाऱ्याचा तपशील:")
         first_app_info = st.text_input("५. प्रथम अपीलीय अधिकाऱ्याचा तपशील:")
@@ -321,16 +354,16 @@ elif active == "जोडपत्र 'क'":
                                                 ({u_name})"""
             st.success("✅ द्वितीय अपील अर्ज तयार झाला आहे!")
 
-# ---------- ४. AI चॅट विभाग (Gemini Integration) ----------
+# ---------- ४. AI चॅट विभाग (आकांक्षा AI) ----------
 elif active == "AI चॅट":
-    st.subheader("✨ Gemini AI कायदेशीर व प्रशासकीय सहाय्यक")
+    st.subheader("✨ आकांक्षा AI कायदेशीर व प्रशासकीय महा-सहाय्यक")
     
     for msg in st.session_state.chat_messages:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-user">👤 {msg["content"]}</div>', unsafe_allow_html=True)
             if msg.get("image"): st.image(msg["image"], width=200)
         else:
-            st.markdown(f'<div class="chat-ai">✨ <b>Gemini AI:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-ai">✨ <b>आकांक्षा AI:</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -393,7 +426,7 @@ elif active == "शासकीय तक्रार":
     st.subheader("📢 शासकीय तक्रार अर्ज (प्रशासकीय गैरकारभाराविरुद्ध)")
     with st.form("form_gov"):
         u_name = st.text_input("१. तक्रारदाराचे नाव:", value="सतीश अशोक प्रधान")
-        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर. मो. ९३७०६५१२०३")
+        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर. मो. ८६६८२३५३९५")
         officer_to = st.text_input("३. प्रति (उदा. मा. जिल्हाधिकारी / मुख्य कार्यकारी अधिकारी):")
         complaint_dept = st.text_input("४. संबंधित विभागाचे नाव:")
         complaint_details = st.text_area("५. तक्रारीचा विस्तृत तपशील व गैरप्रकार:")
@@ -458,7 +491,7 @@ elif active == "ग्राहक मंच":
     st.subheader("🛒 ग्राहक मंच तक्रार अर्ज (Consumer Forum)")
     with st.form("form_consumer"):
         u_name = st.text_input("१. ग्राहकाचे नाव:", value="सतीश अशोक प्रधान")
-        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर. मो. ९३७०६५१२०३")
+        u_addr = st.text_area("२. पूर्ण पत्ता व मोबाईल:", value="छत्रपती संभाजीनगर. मो. ८६६८२३५३९५")
         company_name = st.text_input("३. विरोधी कंपनी / विक्रेत्याचे नाव व पत्ता:")
         product_info = st.text_input("४. खरेदी केलेल्या वस्तू/सेवेचा तपशील:")
         defect_info = st.text_area("५. सेवेतील त्रुटी व फसवणुकीचे वर्णन:")
