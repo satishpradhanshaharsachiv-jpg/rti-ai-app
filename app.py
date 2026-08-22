@@ -5,14 +5,14 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. पेज कॉन्फिगरेशन आणि URL पॅरामीटर तपासणी (बटण क्लिक फिक्स)
+# १. पेज कॉन्फिगरेशन आणि अखंड मोबाईल ग्रिड स्टाईलिंग
 # ==============================================================================
-st.set_page_config(page_title="RTI महा-सहाय्यक", page_icon="⚖️", layout="centered")
+st.set_page_config(page_title="RTI AI महा-सहाय्यक", page_icon="⚖️", layout="centered")
 
-# URL मधील ?tab= वाचून योग्य विभाग उघडणे
-query_params = st.query_params
-if "tab" in query_params:
-    st.session_state.active_tab = query_params["tab"]
+# बटण क्लिक URL वरून वाचणे
+params = st.query_params
+if "tab" in params:
+    st.session_state.active_tab = params["tab"]
 elif "active_tab" not in st.session_state:
     st.session_state.active_tab = "जोडपत्र 'अ'"
 
@@ -31,7 +31,7 @@ html, body {
 
 .block-container {
     padding-top: 0.5rem !important;
-    padding-bottom: 4rem !important;
+    padding-bottom: 3.5rem !important;
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
     max-width: 480px !important;
@@ -40,7 +40,7 @@ html, body {
 
 #MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
 
-/* चमकदार मल्टिकलर शीर्षक */
+/* चमकदार मल्टिकलर एका ओळीतील शीर्षक */
 .glowing-title {
     font-size: 19px !important;
     font-weight: 900 !important;
@@ -104,14 +104,14 @@ html, body {
 .btn-7 { background: linear-gradient(135deg, #F97316, #C2410C); }
 .btn-8 { background: linear-gradient(135deg, #0284C7, #0369A1); }
 
-/* चॅट UI */
+/* चॅट बॉक्स UI */
 .chat-user {
     background: #2563EB; color: #FFFFFF; padding: 8px 12px; border-radius: 14px 14px 2px 14px;
-    margin-bottom: 8px; font-size: 13.5px; max-width: 88%; margin-left: auto;
+    margin-bottom: 8px; font-size: 13.5px; max-width: 88%; margin-left: auto; word-break: break-word;
 }
 .chat-ai {
     background: #F1F5F9; color: #0F172A; padding: 10px 12px; border-radius: 14px 14px 14px 2px;
-    margin-bottom: 8px; font-size: 13.5px; border-left: 4px solid #3B82F6;
+    margin-bottom: 8px; font-size: 13.5px; border-left: 4px solid #3B82F6; word-break: break-word;
 }
 
 /* इन-बिल्ट stChatInput ला कॅप्सूल / पिल आकार */
@@ -138,7 +138,7 @@ if 'chat_messages' not in st.session_state:
 date_today = datetime.now().strftime("%d/%m/%Y")
 
 # ==============================================================================
-# ३. 404 त्रुटीमुक्त AI इंजिन
+# ३. 404 त्रुटीमुक्त ऑटो-कन्फिगर AI इंजिन
 # ==============================================================================
 active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
@@ -148,11 +148,13 @@ def ask_ai_dynamic(prompt_text, image_obj=None):
     try:
         genai.configure(api_key=active_api_key)
         valid_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
         target = "models/gemini-1.5-flash"
         if target not in valid_models:
-            if "models/gemini-pro" in valid_models: target = "models/gemini-pro"
+            if "models/gemini-1.5-pro" in valid_models: target = "models/gemini-1.5-pro"
+            elif "models/gemini-pro" in valid_models: target = "models/gemini-pro"
             elif valid_models: target = valid_models[0]
-            else: target = "gemini-pro"
+            else: target = "gemini-1.5-flash"
             
         model = genai.GenerativeModel(target)
         payload = [prompt_text, image_obj] if image_obj else prompt_text
@@ -315,7 +317,7 @@ elif active == "ग्राहक मंच":
             st.success("✅ ग्राहक तक्रार अर्ज तयार झाला!")
 
 # ==============================================================================
-# ७. मसुदा निकाल, डाऊनलोड व WhatsApp शेअरिंग
+# ७. निकाल डाऊनलोड व WhatsApp शेअरिंग
 # ==============================================================================
 if st.session_state.final_draft and active != "AI चॅट":
     st.markdown("---")
