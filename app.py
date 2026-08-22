@@ -5,124 +5,151 @@ from datetime import datetime
 from PIL import Image
 
 # ==============================================================================
-# १. प्रोफेशनल सॉफ्टवेअर आर्किटेक्चर आणि स्टाईलिंग (CSS Grid)
+# १. मोबाईल स्क्रीनवर ४-४ बटणे आडवी (Lock) ठेवण्यासाठी CSS
 # ==============================================================================
-st.set_page_config(page_title="RTI & Legal AI Master", layout="centered", page_icon="⚖️")
+st.set_page_config(page_title="RTI महा-सहाय्यक", layout="centered")
 
 st.markdown("""
 <style>
-/* ॲपची मूळ रचना - हे '4-Column Grid' ला जबरदस्तीने लागू करेल */
-.stApp { background-color: #F8FAFC; }
-.main-title { color: #0F172A; font-weight: 800; text-align: center; font-size: 22px; margin-bottom: 5px; }
+/* मोबाईलवर ४ बटणे एका ओळीत आडवीच राहतील */
+[data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+}
 
-/* ॲप आयकॉन ग्रिड (4-Column) */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 10px;
+div[data-testid="column"] {
+    flex: 1 1 0px !important;
+    width: 24% !important;
+    min-width: 0px !important;
+    padding: 0px !important;
 }
 
 div[data-testid="stButton"] > button {
-    height: 70px !important; width: 100% !important; border-radius: 16px !important;
-    font-size: 9px !important; font-weight: 700 !important; color: white !important;
-    border: none !important; box-shadow: 0 3px 6px rgba(0,0,0,0.1) !important;
-    white-space: normal !important; line-height: 1.1 !important; margin: 0 !important;
+    height: 65px !important; 
+    width: 100% !important;
+    border-radius: 12px !important;
+    font-size: 10px !important; 
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+    padding: 2px !important;
+    white-space: pre-wrap !important;
+    line-height: 1.15 !important;
 }
 
-/* बटन रंगांचे 'पॅलेट' */
-.stButton:nth-of-type(1) > button { background: #10B981 !important; }
-.stButton:nth-of-type(2) > button { background: #EC4899 !important; }
-.stButton:nth-of-type(3) > button { background: #1E293B !important; }
-.stButton:nth-of-type(4) > button { background: #3B82F6 !important; }
-.stButton:nth-of-type(5) > button { background: #7C3AED !important; }
-.stButton:nth-of-type(6) > button { background: #EF4444 !important; }
-.stButton:nth-of-type(7) > button { background: #F59E0B !important; }
-.stButton:nth-of-type(8) > button { background: #64748B !important; }
+/* ओळ १ मधील ४ बटणांचे स्वतंत्र रंग */
+[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(135deg, #10B981, #059669) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(135deg, #EC4899, #F59E0B) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(135deg, #1E293B, #0F172A) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-of-type(4) button { background: linear-gradient(135deg, #3B82F6, #6366F1) !important; }
+
+/* ओळ २ मधील ४ बटणांचे स्वतंत्र रंग */
+[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(135deg, #7C3AED, #4C1D95) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(135deg, #F97316, #C2410C) !important; }
+[data-testid="stHorizontalBlock"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(4) button { background: linear-gradient(135deg, #0284C7, #0369A1) !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# २. प्रगत AI बॅकएंड (Robust Error Handling)
+# २. सेशन्स स्टेट व्यवस्थापन
 # ==============================================================================
-class LegalAIEngine:
-    def __init__(self):
-        self.api_key = st.secrets.get("GEMINI_API_KEY", "")
-        if self.api_key:
-            genai.configure(api_key=self.api_key)
-
-    def get_response(self, prompt, img=None):
-        try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content([prompt, img] if img else prompt)
-            return response.text
-        except Exception as e:
-            return f"त्रुटी: {str(e)}"
-
-# ॲप इंजिन इनिशियलायझेशन
-ai_engine = LegalAIEngine()
-
-# ==============================================================================
-# ३. ॲप स्टेट मॅनेजमेंट
-# ==============================================================================
-if 'active_tab' not in st.session_state: st.session_state.active_tab = "Home"
+if 'active_tab' not in st.session_state: st.session_state.active_tab = "जोडपत्र 'अ'"
+if 'user_name' not in st.session_state: st.session_state.user_name = ""
+if 'user_address' not in st.session_state: st.session_state.user_address = ""
+if 'dept_name' not in st.session_state: st.session_state.dept_name = ""
+if 'original_query' not in st.session_state: st.session_state.original_query = ""
 if 'final_draft' not in st.session_state: st.session_state.final_draft = ""
 
-# ==============================================================================
-# ४. मुख्य इंटरफेस (4x2 ग्रिड - 8 बटणे)
-# ==============================================================================
-st.markdown("<h1 class='main-title'>RTI महा-सहाय्यक</h1>", unsafe_allow_html=True)
+date_today = datetime.now().strftime("%d/%m/%Y")
 
-# बटणांची ओळ १ (४ बटणे)
-c1, c2, c3, c4 = st.columns(4)
-with c1: 
-    if st.button("📄\nअर्ज"): st.session_state.active_tab = "जोडपत्र 'अ'"
-with c2: 
-    if st.button("⚖️\nप्रथम"): st.session_state.active_tab = "जोडपत्र 'ब'"
-with c3: 
-    if st.button("🏛️\nआयोग"): st.session_state.active_tab = "जोडपत्र 'क'"
-with c4: 
-    if st.button("✨\nAI"): st.session_state.active_tab = "AI सल्लागार"
+# ==============================================================================
+# ३. सुरक्षित AI इंजिन
+# ==============================================================================
+active_api_key = st.secrets.get("GEMINI_API_KEY", "")
 
-# बटणांची ओळ २ (४ बटणे)
-c5, c6, c7, c8 = st.columns(4)
-with c5: 
-    if st.button("📜\nकोर्ट"): st.session_state.active_tab = "न्यायालयीन मसुदा"
-with c6: 
-    if st.button("📢\nतक्रार"): st.session_state.active_tab = "शासकीय तक्रार"
-with c7: 
-    if st.button("📝\nशपथ"): st.session_state.active_tab = "प्रतिज्ञापत्र"
-with c8: 
-    if st.button("🛒\nग्राहक"): st.session_state.active_tab = "ग्राहक मंच"
+def ask_ai(prompt_text, image_obj=None):
+    if not active_api_key:
+        return "कृपया Secrets मध्ये GEMINI_API_KEY तपासा."
+    genai.configure(api_key=active_api_key)
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
+        try:
+            model = genai.GenerativeModel(model_name)
+            res = model.generate_content([prompt_text, image_obj] if image_obj else prompt_text)
+            if res and res.text:
+                return res.text
+        except Exception:
+            continue
+    return "AI कडून उत्तर मिळू शकले नाही."
+
+# ==============================================================================
+# ४. मुख्य हेडर
+# ==============================================================================
+st.markdown("<h3 style='text-align:center; margin-top:-15px;'>⚖️ RTI महा-सहाय्यक</h3>", unsafe_allow_html=True)
+
+# ==============================================================================
+# ५. मोबाईल ॲप ग्रिड (ओळ १: ४ बटणे | ओळ २: ४ बटणे)
+# ==============================================================================
+r1_c1, r1_c2, r1_c3, r1_c4 = st.columns(4)
+with r1_c1:
+    if st.button("📄\nअर्ज", key="b1"): st.session_state.active_tab = "जोडपत्र 'अ'"
+with r1_c2:
+    if st.button("⚖️\nप्रथम", key="b2"): st.session_state.active_tab = "जोडपत्र 'ब'"
+with r1_c3:
+    if st.button("🏛️\nआयोग", key="b3"): st.session_state.active_tab = "जोडपत्र 'क'"
+with r1_c4:
+    if st.button("✨\nAI", key="b4"): st.session_state.active_tab = "AI चॅट"
+
+r2_c1, r2_c2, r2_c3, r2_c4 = st.columns(4)
+with r2_c1:
+    if st.button("📜\nकोर्ट", key="b5"): st.session_state.active_tab = "न्यायालयीन मसुदा"
+with r2_c2:
+    if st.button("📢\nतक्रार", key="b6"): st.session_state.active_tab = "शासकीय तक्रार"
+with r2_c3:
+    if st.button("📝\nशपथ", key="b7"): st.session_state.active_tab = "प्रतिज्ञापत्र"
+with r2_c4:
+    if st.button("🛒\nग्राहक", key="b8"): st.session_state.active_tab = "ग्राहक मंच"
 
 st.markdown("---")
 
 # ==============================================================================
-# ५. विभाग लॉजिक (Modular Sections)
+# ६. विभागानुसार फॉर्म्स व AI चॅट
 # ==============================================================================
-if st.session_state.active_tab == "AI सल्लागार":
-    st.subheader("🤖 AI सल्लागार")
-    img = st.file_uploader("फोटो:")
-    msg = st.chat_input("प्रश्न विचारा...")
-    if msg: st.write(ai_engine.get_response(msg, Image.open(img) if img else None))
+if st.session_state.active_tab == "AI चॅट":
+    st.subheader("✨ AI कायदेशीर सल्लागार")
+    uploaded_photo = st.file_uploader("कागदपत्र / नोटीस फोटो जोडा:", type=["png", "jpg", "jpeg"])
+    user_prompt = st.chat_input("प्रश्न येथे विचारा...")
+    if user_prompt:
+        img_data = Image.open(uploaded_photo) if uploaded_photo else None
+        with st.spinner("माहिती तपासत आहे..."):
+            ans = ask_ai(user_prompt, img_data)
+            st.write(ans)
 
-elif st.session_state.active_tab != "Home":
+else:
     st.subheader(f"📝 {st.session_state.active_tab}")
-    with st.form("main_form"):
-        name = st.text_input("नाव:")
-        addr = st.text_area("पत्ता:")
-        dept = st.text_input("कार्यालय:")
-        detail = st.text_area("तपशील:")
-        if st.form_submit_button("मसुदा बनवा"):
-            st.session_state.final_draft = f"प्रति, {dept}\n{name}, {addr}\nविषय: {detail}"
-            st.success("मसुदा तयार!")
+    with st.form("dynamic_form"):
+        st.session_state.user_name = st.text_input("नाव:", value=st.session_state.user_name)
+        st.session_state.user_address = st.text_area("पत्ता:", value=st.session_state.user_address)
+        st.session_state.dept_name = st.text_input("कार्यालय / विभाग:", value=st.session_state.dept_name)
+        st.session_state.original_query = st.text_area("तपशील / मागितलेली माहिती:", value=st.session_state.original_query)
+        
+        if st.form_submit_button("🚀 मसुदा तयार करा"):
+            st.session_state.final_draft = f"प्रति,\nमा. {st.session_state.dept_name}\n\nविषय: {st.session_state.active_tab}\n\nअर्जदार: {st.session_state.user_name}\nपत्ता: {st.session_state.user_address}\n\nतपशील:\n{st.session_state.original_query}\n\nदिनांक: {date_today}\nस्वाक्षरी: ({st.session_state.user_name})"
+            st.success("✅ मसुदा तयार झाला!")
 
 # ==============================================================================
-# ६. भविष्यातील अपडेट्ससाठी राखीव जागा (येथे नवीन फंक्शन वाढवा)
+# ७. डाऊनलोड व WhatsApp शेअरिंग
 # ==============================================================================
-# ------------------------------------------------------------------------------
-# [येथे तुमचा कोड वाढवा - यापुढे मी जागा सोडली आहे]
-# ------------------------------------------------------------------------------
-if st.session_state.final_draft:
-    st.text_area("अंतिम मसुदा:", st.session_state.final_draft)
-    st.download_button("📥 डाऊनलोड", st.session_state.final_draft, "Legal_Draft.txt")
+if st.session_state.final_draft and st.session_state.active_tab != "AI चॅट":
+    st.markdown("---")
+    st.text_area("तयार झालेला मसुदा:", value=st.session_state.final_draft, height=180)
+    col_d1, col_d2 = st.columns(2)
+    with col_d1:
+        st.download_button("📥 डाऊनलोड (.txt)", st.session_state.final_draft, "Draft.txt", use_container_width=True)
+    with col_d2:
+        msg_enc = urllib.parse.quote(st.session_state.final_draft)
+        st.markdown(f'<a href="https://api.whatsapp.com/send?text={msg_enc}" target="_blank"><button style="width:100%; height:38px; background:#25D366; color:white; font-weight:bold; border:none; border-radius:8px;">📲 WhatsApp</button></a>', unsafe_allow_html=True)
